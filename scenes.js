@@ -13,6 +13,9 @@ const SVE=(b,m)=>SV(b,...at(9.3,-6.1),m);
 const UE=n=>users(n,...at(9.3,-19));
 const others=()=>[3,4,5].flatMap(k=>[pod('o0'+k,0,k,'other',tl('other')),pod('o1'+k,1,k,'other',tl('other'))]);
 const UR6=()=>users(6,...at(16.9,-20));
+const CF={api:(id,n,o={})=>pod(id,n,1,o.st||'ok','api',{b:o.b}),cm:v=>blk('cm',...at(4,-13),'yellow','ConfigMap',{s:2.1,h:30,ic:'log',b:v?[v,'ok']:null}),sec:b=>blk('sec',...at(18,-13),'yellow','Secret',{s:2.1,h:30,ic:'lock',b:b?[b]:null})};
+const ST={PV:at(26,-6),PVC:at(9,-14),SC:at(25,-17),pv:(b,dyn,t)=>blk('pv',...ST.PV,dyn?'green':'blue','PV',{s:2.2,h:34,ic:'db',b:[b,t||'']}),pvc:b=>blk('pvc',...ST.PVC,'yellow','PVC',{s:2,h:28,ic:'link',b:[b,b==='Pending'?'':'ok']}),sc:b=>blk('sc',...ST.SC,'violet','StorageClass',{s:2.2,h:30,ic:'gauge',b:b?[b]:null})};
+const SC={s:()=>blk('sch',...at(17,-16),'violet','scheduler',{s:2.1,h:32,ic:'cal'})};
 const RB={API:at(17,-15),
 base:(o={})=>{const r=[node(0,{id:'ns1',lb:'ns: loja'}),node(2,{id:'ns2',lb:'ns: financeiro'}),blk('apis',...RB.API,'violet','API server',{ic:'shield'}),
  pod('l0',0,0,o.sa?'new':'ok','api',o.sa?{b:['sa: loja-api','ok']}:{}),pod('l1',0,2,'web','secret',{ic:'lock'}),
@@ -105,6 +108,47 @@ rollout:{min:11,lvl:'int',mod:2,steps:[
 {k:'conceito',s:()=>({e:[...nodes(),UR6(),SV(),pod('r3a',0,1,'ok','v1'),pod('r3b',1,1,'dead','v1',{b:[tl('frozen'),'bad']}),pod('r3c',2,1,'ok','v1'),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','r3a',2],['sv','r3c',2],['k1','r3b',2,'hc']]})},
 {k:'resumo',s:()=>({e:[...nodes(),UR6(),SV(),pod('r3a',0,1,'ok','v1'),pod('r3b',1,1,'new','v1',{b:[tl('restarted'),'ok']}),pod('r3c',2,1,'ok','v1')],f:[['u','sv',3],['sv','r3a',1],['sv','r3b',1],['sv','r3c',1]]})}
 ]},
+config:{min:12,lvl:'int',mod:1,steps:[
+{k:'problema',s:()=>({e:[...nodes({},2),CF.api('a0',0,{b:['DB_HOST=prod-db','bad']}),CF.api('a1',1),blk('img',...at(9,-15),'paper','loja/api',{s:2,h:30,ic:'box',b:[tl('rebuild')]})],f:[['img','a0',1],['img','a1',1]]})},
+{k:'solucao',cmd:'kubectl create configmap loja-config --from-literal=DB_HOST=db',s:()=>({e:[...nodes({},2),CF.api('a0',0),CF.api('a1',1),CF.cm()],l:[['cm','a0'],['cm','a1']]})},
+{k:'conceito',s:()=>({e:[...nodes({},2),CF.api('a0',0,{b:['env']}),CF.api('a1',1,{b:['/etc/config']}),CF.cm()],l:[['cm','a0'],['cm','a1']]})},
+{k:'tradeoff',cmd:'kubectl rollout restart deployment/api',s:()=>({e:[...nodes({},2),CF.api('a0',0,{b:[tl('old'),'bad']}),CF.api('a1',1,{b:[tl('updated'),'ok']}),CF.cm('v2')],l:[['cm','a1']],f:[['cm','a1',1]]})},
+{k:'solucao',cmd:'kubectl create secret generic db-cred --from-literal=password=s3nh4',s:()=>({e:[...nodes({},2),CF.api('a0',0),CF.api('a1',1),CF.cm(),CF.sec('base64')],l:[['cm','a0'],['cm','a1'],['sec','a0'],['sec','a1']]})},
+{k:'conceito',cmd:'kubectl create secret tls loja-tls --cert=tls.crt --key=tls.key',s:()=>({e:[...nodes({},2),CF.api('a0',0),CF.api('a1',1),CF.sec('docker-registry'),blk('reg',...at(26,-14),'yellow','registry',{s:2,h:30,ic:'lock',b:[tl('private')]})],l:[['sec','a1']],f:[['reg','a1',2,'heavy']]})},
+{k:'problema',s:()=>({e:[...nodes({},2),CF.api('a0',0,{b:['uid 0 (root)','bad'],m:null}),CF.api('a1',1),blk('atk',...at(-9,-12),'red',tl('attacker'),{s:1.9,h:30,ic:'user'})],f:[['atk','a0',2,'bad'],['a0','n0',1,'bad']]})},
+{k:'solucao',s:()=>({e:[...nodes({},2),CF.api('a0',0,{st:'new',b:['uid 1000','ok']}),CF.api('a1',1,{st:'new',b:['uid 1000','ok']}),blk('atk',...at(-9,-12),'red',tl('attacker'),{s:1.9,h:30,ic:'user'})],f:[['atk','a0',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...nodes({},2),CF.api('a0',0,{st:'new',b:['drop: ALL']}),CF.api('a1',1,{st:'new',b:['+NET_BIND_SERVICE']})]})},
+{k:'conceito',cmd:'kubectl label ns loja pod-security.kubernetes.io/enforce=restricted',s:()=>({e:[node(0,{lb:'ns: loja · restricted',c:'violet'}),node(1,{lb:'node-2'}),CF.api('a0',0,{st:'new'}),pod('bad',0,4,'pend','root',{b:[tl('rejected'),'bad']}),blk('apis',...at(9,-15),'violet','API server',{s:2,h:30,ic:'shield'})],f:[['apis','bad',2,'bad']]})},
+{k:'resumo',s:()=>({e:[...nodes({},2),CF.api('a0',0,{st:'new'}),CF.api('a1',1,{st:'new'}),CF.cm(),CF.sec()],l:[['cm','a0'],['cm','a1'],['sec','a0'],['sec','a1']]})}
+]},
+storage:{min:13,lvl:'int',mod:1,steps:[
+{k:'problema',s:()=>({e:[...nodes({},2),pod('db',0,1,'dead','db',{ic:'db',b:[tl('dataLost'),'bad']}),pod('db2',1,1,'new','db',{ic:'db',b:[tl('empty')]})]})},
+{k:'conceito',s:()=>({e:[...nodes({},2),pod('w',0,1,'web','web',{ic:'web',b:['emptyDir']}),pod('lg',0,2,'v2','log',{ic:'log'}),pod('db',1,1,'ok','db',{ic:'db',b:['hostPath']}),blk('hd',...at(19,10),'yellow','/data',{s:1.7,h:20,ic:'db'})],l:[['w','lg'],['db','hd']]})},
+{k:'problema',s:()=>({e:[...nodes({},2),pod('db',1,4,'new','db',{ic:'db',b:[tl('empty'),'bad']}),blk('hd',...at(3,10),'yellow','/data',{s:1.7,h:20,ic:'db',b:[tl('stuck')]})],f:[['hd','db',1,'bad']]})},
+{k:'conceito',cmd:'kubectl get pv',s:()=>({e:[...nodes({},2),ST.pv('Available')]})},
+{k:'conceito',cmd:'kubectl get pvc',s:()=>({e:[...nodes({},2),ST.pv('Bound'),ST.pvc('Bound')],l:[['pvc','pv']]})},
+{k:'solucao',s:()=>({e:[...nodes({},2),ST.pv('Bound'),ST.pvc('Bound'),pod('db',1,1,'ok','db',{ic:'db',b:['claimName: dados']})],l:[['pvc','pv'],['db','pvc']]})},
+{k:'conceito',s:()=>({e:[...nodes({},2),ST.pv('RWO'),pod('db',0,1,'ok','db',{ic:'db'}),pod('db2',1,1,'pend','db',{ic:'db',b:['RWO: '+tl('busy'),'bad']})],l:[['db','pv']]})},
+{k:'conceito',cmd:'kubectl get storageclass',s:()=>({e:[...nodes({},2),ST.sc(),ST.pvc('Pending'),ST.pv('Bound',1)],f:[['pvc','sc',1],['sc','pv',1,'heavy']]})},
+{k:'conceito',s:()=>({e:[...nodes({},2),ST.sc('WaitForFirstConsumer'),ST.pvc('Bound'),ST.pv('zona-b',1),pod('db',1,1,'new','db',{ic:'db'})],l:[['db','pvc'],['pvc','pv']]})},
+{k:'tradeoff',cmd:'kubectl patch pv pv-dados -p \'{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}\'',s:()=>({e:[...nodes({},2),ST.sc(),ST.pv('Released',1,'bad'),blk('pvc',...ST.PVC,'yellow','PVC',{s:2,h:28,ic:'link',st:'dead'})]})},
+{k:'conceito',cmd:'kubectl edit pvc dados',s:()=>({e:[...nodes({},2),ST.sc('allowVolumeExpansion'),ST.pvc('10Gi → 20Gi'),ST.pv('20Gi',1),pod('db',1,1,'ok','db',{ic:'db'})],l:[['db','pvc'],['pvc','pv']]})},
+{k:'resumo',s:()=>({e:[...nodes({},2),ST.sc(),ST.pvc('Bound'),ST.pv('Bound',1),pod('db',1,1,'ok','db',{ic:'db'})],l:[['db','pvc'],['pvc','pv'],['pvc','sc','d']]})}
+]},
+sched:{min:13,lvl:'int',mod:2,steps:[
+{k:'contexto',s:()=>({e:[...nodes(),SC.s(),pod('p0',0,1),pod('p1',1,1),pod('p9',1,3,'new','api',{b:[tl('score')+'','ok']})],l:[['sch','p9']]})},
+{k:'conceito',s:()=>({e:[...nodes(),pod('g',0,1,'ok','api',{b:['Guaranteed','ok']}),pod('b',1,1,'web','web',{ic:'web',b:['Burstable']}),pod('be',2,1,'other','batch',{b:['BestEffort','bad']})]})},
+{k:'problema',s:()=>({e:[...nodes({1:{c:'red',lb:'node-2 · MemoryPressure'}}),pod('g',0,1,'ok','api'),pod('b',1,1,'web','web',{ic:'web',m:99}),pod('be',1,3,'dead','batch',{b:[tl('evicted'),'bad']}),pod('b2',1,4,'other','batch',{m:97})]})},
+{k:'solucao',cmd:'kubectl create quota loja --hard=requests.cpu=4,pods=10 -n loja',s:()=>({e:[node(0,{lb:'ns: loja · quota',c:'violet'}),...nodes().slice(1),pod('g',0,1,'ok','api'),pod('g2',0,2,'ok','api'),pod('x',0,4,'pend','api',{b:['exceeded quota','bad']}),blk('apis',...at(9,-15),'violet','API server',{s:2,h:30,ic:'shield'})],f:[['apis','x',2,'bad']]})},
+{k:'conceito',cmd:'kubectl label node node-2 disktype=ssd',s:()=>({e:[...nodes({1:{lb:'node-2 · disktype=ssd',st:'hi'}}),SC.s(),pod('db',1,1,'new','db',{ic:'db',b:['nodeSelector']})],l:[['sch','db']]})},
+{k:'conceito',s:()=>({e:[...nodes({0:{lb:'node-1 · zone=a'},1:{lb:'node-2 · zone=b',st:'hi'},2:{lb:'node-3 · zone=b'}}),SC.s(),pod('p',1,1,'new','api',{b:['required: zone=b']}),pod('p2',2,1,'ok','api',{b:['preferred']})],l:[['sch','p'],['sch','p2','d']]})},
+{k:'conceito',s:()=>({e:[...nodes(),SC.s(),pod('r0',0,1,'ok','api'),pod('r1',1,1,'ok','api'),pod('r2',2,1,'new','api',{b:['anti-affinity']})],l:[['sch','r2']]})},
+{k:'conceito',cmd:'kubectl taint nodes node-3 gpu=true:NoSchedule',s:()=>({e:[...nodes({2:{lb:'node-3 · taint gpu',c:'yellow'}}),SC.s(),pod('p',0,1),pod('p1',1,1),pod('ml',2,1,'v2','ml',{b:['toleration','ok']}),pod('x',1,4,'pend','api',{b:[tl('refused'),'bad']})],l:[['sch','ml']]})},
+{k:'tradeoff',s:()=>({e:[...nodes({2:{lb:'node-3 · taint gpu',c:'yellow'}}),SC.s(),pod('p',0,1),pod('ml',1,1,'v2','ml',{b:[tl('wrongNode'),'bad']})],l:[['sch','ml']]})},
+{k:'conceito',cmd:'kubectl drain node-2 --ignore-daemonsets --delete-emptydir-data',s:()=>({e:[...nodes({1:{lb:'node-2 · SchedulingDisabled',c:'grey'}}),SC.s(),pod('p',0,1),pod('m1',0,2,'new','api'),pod('m2',2,1,'new','api')],l:[['sch','m1','d'],['sch','m2','d']]})},
+{k:'conceito',s:()=>({e:[node(0,{lb:'controlplane',c:'violet'}),...nodes().slice(1),pod('s0',0,0,'v2','etcd',{ic:'db',b:['/etc/kubernetes/manifests']}),pod('s1',0,2,'v2','api',{ic:'api'}),pod('s2',0,4,'v2','sched',{ic:'cal'}),pod('k',0,5,'other','kubelet',{ic:'srv'}),pod('m',2,1,'new','api',{b:['nodeName: node-3']})],f:[['k','s0',1,'hc'],['k','s1',1,'hc'],['k','s2',1,'hc']]})},
+{k:'resumo',s:()=>({e:[...nodes({1:{lb:'node-2 · disktype=ssd'},2:{lb:'node-3 · taint gpu',c:'yellow'}}),SC.s(),pod('p',0,1),pod('db',1,1,'ok','db',{ic:'db'}),pod('ml',2,1,'v2','ml')]})}
+]},
 probes:{min:11,lvl:'int',mod:2,steps:[
 {k:'contexto',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1',1,1)],f:[['u','sv',2],['sv','p0',1],['sv','p1',1]]})},
 {k:'problema',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1',1,1),pod('p2',0,3,'pend','api',{b:[tl('loading'),'bad']})],f:[['u','sv',2],['sv','p0',1],['sv','p1',1],['sv','p2',2,'bad']]})},
@@ -138,4 +182,4 @@ tudo:{min:5,lvl:'beg',mod:3,steps:[
 {k:'resumo',cmd:'kubectl get all',s:()=>({e:[...cp(['api','etcd','sched','ctrl'],at(-3,-16)),...nodes(),users(9),ING(),SV(),pod('t0',0,1),pod('t1',1,1),pod('t2',2,1),pod('t3',1,3)],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})}
 ]}
 };};
-window.LESSON_ORDER=['intro','cluster','pods','service','escala','rollout','probes','rbac','tudo'];
+window.LESSON_ORDER=['intro','cluster','pods','config','storage','service','escala','sched','rollout','probes','rbac','tudo'];

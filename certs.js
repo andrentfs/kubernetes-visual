@@ -3,17 +3,17 @@
 window.CERTS={
 cka:{weights:[['storage',10],['trouble',30],['work',15],['arch',25],['net',20]],
  comp:{
-  storage:[['sc',[],'planned','storage'],['vol',[],'planned','storage'],['pvpvc',[],'planned','storage']],
-  trouble:[['tnode',['cluster'],'partial','trouble'],['tcomp',['cluster'],'partial','trouble'],['tmon',['escala'],'partial','observ'],['tlogs',[],'planned','observ'],['tsvc',['service'],'partial','network']],
-  work:[['roll',['rollout'],'full'],['cm',['rbac'],'partial','config'],['hpa',['escala'],'full'],['heal',['pods','probes'],'full'],['sched',['escala'],'partial','sched']],
+  storage:[['sc',['storage'],'full'],['vol',['storage'],'full'],['pvpvc',['storage'],'full']],
+  trouble:[['tnode',['cluster','sched'],'partial','trouble'],['tcomp',['cluster','sched'],'partial','trouble'],['tmon',['escala'],'partial','observ'],['tlogs',[],'planned','observ'],['tsvc',['service'],'partial','network']],
+  work:[['roll',['rollout'],'full'],['cm',['config'],'full'],['hpa',['escala'],'full'],['heal',['pods','probes'],'full'],['sched',['sched','escala'],'full']],
   arch:[['rbac',['rbac'],'full'],['infra',[],'planned','kubeadm'],['kubeadm',[],'planned','kubeadm'],['life',[],'planned','kubeadm'],['ha',['cluster'],'partial','kubeadm'],['helm',[],'planned','helm'],['ext',['cluster'],'partial','extend'],['crd',[],'planned','extend']],
   net:[['podnet',['cluster'],'partial','network'],['netpol',[],'planned','netpol'],['svctype',['service'],'full'],['gw',['service'],'partial','network'],['ing',['service'],'full'],['dns',[],'planned','network']]}},
 ckad:{weights:[['design',20],['deploy',20],['obs',15],['env',25],['net',20]],
  comp:{
-  design:[['img',['intro'],'partial','images'],['wl',['pods'],'partial','workloads'],['multi',['pods'],'partial','workloads'],['vols',[],'planned','storage']],
+  design:[['img',['intro'],'partial','images'],['wl',['pods'],'partial','workloads'],['multi',['pods'],'partial','workloads'],['vols',['storage'],'full']],
   deploy:[['strat',['rollout'],'partial','workloads'],['roll',['rollout'],'full'],['helm',[],'planned','helm'],['kust',[],'planned','helm']],
   obs:[['depr',[],'planned','observ'],['probes',['probes'],'full'],['cli',['escala'],'partial','observ'],['logs',[],'planned','observ'],['debug',[],'planned','observ']],
-  env:[['crd',[],'planned','extend'],['aaa',['rbac'],'full'],['quota',['escala'],'partial','sched'],['cm',[],'planned','config'],['req',['escala'],'full'],['secret',['rbac'],'partial','config'],['sa',['rbac'],'full'],['secctx',[],'planned','config']],
+  env:[['crd',[],'planned','extend'],['aaa',['rbac'],'full'],['quota',['sched'],'full'],['cm',['config'],'full'],['req',['escala','sched'],'full'],['secret',['config','rbac'],'full'],['sa',['rbac'],'full'],['secctx',['config'],'full']],
   net:[['netpol',[],'planned','netpol'],['svc',['service'],'full'],['ing',['service'],'full']]}}
 };
 window.CERTTXT={

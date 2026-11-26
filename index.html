@@ -151,6 +151,7 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 .pop span{overflow:hidden;text-overflow:ellipsis}
 .keys{grid-column:1/-1;display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:11px;margin-top:2px}
 .keys kbd{font:700 10px "JetBrains Mono",monospace;border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--paper2)}
+.exam{padding:16px 18px;background:light-dark(#fff6e3,#2a2416);border-color:light-dark(#ecd3a1,#5a4618)}.exam h3{display:flex;gap:8px;align-items:center;margin:0 0 10px;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.exam h3 svg{width:16px;height:16px}.exam ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:12.5px;line-height:1.5}.exc{display:grid;gap:5px;margin-top:12px}.exc code{display:block;background:#1d1b18;color:#f4ebe0;border-radius:7px;padding:6px 9px;font:500 11.5px "JetBrains Mono",monospace;overflow-wrap:anywhere}.exc code::before{content:"$ ";color:#9a9286}
 .learn{padding:16px 18px}
 .learn h3{margin:0 0 10px;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
 .learn ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
@@ -222,6 +223,7 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 </div>
 <section class="panel">
 <article class="card step"><div id="step"></div><div class="nav"><button class="pop back" id="prev" type="button">←<span data-t="back">Voltar</span></button><button class="pop go" id="next" type="button"><span id="nextL"></span><b>→</b></button><div class="keys"><kbd>←</kbd><kbd>→</kbd> <span data-t="kStep">passo</span> · <kbd>R</kbd> <span data-t="kReplay">repetir</span> · <kbd>Space</kbd> <span data-t="kPause">pausar</span></div></div></article>
+<article class="card exam" id="exam" hidden></article>
 <article class="card learn"><h3 data-t="learn">Você vai aprender</h3><ul id="learn"></ul></article>
 </section>
 </div>
@@ -301,7 +303,7 @@ function link(a,b){const A=anchor(a),B=anchor(b),dx=B.x-A.x,dy=B.y-A.y,L=Math.hy
 
 /* ---------- scene helpers ---------- */
 const K=7.6,N=[[0,0],[K,-K],[2*K,-2*K]],SL=[[1.4,1.3],[4.3,1.3],[7.2,1.3],[1.4,3.9],[4.3,3.9],[7.2,3.9]];
-const node=(i,o={})=>({id:o.id||'n'+i,t:'slab',x:N[i][0],y:N[i][1],w:8.6,d:5.2,th:12,c:'paper',lb:o.lb||('node-'+(i+1)),st:o.st||''});
+const node=(i,o={})=>({id:o.id||'n'+i,t:'slab',x:N[i][0],y:N[i][1],w:8.6,d:5.2,th:12,c:o.c||'paper',lb:o.lb||('node-'+(i+1)),st:o.st||''});
 const at=(a,b)=>[(a+b)/2,(b-a)/2];
 const nodes=(o={},n=3)=>[0,1,2].slice(0,n).map(i=>node(i,o[i]));
 const PC={plain:'paper',ok:'blue',new:'green',v2:'violet',dead:'grey',other:'grey',cont:'orange',pend:'blue',web:'yellow'};
@@ -320,7 +322,7 @@ let LANG=(()=>{try{const v=localStorage.getItem('k8s-lang');if(v==='pt'||v==='en
 const TX=()=>window.TXT[LANG],tl=k=>(TX().lbl[k]??k),U_=k=>TX().ui[k];
 const S=window.buildScenes({node,nodes,pod,blk,cp,users,kub,SV,ING,at,tl});
 let L=[];
-function buildL(){L=window.LESSON_ORDER.map(id=>{const sc=S[id],tx=TX().les[id];return{id,mod:sc.mod,min:sc.min,lvl:TX().lv[sc.lvl],title:tx.t,lede:tx.lede,ml:tx.ml,goals:tx.goals,steps:sc.steps.map((st,i)=>({...tx.steps[i],c:(TX().cap||{})[id]?.[i],k:st.k,cmd:st.cmd,s:st.s}))}})}
+function buildL(){L=window.LESSON_ORDER.map(id=>{const sc=S[id],tx=TX().les[id];return{id,mod:sc.mod,min:sc.min,lvl:TX().lv[sc.lvl],exam:tx.exam,title:tx.t,lede:tx.lede,ml:tx.ml,goals:tx.goals,steps:sc.steps.map((st,i)=>({...tx.steps[i],c:(TX().cap||{})[id]?.[i],k:st.k,cmd:st.cmd,s:st.s}))}})}
 buildL();
 const MODC=['#cfe1f6','#d1e9c2','#fcd4ad','#e2d6f4'];
 
@@ -430,6 +432,7 @@ function show(){const hv=location.hash.slice(1);if(hv==='cka'||hv==='ckad'){setV
   (st.warn?`<div class="call warn">${SV_WARN}<div><small>${U_('warn')}</small>${esc(st.warn)}</div></div>`:'')+
   (st.chg?`<div class="chg"><small>${U_('changed')}</small><ul>${st.chg.map(([s,t])=>`<li><i class="${s==='+'?'p':s==='-'?'m':'t'}">${s==='~'?'↝':s}</i>${esc(t)}</li>`).join('')}</ul></div>`:'')+
   (st.cmd?`<div class="cmd"><code>${esc(st.cmd)}</code><button type="button" id="copy">${U_('copy')}</button></div>`:'');
+ {const ex=les.exam,E=$('#exam');E.hidden=!ex;if(ex)E.innerHTML=`<h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg>${U_('examT')}</h3><ul>${ex.t.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${ex.c?`<div class="exc">${ex.c.map(c=>`<code>${esc(c)}</code>`).join('')}</div>`:''}`}
  $('#cap').innerHTML=st.c?`<small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4M4 4h12l-2 4 2 4H4"/></svg>${U_('inDiagram')}</small>${esc(st.c)}`:'';$('#learn').innerHTML=les.goals.map(([g,at])=>`<li class="${si+1>=at?'ok':''}"><i>${si+1>=at?'✓':''}</i>${esc(g)}</li>`).join('');
  const last=si===les.steps.length-1,end=last&&li===L.length-1,nl=end?U_('end'):last?`${U_('nextLesson')}: ${L[li+1].title}`:`${U_('next')}: ${les.steps[si+1].n}`;
  ['#prev','#prev2'].forEach(q=>$(q).disabled=li===0&&si===0);['#next','#next2'].forEach(q=>$(q).disabled=end);
