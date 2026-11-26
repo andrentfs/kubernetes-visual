@@ -13,6 +13,18 @@ const SVE=(b,m)=>SV(b,...at(9.3,-6.1),m);
 const UE=n=>users(n,...at(9.3,-19));
 const others=()=>[3,4,5].flatMap(k=>[pod('o0'+k,0,k,'other',tl('other')),pod('o1'+k,1,k,'other',tl('other'))]);
 const UR6=()=>users(6,...at(16.9,-20));
+const RB={API:at(17,-15),
+base:(o={})=>{const r=[node(0,{id:'ns1',lb:'ns: loja'}),node(2,{id:'ns2',lb:'ns: financeiro'}),blk('apis',...RB.API,'violet','API server',{ic:'shield'}),
+ pod('l0',0,0,o.sa?'new':'ok','api',o.sa?{b:['sa: loja-api','ok']}:{}),pod('l1',0,2,'web','secret',{ic:'lock'}),
+ pod('f0',2,0,o.f0||'ok','api'),pod('f1',2,2,o.f1||'web','secret',{ic:'lock'})];
+ if(o.role)r.push(pod('role',0,4,'v2','Role',{ic:'log',b:['get, list pods']}));
+ if(o.rb)r.push(pod('rb',0,5,'new','Binding',{ic:'link'}));
+ if(o.rbv)r.push(pod('rbv',0,4,'new','Binding',{ic:'link',b:['view @ loja']}));
+ if(o.rbv2)r.push(pod('rbv2',2,4,'new','Binding',{ic:'link',b:['view @ financeiro']}));
+ return r},
+ana:b=>blk('ana',...at(-9,-20),'orange','ana',{s:1.9,h:30,ic:'user',b:b?[b,b==='cluster-admin'?'bad':'']:null}),
+ci:b=>blk('ci',...at(-9,-2),'orange','ci-bot',{s:1.9,h:30,ic:'term',b:b?[b]:null}),
+gates:()=>[blk('g1',...at(-1,-24),'paper',tl('authn'),{s:1.8,h:28,ic:'user',b:[tl('who')]}),blk('g2',...at(5.5,-21),'paper','RBAC',{s:1.8,h:28,ic:'lock',b:[tl('may')]}),blk('g3',...at(12,-18),'paper','admission',{s:1.8,h:28,ic:'shield',b:[tl('rules')]})]};
 return {
 intro:{min:9,lvl:'beg',mod:0,steps:[
 {k:'contexto',s:()=>({e:[node(1,{id:'v0',lb:tl('server')}),users(4,...at(4,2)),pod('a0',1,1,'plain',tl('store'),{ic:'srv'})],f:[['u','a0',2]]})},
@@ -93,10 +105,37 @@ rollout:{min:11,lvl:'int',mod:2,steps:[
 {k:'conceito',s:()=>({e:[...nodes(),UR6(),SV(),pod('r3a',0,1,'ok','v1'),pod('r3b',1,1,'dead','v1',{b:[tl('frozen'),'bad']}),pod('r3c',2,1,'ok','v1'),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','r3a',2],['sv','r3c',2],['k1','r3b',2,'hc']]})},
 {k:'resumo',s:()=>({e:[...nodes(),UR6(),SV(),pod('r3a',0,1,'ok','v1'),pod('r3b',1,1,'new','v1',{b:[tl('restarted'),'ok']}),pod('r3c',2,1,'ok','v1')],f:[['u','sv',3],['sv','r3a',1],['sv','r3b',1],['sv','r3c',1]]})}
 ]},
-tudo:{min:5,lvl:'beg',mod:2,steps:[
+probes:{min:11,lvl:'int',mod:2,steps:[
+{k:'contexto',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1',1,1)],f:[['u','sv',2],['sv','p0',1],['sv','p1',1]]})},
+{k:'problema',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1',1,1),pod('p2',0,3,'pend','api',{b:[tl('loading'),'bad']})],f:[['u','sv',2],['sv','p0',1],['sv','p1',1],['sv','p2',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1,'ok','api',{b:['GET /healthz']}),pod('p1',1,1),pod('k0',0,5,'other','kubelet',{ic:'srv'}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',2],['sv','p0',1],['sv','p1',1],['k0','p0',2,'hc'],['k1','p1',2,'hc']]})},
+{k:'solucao',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1',1,1),pod('p2',0,3,'pend','api',{b:['readiness: '+tl('no'),'bad']}),pod('k0',0,5,'other','kubelet',{ic:'srv'}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',2],['sv','p0',1],['sv','p1',1],['k0','p2',2,'hc']]})},
+{k:'solucao',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1',1,1),pod('p2',0,3,'new','api',{b:['readiness: '+tl('yes'),'ok']}),pod('k0',0,5,'other','kubelet',{ic:'srv'}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','p0',1],['sv','p1',1],['sv','p2',1],['k0','p2',1,'hc']]})},
+{k:'problema',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1',1,1,'ok','api',{b:[tl('frozen'),'bad']}),pod('p2',0,3),pod('k0',0,5,'other','kubelet',{ic:'srv'}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','p0',2],['sv','p2',2],['k1','p1',2,'hc']]})},
+{k:'solucao',cmd:'kubectl get pods -w',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1b',1,1,'new','api',{b:[tl('restarted'),'ok']}),pod('p2',0,3),pod('k0',0,5,'other','kubelet',{ic:'srv'}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','p0',1],['sv','p1b',1],['sv','p2',1],['k1','p1b',1,'hc']]})},
+{k:'problema',cmd:'kubectl describe pod relatorios',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1b',1,1),pod('p2',0,3),pod('j0',1,3,'dead','java',{b:['CrashLoopBackOff','bad']}),pod('k0',0,5,'other','kubelet',{ic:'srv'}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','p0',1],['sv','p1b',1],['sv','p2',1],['k1','j0',2,'bad']]})},
+{k:'solucao',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1b',1,1),pod('p2',0,3),pod('j1',1,3,'pend','java',{b:['startup: 30 × 10 s']}),pod('k0',0,5,'other','kubelet',{ic:'srv'}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','p0',1],['sv','p1b',1],['sv','p2',1],['k1','j1',2,'hc']]})},
+{k:'tradeoff',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1,'pend','api',{b:[tl('restarting'),'bad']}),pod('p1b',1,1,'pend','api',{b:[tl('restarting'),'bad']}),pod('p2',0,3,'pend','api'),pod('db',1,2,'dead','db',{b:[tl('down'),'bad']}),pod('k0',0,5,'other','kubelet',{ic:'srv'}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3,'bad'],['k0','p0',1,'hc'],['k1','p1b',1,'hc']]})},
+{k:'resumo',s:()=>({e:[...nodes({},2),UE(6),SVE(),pod('p0',0,1),pod('p1b',1,1),pod('p2',0,3),pod('j1',1,3,'ok','java'),pod('k0',0,5,'other','kubelet',{ic:'srv'}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','p0',1],['sv','p1b',1],['sv','p2',1],['sv','j1',1],['k0','p0',1,'hc'],['k1','j1',1,'hc']]})}
+]},
+rbac:{min:13,lvl:'int',mod:3,steps:[
+{k:'contexto',cmd:'kubectl get clusterrolebindings',s:()=>({e:[...RB.base(),RB.ana('cluster-admin'),RB.ci()],f:[['ana','apis',2]],l:[['apis','ns1','d'],['apis','ns2','d']]})},
+{k:'problema',cmd:'kubectl delete pods --all -n financeiro',s:()=>({e:[...RB.base({f0:'dead',f1:'dead'}),RB.ana('cluster-admin'),RB.ci()],f:[['ana','apis',2],['apis','f0',2,'bad'],['apis','f1',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...RB.base(),RB.ana(),RB.ci(),...RB.gates()],f:[['ana','g1',2],['g1','g2',2],['g2','g3',2],['g3','apis',2]]})},
+{k:'conceito',s:()=>({e:[...RB.base(),RB.ana(tl('user')),RB.ci('ServiceAccount'),blk('grp',...at(-9,-11),'orange',tl('group'),{s:1.9,h:30,ic:'user',b:['devs']})],f:[['ana','apis',1],['grp','apis',1],['ci','apis',1]]})},
+{k:'conceito',cmd:'kubectl create role leitor-pods --verb=get,list,watch --resource=pods -n loja',s:()=>({e:[...RB.base({role:1}),RB.ana(),RB.ci()]})},
+{k:'conceito',cmd:'kubectl create rolebinding ana-leitora --role=leitor-pods --user=ana -n loja',s:()=>({e:[...RB.base({role:1,rb:1}),RB.ana(),RB.ci()],l:[['ana','rb'],['rb','role']]})},
+{k:'solucao',cmd:'kubectl auth can-i delete pods -n financeiro --as ana',s:()=>({e:[...RB.base({role:1,rb:1}),RB.ana(),RB.ci(),{...blk('apis',...RB.API,'violet','API server',{ic:'shield',b:['403 Forbidden','bad']})}],f:[['ana','apis',2],['apis','l0',1],['apis','f0',1,'bad']]})},
+{k:'conceito',cmd:'kubectl create clusterrolebinding monitor-view --clusterrole=view --serviceaccount=monitoring:prometheus',s:()=>({e:[...RB.base(),RB.ana(),RB.ci(),blk('cr',...at(18,4),'violet','ClusterRole',{s:2.1,h:32,ic:'log',b:['view']}),blk('crb',...at(18,13),'green','ClusterRoleBinding',{s:2.3,h:30,ic:'link'}),blk('mon',...at(-9,-11),'orange','prometheus',{s:1.9,h:30,ic:'gauge',b:['ServiceAccount']})],l:[['mon','crb'],['crb','cr']],f:[['mon','apis',1],['apis','l0',1],['apis','f0',1]]})},
+{k:'conceito',s:()=>({e:[...RB.base({rbv:1,rbv2:1}),RB.ana(),RB.ci(),blk('cr',...at(18,4),'violet','ClusterRole',{s:2.1,h:32,ic:'log',b:['view']})],l:[['rbv','cr'],['rbv2','cr']]})},
+{k:'conceito',s:()=>({e:[...RB.base({role:1,rb:1,sa:1}),RB.ana(),RB.ci()],f:[['l0','apis',2]]})},
+{k:'tradeoff',cmd:'kubectl auth can-i get secrets -n financeiro --as ana',s:()=>({e:[...RB.base({role:1,rb:1}),RB.ana(),RB.ci(),{...blk('apis',...RB.API,'violet','API server',{ic:'shield',b:['403 Forbidden','bad']})}],f:[['ana','apis',2],['apis','f1',1,'bad']]})},
+{k:'resumo',s:()=>({e:[...RB.base({role:1,rb:1,sa:1}),RB.ana(),RB.ci(),blk('cr',...at(18,4),'violet','ClusterRole',{s:2.1,h:32,ic:'log',b:['view']})],l:[['ana','rb'],['rb','role']]})}
+]},
+tudo:{min:5,lvl:'beg',mod:3,steps:[
 {k:'resumo',s:()=>({e:[...cp([],at(-3,-16)),...nodes(),users(9),ING(),SV('HPA 2–10'),pod('t0',0,1,'ok','api',{m:41}),pod('t1',1,1,'ok','api',{m:39}),pod('t2',2,1,'ok','api',{m:40}),pod('t3',1,3,'ok','api',{m:42})],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})},
 {k:'resumo',s:()=>({e:[...cp(['api','etcd','sched','ctrl'],at(-3,-16)),...nodes({0:{st:'hi'},1:{st:'hi'},2:{st:'hi'}}),users(9),ING(),SV('HPA 2–10'),pod('t0',0,1),pod('t1',1,1),pod('t2',2,1),pod('t3',1,3)],l:[['cp','n0','d'],['cp','n1','d'],['cp','n2','d']],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})},
 {k:'resumo',cmd:'kubectl get all',s:()=>({e:[...cp(['api','etcd','sched','ctrl'],at(-3,-16)),...nodes(),users(9),ING(),SV(),pod('t0',0,1),pod('t1',1,1),pod('t2',2,1),pod('t3',1,3)],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})}
 ]}
 };};
-window.LESSON_ORDER=['intro','cluster','pods','service','escala','rollout','tudo'];
+window.LESSON_ORDER=['intro','cluster','pods','service','escala','rollout','probes','rbac','tudo'];
