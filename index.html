@@ -382,7 +382,7 @@ function paint(sc,fresh){(sc.dead||[]).forEach(id=>{const e=sc.e.find(x=>x.id===
  $('#leg').innerHTML=['req','heavy','hc','bad'].filter(k=>kinds.has(k)).map(k=>`<span><i class="${k}"></i>${U_('leg_'+k)}</span>`).join('')}
 function drawLinks(){if(!lastScene)return;const{sc,by}=lastScene;let a='',b='';
  (sc.l||[]).forEach(([p,q,d])=>{if(by[p]&&by[q])a+=`<path d="${link(by[p],by[q])}" class="lnk ${d||''}" ${d?'':'marker-end="url(#arw)"'}/>`});
- (sc.f||[]).forEach(([p,q,n,k])=>{if(!by[p]||!by[q])return;k=k||'';const d=link(by[p],by[q]);a+=`<path d="${d}" class="lnk ${k}" ${k==='hc'?'':'marker-start="url(#arw)" marker-end="url(#arw)"'}/>`;
+ (sc.f||[]).forEach(([p,q,n,k])=>{if(!by[p]||!by[q])return;k=k||'';const d=link(by[p],by[q]);a+=`<path d="${d}" class="lnk ${k}" ${k==='hc'?'':'marker-end="url(#arw)"'}/>`;
   if(RM.matches)return;const dur=k==='heavy'?2.6:k==='hc'?1.4:1.7;
   for(let i=0;i<n;i++){const shape=k==='heavy'?`<rect x="-5.5" y="-5.5" width="11" height="11" rx="2" class="pk"/>`:k==='bad'?`<circle r="6" class="pk bad"/><path d="M-2.5-2.5l5 5M2.5-2.5l-5 5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`:k==='hc'?`<circle r="6" class="pk hc"/>`:`<circle r="5.5" class="pk"/>`;
    b+=`<g>${shape}<animateMotion dur="${dur}s" begin="-${f1(i*dur/n+Math.random()*.3)}s" repeatCount="indefinite" path="${d}"/></g>`}});
