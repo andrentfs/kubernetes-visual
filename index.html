@@ -76,10 +76,6 @@ h1{font-size:clamp(24px,2.6vw,32px);line-height:1.08;font-weight:800;letter-spac
 .met.bad{border-left-color:var(--redink)}.met.bad b{color:var(--redink)}
 .met.ok{border-left-color:var(--green3)}
 .ctl{display:flex;gap:8px;flex:none}
-.rcp{border:1.5px solid var(--ink);border-radius:12px;background:#1d1b18;color:#f4ebe0;padding:10px 12px;min-width:260px;box-shadow:1.5px 2.5px 0 var(--drop);font-size:12.5px}
-.rh{display:flex;align-items:center;gap:7px;font-weight:800;margin-bottom:6px}.rh svg{width:14px;height:14px}.rh span{margin-left:auto;font-weight:500;color:#9a9286;font-size:11px}
-.rl{display:grid;grid-template-columns:3.4em minmax(0,1fr) 3em;gap:6px;align-items:center;padding:3px 6px;border-radius:6px;transition:background .3s}.rl code{font:500 12.5px "JetBrains Mono",monospace;color:#f4ebe0}.rl b{text-align:right;color:#e5534b;font-size:12px}.rl.ok b{color:#7fc278}.rl.hl{background:rgba(245,179,1,.22)}
-.rb{margin-top:7px;padding-top:7px;border-top:1px solid #3a352c;color:#f5c96b;font-size:12px;animation:fresh .35s ease-out}@keyframes fresh{from{opacity:0;transform:translateY(4px)}}
 .dfoot{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:0 14px 14px;flex-wrap:wrap}
 .cap{flex:0 1 460px;background:var(--card);border:1.5px solid var(--ink);border-radius:12px;box-shadow:1.5px 2.5px 0 var(--drop);padding:10px 14px 11px;font-size:12.6px;line-height:1.5}.cap small{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}.cap small svg{width:13px;height:13px}.cap:empty{display:none}
 .leg{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:11.5px;pointer-events:none}
@@ -225,7 +221,7 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 <defs id="defs"></defs>
 <rect id="gridr" fill="url(#iso)"/>
 <g id="bg"></g><g id="lk"></g><g id="pk"></g><g id="fg"></g></svg></div>
-<div class="dfoot"><div class="rcpw" id="rcp" hidden></div><div class="leg" id="leg"></div><div class="cap" id="cap" aria-live="polite"></div></div>
+<div class="dfoot"><div class="leg" id="leg"></div><div class="cap" id="cap" aria-live="polite"></div></div>
 </div>
 </section>
 <section class="card trk"><div class="hd"><b data-t="inLesson">Nesta lição</b><span id="trkn"></span></div><div class="dots" id="dots"></div></section>
@@ -334,7 +330,7 @@ let LANG=(()=>{try{const v=localStorage.getItem('k8s-lang');if(v==='pt'||v==='en
 const TX=()=>window.TXT[LANG],tl=k=>(TX().lbl[k]??k),U_=k=>TX().ui[k];
 const S=window.buildScenes({node,nodes,pod,blk,cp,users,kub,SV,ING,at,tl});
 let L=[];
-function buildL(){L=window.LESSON_ORDER.filter(id=>TX().les[id]&&S[id]).map(id=>{const sc=S[id],tx=TX().les[id];return{id,mod:sc.mod,min:sc.min,lvl:TX().lv[sc.lvl],exam:tx.exam,title:tx.t,lede:tx.lede,ml:tx.ml,goals:tx.goals,steps:sc.steps.map((st,i)=>({...tx.steps[i],seq:st.seq,recipe:st.recipe,c:(TX().cap||{})[id]?.[i],k:st.k,cmd:st.cmd,s:st.s}))}})}
+function buildL(){L=window.LESSON_ORDER.filter(id=>TX().les[id]&&S[id]).map(id=>{const sc=S[id],tx=TX().les[id];return{id,mod:sc.mod,min:sc.min,lvl:TX().lv[sc.lvl],exam:tx.exam,title:tx.t,lede:tx.lede,ml:tx.ml,goals:tx.goals,steps:sc.steps.map((st,i)=>({...tx.steps[i],c:(TX().cap||{})[id]?.[i],k:st.k,cmd:st.cmd,s:st.s}))}})}
 buildL();
 const MODC=['#cfe1f6','#d1e9c2','#fcd4ad','#f1c3bd','#e2d6f4'];
 
@@ -365,9 +361,9 @@ function deconflict(list){const blocks=list.filter(e=>e.t==='block'),placed=[];
   const obs=placed.concat(blocks.filter(o=>o!==e&&depth(o)>depth(e)).map(body));let off=0,r=r0;
   for(let k=0;k<12;k++){const hit=obs.find(p=>r[0]<p[2]&&r[2]>p[0]&&r[1]<p[3]&&r[3]>p[1]);if(!hit)break;const d=r[3]-hit[1]+4;if(off+d>90)break;off+=d;r=[r[0],r[1]-d,r[2],r[3]-d]}
   e._bo=off;placed.push(r)})}
-function paint(sc,fresh,keepCam){(sc.dead||[]).forEach(id=>{const e=sc.e.find(x=>x.id===id);if(e)e.st='dead'});fitSizes(sc.e);deconflict(sc.e);
+function paint(sc,fresh){(sc.dead||[]).forEach(id=>{const e=sc.e.find(x=>x.id===id);if(e)e.st='dead'});fitSizes(sc.e);deconflict(sc.e);
  if(fresh){live.forEach(g=>g.remove());live.clear()}
- if(!keepCam)moveCam(camFor(sc),fresh);
+ moveCam(camFor(sc),fresh);
  const seen=new Set(),by={};
  const anim=!RM.matches,order=sc.e.filter(e=>!live.has(e.id)).sort((a,b)=>(a.t==='slab'?-1e3:0)+depth(a)-((b.t==='slab'?-1e3:0)+depth(b))),gap=Math.min(55,700/Math.max(1,order.length));
  const dly={};order.forEach((e,i)=>dly[e.id]=fresh?i*gap:i*35+120);ENTER=fresh?order.length*gap+650:0;
@@ -429,13 +425,6 @@ function certView(k){const C=window.CERTS[k],T=CT(),X=T[k],cols=['#cfe1f6','#fcd
  <section class="card csec"><h2>${esc(T.ui.tips)}</h2><div class="tips">${X.tips.map(([a,b])=>`<div class="tip"><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('')}</div></section>
  <section class="card csec"><h2>${esc(T.ui.roadmap)}</h2><ul class="rm">${plans.map((p,i)=>`<li><i>${i+1}</i>${esc(p)}</li>`).join('')}</ul></section></aside></div><p class="csrc">${esc(T.ui.src)}</p>`}
 function setView(v){VIEW=v;document.body.classList.toggle('vcert',v!=='learn');$('#cert').hidden=v==='learn';document.querySelectorAll('#tabs button').forEach(b=>{b.querySelector('span').textContent=CT().tabs[b.dataset.v];b.setAttribute('aria-current',b.dataset.v===v?'page':'false')});if(v!=='learn'){$('#cert').innerHTML=certView(v);document.title=CT()[v].t;applyUI()}}
-let SEQ=null;
-function recipeHTML(st,fr){const r=fr?fr.r:{};return `<div class="rcp"><div class="rh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 2h8l4 4v16H6Z"/><path d="M14 2v4h4"/></svg>loja.yaml<span>${U_('want')} · ${U_('real')}</span></div>${st.recipe.map(([k,n],i)=>{const v=r[k]??0,ok=v>=n;return`<div class="rl ${fr&&fr.hl===i?'hl':''} ${ok?'ok':''}"><code>${k}:</code><code>replicas: ${n}</code><b>${ok?'✓':v+'/'+n}</b></div>`}).join('')}${fr?`<div class="rb">${esc(U_(fr.b))}</div>`:''}</div>`}
-function stopSeq(){if(SEQ){clearTimeout(SEQ.t);SEQ=null}$('#rcp').innerHTML='';$('#rcp').hidden=true}
-function runSeq(st){stopSeq();if(!st.seq)return;const F=st.seq(),box=$('#rcp');box.hidden=false;
- if(RM.matches){const f=F[F.length-1];paint(f.s(),false,true);box.innerHTML=recipeHTML(st,f);return}
- SEQ={i:0,F,st};const tick=()=>{if(!SEQ)return;if(paused){SEQ.t=setTimeout(tick,300);return}const f=SEQ.F[SEQ.i];paint(f.s(),false,true);box.innerHTML=recipeHTML(st,f);SEQ.i=(SEQ.i+1)%SEQ.F.length;SEQ.t=setTimeout(tick,SEQ.i===0?f.d+1400:f.d)};
- box.innerHTML=recipeHTML(st,null);SEQ.t=setTimeout(tick,ENTER?Math.min(ENTER,1400):900)}
 function show(){const hv=location.hash.slice(1);if(hv==='cka'||hv==='ckad'){setView(hv);return}if(VIEW!=='learn')cur=null;setView('learn');$('#svw')._u=0;if(/^[a-z]+-\d+$/.test(hv))window._lastLesson=hv;const[li,si]=parse(),les=L[li],st=les.steps[si],fresh=!cur||cur[0]!==li;cur=[li,si];
  if(si===les.steps.length-1&&!DONE.has(les.id)){DONE.add(les.id);try{localStorage.setItem('k8s-done',JSON.stringify([...DONE]))}catch(e){}}buildSide();
  $('#prog').textContent=`${U_('lesson')} ${li+1} ${U_('of')} ${L.length}`;
@@ -460,10 +449,10 @@ function show(){const hv=location.hash.slice(1);if(hv==='cka'||hv==='ckad'){setV
  ['#prev','#prev2'].forEach(q=>$(q).disabled=li===0&&si===0);['#next','#next2'].forEach(q=>$(q).disabled=end);
  $('#nextL').textContent=nl;$('#nextL2').textContent=nl;
  document.title=`${les.title} · Kubernetes Visual`;applyUI();
- paint(st.seq?st.seq()[0].s():st.s(),fresh);runSeq(st)}
+ paint(st.s(),fresh)}
 function step(d){const[li,si]=cur;let a=li,b=si+d;if(b>=L[a].steps.length){if(a<L.length-1){a++;b=0}else return}if(b<0){if(a>0){a--;b=L[a].steps.length-1}else return}go(a,b)}
 const drawer=o=>{side.classList.toggle('open',o);$('#scrim').classList.toggle('open',o)};
-const replay=()=>{const[li,si]=cur,st=L[li].steps[si];paint(st.seq?st.seq()[0].s():st.s(),true);runSeq(st)};
+const replay=()=>{const[li,si]=cur;paint(L[li].steps[si].s(),true)};
 const togglePause=()=>{paused=!paused;paused?sv.pauseAnimations():sv.unpauseAnimations();$('#pauseI').setAttribute('d',paused?'M7 4l13 8-13 8z':'M9 5v14M15 5v14');applyUI()};
 side.addEventListener('click',e=>{const b=e.target.closest('.les');if(b){go(+b.dataset.i,0);drawer(false)}});
 $('#menu').addEventListener('click',()=>drawer(!side.classList.contains('open')));
