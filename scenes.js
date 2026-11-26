@@ -46,7 +46,22 @@ intro:{min:9,lvl:'beg',mod:0,steps:[
 {k:'solucao',s:()=>({e:[...srv3(),users(9,...UR),pod('w',0,1,'cont','web',{ic:'web',m:45}),pod('a0',0,4,'cont','api'),pod('w2',1,1,'cont','web',{ic:'web',m:44}),pod('a2',1,4,'cont','api'),pod('a1',2,1,'cont','db',{ic:'db'}),pod('q',2,4,'cont',tl('queue'))],f:[['u','w2',2],['u','w',2]]})},
 {k:'problema',s:()=>({e:[...srv3({0:'down'}),users(9,...UR),pod('w',0,1,'dead','web'),pod('a0',0,4,'dead','api'),pod('w2',1,1,'cont','web',{ic:'web',m:88,b:[tl('whoRestarts')]}),pod('a2',1,4,'cont','api',{b:[tl('whereRun')]}),pod('a1',2,1,'cont','db',{ic:'db',b:[tl('howUpdate')]}),pod('q',2,4,'cont',tl('queue'))],f:[['u','w2',3,'heavy'],['u','w',2,'bad']]})},
 {k:'conceito',s:()=>({e:[...cp(),...nd3(),users(9,...UR),pod('w',0,1,'cont','web',{ic:'web'}),pod('a0',0,4,'cont','api'),pod('w2',1,1,'cont','web',{ic:'web'}),pod('a2',1,4,'cont','api'),pod('a1',2,1,'cont','db',{ic:'db'}),pod('q',2,4,'cont',tl('queue'))],l:[['cp','v0','d'],['cp','v1','d'],['cp','v2','d']],f:[['u','w2',2],['u','w',2]]})},
-{k:'conceito',cmd:'kubectl apply -f loja.yaml',s:()=>({e:[...cpb(['ctrl'],{ctrl:{b:[tl('want2web'),'ok']}}),...nd3(),users(9,...UR),pod('w',0,1,'ok','web',{ic:'web'}),pod('a0',0,4),pod('w2',1,1,'ok','web',{ic:'web'}),pod('a2',1,4),pod('a1',2,1,'ok','db',{ic:'db'}),pod('q',2,4,'ok',tl('queue'))],l:[['ctrl','w','d'],['ctrl','w2','d']],f:[['u','w2',2],['u','w',2]]})},
+{k:'conceito',cmd:'kubectl apply -f loja.yaml',seq:()=>{
+ const W=[['w',0,1,'web','web',{ic:'web'}],['w2',1,1,'web','web',{ic:'web'}],['a0',0,4,'ok','api',{}],['a2',1,4,'ok','api',{}],['a1',2,1,'ok','db',{ic:'db'}]];
+ const base=(hi,bad={},ns={})=>[...cpb(hi,bad),...nd3(ns),users(9,...UR),blk('kc',...at(-3,-24),'orange','kubectl',{s:2,h:30,ic:'term'})];
+ const pods=(n,st={})=>W.slice(0,n).map(([id,i,k,c,lb,o],j)=>pod(id,i,k,st[id]||(j===n-1&&st.last?'new':c),lb,o));
+ const real=(n,web)=>({web:web??Math.min(n,2),api:Math.max(0,Math.min(n-2,2)),db:n>=5?1:0});
+ const F=[];
+ F.push({d:1700,b:'seqSend',hl:-1,r:real(0),s:()=>({e:base(['api']),f:[['kc','api',3]]})});
+ F.push({d:1500,b:'seqSave',hl:-1,r:real(0),s:()=>({e:base(['api','etcd'],{etcd:{b:[tl('saved'),'ok']}}),f:[['api','etcd',3]]})});
+ F.push({d:1600,b:'seqCompare',hl:-1,r:real(0),s:()=>({e:base(['ctrl'],{ctrl:{b:['0 / 5','bad']}})})});
+ for(let n=1;n<=5;n++)F.push({d:850,b:'seqCreate',hl:n<=2?0:n<=4?1:2,r:real(n),s:()=>({e:[...base(['sched','ctrl'],{ctrl:{b:[n+' / 5',n<5?'bad':'ok']}}),...pods(n,{last:1})],l:[['sched',W[n-1][0],'d']]})});
+ F.push({d:1800,b:'seqMatch',hl:-1,r:real(5),s:()=>({e:[...base(['ctrl'],{ctrl:{b:['5 / 5','ok']}}),...pods(5)],f:[['u','w',1],['u','w2',1]]})});
+ F.push({d:1600,b:'seqFail',hl:0,r:real(5,1),s:()=>({e:[...base(['ctrl'],{ctrl:{b:['4 / 5','bad']}},{0:'down'}),...pods(5,{w:'dead'})],f:[['u','w2',1]]})});
+ F.push({d:1400,b:'seqHeal',hl:0,r:real(5,2),s:()=>({e:[...base(['ctrl','sched'],{ctrl:{b:['5 / 5','ok']}},{0:'down'}),...pods(5,{w:'dead'}).filter(p=>p.id!=='w'),pod('w3',2,4,'new','web',{ic:'web'})],l:[['sched','w3','d']]})});
+ F.push({d:2600,b:'seqMatch',hl:-1,r:real(5,2),s:()=>({e:[...base(['ctrl'],{ctrl:{b:['5 / 5','ok']}},{0:'down'}),...pods(5).filter(p=>p.id!=='w'),pod('w3',2,4,'ok','web',{ic:'web'})],f:[['u','w2',1],['u','w3',1]]})});
+ return F},recipe:[['web',2],['api',2],['db',1]],
+ s:()=>({e:[...cpb(['ctrl'],{ctrl:{b:[tl('want2web'),'ok']}}),blk('kc',...at(-3,-24),'orange','kubectl',{s:2,h:30,ic:'term'}),...nd3(),users(9,...UR),pod('w',0,1,'ok','web',{ic:'web'}),pod('a0',0,4),pod('w2',1,1,'ok','web',{ic:'web'}),pod('a2',1,4),pod('a1',2,1,'ok','db',{ic:'db'}),pod('q',2,4,'ok',tl('queue'))],l:[['ctrl','w','d'],['ctrl','w2','d']],f:[['u','w2',2],['u','w',2]]})},
 {k:'resumo',s:()=>({e:[...cp(['api','etcd','sched','ctrl']),...nd3({0:'hi',1:'hi',2:'hi'}),users(9,...UR),pod('w',0,1,'ok','web',{ic:'web'}),pod('a0',0,4),pod('w2',1,1,'ok','web',{ic:'web'}),pod('a2',1,4),pod('a1',2,1,'ok','db',{ic:'db'}),pod('q',2,4,'ok',tl('queue'))],f:[['u','w2',2],['u','w',2]]})}
 ]},
 cluster:{min:10,lvl:'beg',mod:0,steps:[
