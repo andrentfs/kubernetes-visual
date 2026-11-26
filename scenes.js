@@ -207,16 +207,16 @@ network:{min:14,lvl:'int',mod:1,steps:[
 {k:'resumo',s:()=>({e:[...nodes(),users(6),blk('gw',...at(16.9,-16),'yellow','Gateway',{s:2.2,h:32,ic:'globe'}),SV(),pod('dns',0,5,'v2','coredns',{ic:'globe'}),pod('w0',0,1,'web','web',{ic:'web'}),pod('a1',1,1),pod('a2',2,1)],f:[['u','gw',2],['gw','sv',2],['sv','a1',1],['sv','a2',1],['w0','dns',1]]})}
 ]},
 netpol:{min:12,lvl:'int',mod:1,steps:[
-{k:'contexto',s:()=>({e:[...NP.base(),pod('x',1,1,'other','hacker',{ic:'user',b:[tl('anyPod')]})],f:[['w0','db',1],['x','db',2]]})},
+{k:'contexto',s:()=>({e:[...NP.base(),pod('x',1,4,'other','hacker',{ic:'user',b:[tl('anyPod')]})],f:[['w0','db',1],['x','db',2]]})},
 {k:'conceito',s:()=>({e:[...NP.base(),NP.pol('podSelector: app=db')],l:[['pol','db','d']]})},
-{k:'solucao',cmd:'kubectl apply -f deny-all.yaml',s:()=>({e:[...NP.base(),pod('x',1,1,'other','hacker',{ic:'user'}),NP.pol('default deny')],l:[['pol','db','d']],f:[['w0','db',2,'bad'],['x','db',2,'bad']]})},
-{k:'solucao',s:()=>({e:[...NP.base(),pod('x',1,1,'other','hacker',{ic:'user'}),NP.pol('from: app=web')],l:[['pol','db','d']],f:[['w0','db',2],['x','db',2,'bad']]})},
-{k:'conceito',s:()=>({e:[...NP.base(),pod('x',1,1,'other','hacker',{ic:'user'}),NP.pol('namespaceSelector: loja')],l:[['pol','db','d']],f:[['w0','db',1],['w1','db',1],['x','db',1,'bad']]})},
+{k:'solucao',cmd:'kubectl apply -f deny-all.yaml',s:()=>({e:[...NP.base(),pod('x',1,4,'other','hacker',{ic:'user'}),NP.pol('default deny')],l:[['pol','db','d']],f:[['w0','db',2,'bad'],['x','db',2,'bad']]})},
+{k:'solucao',s:()=>({e:[...NP.base(),pod('x',1,4,'other','hacker',{ic:'user'}),NP.pol('from: app=web')],l:[['pol','db','d']],f:[['w0','db',2],['x','db',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...NP.base(),pod('x',1,4,'other','hacker',{ic:'user'}),NP.pol('namespaceSelector: loja')],l:[['pol','db','d']],f:[['w0','db',1],['w1','db',1],['x','db',1,'bad']]})},
 {k:'conceito',s:()=>({e:[...NP.base(),NP.pol('port: 5432/TCP')],f:[['w0','db',2],['w1','db',1,'bad']]})},
-{k:'tradeoff',s:()=>({e:[...NP.base(),pod('x',1,1,'other','web',{ic:'web',b:['ns: teste']}),NP.pol('AND × OR')],l:[['pol','db','d']],f:[['w0','db',1],['x','db',2,'bad']]})},
-{k:'problema',s:()=>({e:[...NP.base(),pod('dns',1,4,'v2','coredns',{ic:'globe',b:[':53']}),NP.pol('egress deny')],l:[['pol','w0','d']],f:[['w0','dns',2,'bad'],['w0','db',1,'bad']]})},
-{k:'solucao',cmd:'kubectl exec web -- nc -zv -w 2 db.dados 5432',s:()=>({e:[...NP.base(),pod('dns',1,4,'v2','coredns',{ic:'globe',b:[':53 ok','ok']}),NP.pol('egress: 53 + db')],l:[['pol','w0','d']],f:[['w0','dns',1],['w0','db',2]]})},
-{k:'resumo',s:()=>({e:[...NP.base(),pod('x',1,1,'other','hacker',{ic:'user'}),NP.pol('NetworkPolicy')],l:[['pol','db','d']],f:[['w0','db',2],['x','db',1,'bad']]})}
+{k:'tradeoff',s:()=>({e:[...NP.base(),pod('x',1,4,'other','web',{ic:'web',b:['ns: teste']}),NP.pol('AND × OR')],l:[['pol','db','d']],f:[['w0','db',1],['x','db',2,'bad']]})},
+{k:'problema',s:()=>({e:[...NP.base(),pod('dns',1,5,'v2','coredns',{ic:'globe',b:[':53']}),NP.pol('egress deny')],l:[['pol','w0','d']],f:[['w0','dns',2,'bad'],['w0','db',1,'bad']]})},
+{k:'solucao',cmd:'kubectl exec web -- nc -zv -w 2 db.dados 5432',s:()=>({e:[...NP.base(),pod('dns',1,5,'v2','coredns',{ic:'globe',b:[':53 ok','ok']}),NP.pol('egress: 53 + db')],l:[['pol','w0','d']],f:[['w0','dns',1],['w0','db',2]]})},
+{k:'resumo',s:()=>({e:[...NP.base(),pod('x',1,4,'other','hacker',{ic:'user'}),NP.pol('NetworkPolicy')],l:[['pol','db','d']],f:[['w0','db',2],['x','db',1,'bad']]})}
 ]},
 helm:{min:13,lvl:'int',mod:2,steps:[
 {k:'problema',s:()=>({e:[...nodes({},2),...['dev','hml','prod'].map((n,i)=>blk('y'+i,...at(-2+i*8,-15),'paper',n+'.yaml',{s:1.9,h:26,ic:'log',b:[i===2?tl('copyPaste'):null,'bad'].filter(Boolean).length>1?[tl('copyPaste'),'bad']:null})),pod('a0',0,1),pod('a1',1,1)],f:[['y0','a0',1],['y1','a0',1],['y2','a1',1]]})},
