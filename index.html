@@ -326,7 +326,7 @@ const S=window.buildScenes({node,nodes,pod,blk,cp,users,kub,SV,ING,at,tl});
 let L=[];
 function buildL(){L=window.LESSON_ORDER.map(id=>{const sc=S[id],tx=TX().les[id];return{id,mod:sc.mod,min:sc.min,lvl:TX().lv[sc.lvl],exam:tx.exam,title:tx.t,lede:tx.lede,ml:tx.ml,goals:tx.goals,steps:sc.steps.map((st,i)=>({...tx.steps[i],c:(TX().cap||{})[id]?.[i],k:st.k,cmd:st.cmd,s:st.s}))}})}
 buildL();
-const MODC=['#cfe1f6','#d1e9c2','#fcd4ad','#e2d6f4'];
+const MODC=['#cfe1f6','#d1e9c2','#fcd4ad','#f1c3bd','#e2d6f4'];
 
 /* ---------- renderer ---------- */
 const sv=$('#sv'),bg=$('#bg'),fg=$('#fg'),lk=$('#lk'),pk=$('#pk'),live=new Map();
@@ -355,7 +355,7 @@ function deconflict(list){const blocks=list.filter(e=>e.t==='block'),placed=[];
   const obs=placed.concat(blocks.filter(o=>o!==e&&depth(o)>depth(e)).map(body));let off=0,r=r0;
   for(let k=0;k<12;k++){const hit=obs.find(p=>r[0]<p[2]&&r[2]>p[0]&&r[1]<p[3]&&r[3]>p[1]);if(!hit)break;const d=r[3]-hit[1]+4;if(off+d>90)break;off+=d;r=[r[0],r[1]-d,r[2],r[3]-d]}
   e._bo=off;placed.push(r)})}
-function paint(sc,fresh){fitSizes(sc.e);deconflict(sc.e);
+function paint(sc,fresh){(sc.dead||[]).forEach(id=>{const e=sc.e.find(x=>x.id===id);if(e)e.st='dead'});fitSizes(sc.e);deconflict(sc.e);
  if(fresh){live.forEach(g=>g.remove());live.clear()}
  moveCam(camFor(sc),fresh);
  const seen=new Set(),by={};
