@@ -1,0 +1,102 @@
+/* Scene structure: language-neutral. Text lives in pt.js / en.js, keyed by lesson id and step index. */
+window.buildScenes=function(H){
+const{node,nodes,pod,blk,cp,users,kub,SV,ING,at,tl}=H;
+const cpb=(hi,bad={},c)=>{const a=cp(hi,c);a.forEach(e=>{if(bad[e.id]){Object.assign(e,bad[e.id])}});return a};
+const UR=at(-3,-13);
+const srv3=(st={})=>[0,1,2].map(i=>node(i,{id:'v'+i,lb:tl('server')+'-'+(i+1),st:st[i]}));
+const nd3=(st={})=>[0,1,2].map(i=>node(i,{id:'v'+i,st:st[i]}));
+const bigNode=()=>({id:'bn',t:'slab',x:0,y:-1,w:13,d:9,th:12,c:'paper',lb:'node-2'});
+const podSlab=(id,c,lb,st)=>({id,t:'slab',x:2.5,y:1,w:8.5,d:5.5,z:12,th:10,c,lb,st,lr:1});
+const vol=(id,c)=>({id,t:'slab',x:3.3,y:4.9,w:6.9,d:1.1,z:22,th:5,c,lb:''});
+const hpa=(st,b)=>blk('hpa',...at(-5,-6.1),'violet','HPA',{ic:'gauge',st,b:b?[b]:null});
+const SVE=(b,m)=>SV(b,...at(9.3,-6.1),m);
+const UE=n=>users(n,...at(9.3,-19));
+const others=()=>[3,4,5].flatMap(k=>[pod('o0'+k,0,k,'other',tl('other')),pod('o1'+k,1,k,'other',tl('other'))]);
+const UR6=()=>users(6,...at(16.9,-20));
+return {
+intro:{min:9,lvl:'beg',mod:0,steps:[
+{k:'contexto',s:()=>({e:[node(1,{id:'v0',lb:tl('server')}),users(4,...at(4,2)),pod('a0',1,1,'plain',tl('store'),{ic:'srv'})],f:[['u','a0',2]]})},
+{k:'problema',s:()=>({e:[node(1,{id:'v0',lb:tl('server')}),users(4,...at(4,2)),pod('a0',1,1,'plain',tl('store'),{ic:'srv',b:[tl('version'),'bad']}),pod('a1',1,4,'plain','db',{ic:'db'})],f:[['u','a0',2],['a0','a1',2,'bad']]})},
+{k:'solucao',cmd:'docker run -d -p 80:8080 loja/app:1.0',s:()=>({e:[node(1,{id:'v0',lb:tl('server')}),users(4,...at(4,2)),pod('a0',1,1,'cont',tl('store'),{b:['loja/app:1.0']}),pod('a1',1,4,'cont','db',{ic:'db'})],f:[['u','a0',2],['a0','a1',1]]})},
+{k:'conceito',s:()=>({e:[node(1,{id:'v0',lb:tl('server')}),users(4,...at(4,2)),pod('w',1,0,'cont','web',{ic:'web'}),pod('a0',1,2,'cont','api'),pod('a1',1,3,'cont','db',{ic:'db'}),pod('q',1,5,'cont',tl('queue'))],f:[['u','w',2],['w','a0',1],['a0','a1',1],['a0','q',1]]})},
+{k:'problema',s:()=>({e:[node(1,{id:'v0',lb:tl('server')}),users(9,...at(4,2)),pod('w',1,0,'cont','web',{ic:'web',m:92}),pod('a0',1,2,'cont','api',{m:97}),pod('a1',1,3,'cont','db',{ic:'db'}),pod('q',1,5,'cont',tl('queue'))],f:[['u','w',4,'heavy'],['w','a0',2,'heavy'],['a0','a1',1],['u','w',1,'bad']]})},
+{k:'problema',s:()=>({e:[node(1,{id:'v0',lb:tl('server'),st:'down'}),users(9,...at(4,2)),pod('w',1,0,'dead','web'),pod('a0',1,2,'dead','api'),pod('a1',1,3,'dead','db'),pod('q',1,5,'dead',tl('queue'))],f:[['u','w',4,'bad']]})},
+{k:'solucao',s:()=>({e:[...srv3(),users(9,...UR),pod('w',0,1,'cont','web',{ic:'web',m:45}),pod('a0',0,4,'cont','api'),pod('w2',1,1,'cont','web',{ic:'web',m:44}),pod('a2',1,4,'cont','api'),pod('a1',2,1,'cont','db',{ic:'db'}),pod('q',2,4,'cont',tl('queue'))],f:[['u','w2',2],['u','w',2]]})},
+{k:'problema',s:()=>({e:[...srv3({0:'down'}),users(9,...UR),pod('w',0,1,'dead','web'),pod('a0',0,4,'dead','api'),pod('w2',1,1,'cont','web',{ic:'web',m:88,b:[tl('whoRestarts')]}),pod('a2',1,4,'cont','api',{b:[tl('whereRun')]}),pod('a1',2,1,'cont','db',{ic:'db',b:[tl('howUpdate')]}),pod('q',2,4,'cont',tl('queue'))],f:[['u','w2',3,'heavy'],['u','w',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...cp(),...nd3(),users(9,...UR),pod('w',0,1,'cont','web',{ic:'web'}),pod('a0',0,4,'cont','api'),pod('w2',1,1,'cont','web',{ic:'web'}),pod('a2',1,4,'cont','api'),pod('a1',2,1,'cont','db',{ic:'db'}),pod('q',2,4,'cont',tl('queue'))],l:[['cp','v0','d'],['cp','v1','d'],['cp','v2','d']],f:[['u','w2',2],['u','w',2]]})},
+{k:'conceito',cmd:'kubectl apply -f loja.yaml',s:()=>({e:[...cpb(['ctrl'],{ctrl:{b:[tl('want2web'),'ok']}}),...nd3(),users(9,...UR),pod('w',0,1,'ok','web',{ic:'web'}),pod('a0',0,4),pod('w2',1,1,'ok','web',{ic:'web'}),pod('a2',1,4),pod('a1',2,1,'ok','db',{ic:'db'}),pod('q',2,4,'ok',tl('queue'))],l:[['ctrl','w','d'],['ctrl','w2','d']],f:[['u','w2',2],['u','w',2]]})},
+{k:'resumo',s:()=>({e:[...cp(['api','etcd','sched','ctrl']),...nd3({0:'hi',1:'hi',2:'hi'}),users(9,...UR),pod('w',0,1,'ok','web',{ic:'web'}),pod('a0',0,4),pod('w2',1,1,'ok','web',{ic:'web'}),pod('a2',1,4),pod('a1',2,1,'ok','db',{ic:'db'}),pod('q',2,4,'ok',tl('queue'))],f:[['u','w2',2],['u','w',2]]})}
+]},
+cluster:{min:10,lvl:'beg',mod:0,steps:[
+{k:'conceito',cmd:'kubectl get nodes',s:()=>({e:[...nodes(),pod('p0',0,1,'ok','web',{ic:'web'}),pod('p1',1,1),pod('p2',2,1,'ok','db',{ic:'db'})]})},
+{k:'conceito',s:()=>({e:[...cp(),...nodes(),pod('p0',0,1,'ok','web',{ic:'web'}),pod('p1',1,1),pod('p2',2,1,'ok','db',{ic:'db'})],l:[['cp','n0','d'],['cp','n1','d'],['cp','n2','d']]})},
+{k:'conceito',cmd:'kubectl get pods',s:()=>({e:[kub(),...cp(['api'])],f:[['kc','api',3]]})},
+{k:'conceito',s:()=>({e:[kub(),...cpb(['api','etcd'],{etcd:{b:[tl('saved'),'ok']}})],f:[['kc','api',1],['api','etcd',3]]})},
+{k:'conceito',cmd:'kubectl get pods -o wide',s:()=>({e:[...cp(['sched']),...nodes({1:{st:'hi'}}),pod('p1',1,1),pod('p0',0,1,'ok','web',{ic:'web'}),pod('p2',2,1,'ok','db',{ic:'db'}),pod('p3',1,3,'new','api',{b:[tl('score'),'ok']})],l:[['sched','p3']]})},
+{k:'conceito',s:()=>({e:[...cpb(['ctrl'],{ctrl:{b:[tl('want4'),'ok']}}),...nodes(),pod('p1',1,1),pod('p0',0,1,'ok','web',{ic:'web'}),pod('p2',2,1,'ok','db',{ic:'db'}),pod('p3',1,3),pod('p4',0,3,'new'),pod('p5',2,3,'new')],l:[['ctrl','p4','d'],['ctrl','p5','d']]})},
+{k:'conceito',cmd:'kubectl describe node node-1',s:()=>({e:[...cp(['api']),...nodes({0:{st:'hi'},1:{st:'hi'},2:{st:'hi'}}),pod('p0',0,1,'ok','web',{ic:'web'}),pod('p1',1,1),pod('p2',2,1,'ok','db',{ic:'db'}),pod('k0',0,3,'other','kubelet',{ic:'srv'}),pod('k1',1,3,'other','kubelet',{ic:'srv'}),pod('k2',2,3,'other','kubelet',{ic:'srv'})],f:[['k0','api',1],['k1','api',1],['k2','api',1],['k0','p0',2,'hc'],['k1','p1',2,'hc'],['k2','p2',2,'hc']]})},
+{k:'conceito',s:()=>({e:[...nodes(),blk('reg',...at(16.9,-13),'yellow','registry',{ic:'box',b:['loja/api:1.0']}),pod('p0',0,1,'pend','api',{b:[tl('pulling')]}),pod('p1',1,1,'pend','api',{b:[tl('pulling')]}),pod('p2',2,1,'new','api')],f:[['reg','p0',2,'heavy'],['reg','p1',2,'heavy']]})},
+{k:'conceito',s:()=>({e:[...nodes(),pod('w0',0,1,'web','web',{ic:'web',b:['10.1.0.3']}),pod('a0',1,1,'ok','api',{b:['10.1.1.4']}),pod('a1',2,3,'ok','api',{b:['10.1.2.7']}),pod('d0',1,3,'ok','db',{ic:'db'})],f:[['w0','a0',2],['w0','a1',2],['a0','d0',1],['a1','d0',1]]})},
+{k:'tradeoff',s:()=>({e:[kub(),...cpb([],{api:{st:'dead',b:[tl('down'),'bad']}}),...nodes(),pod('w0',0,1,'web','web',{ic:'web'}),pod('a0',1,1),pod('a1',2,1)],f:[['kc','api',2,'bad'],['w0','a0',1],['w0','a1',1]]})},
+{k:'resumo',s:()=>({e:[...cp(['api','etcd','sched','ctrl']),...nodes({0:{st:'hi'},1:{st:'hi'},2:{st:'hi'}}),pod('w0',0,1,'web','web',{ic:'web'}),pod('a0',1,1),pod('a1',2,1),pod('k0',0,3,'other','kubelet',{ic:'srv'}),pod('k1',1,3,'other','kubelet',{ic:'srv'}),pod('k2',2,3,'other','kubelet',{ic:'srv'})],l:[['api','k0'],['api','k1'],['api','k2']]})}
+]},
+pods:{min:11,lvl:'beg',mod:1,steps:[
+{k:'conceito',cmd:'kubectl run api --image=loja/api:1.0',s:()=>({e:[bigNode(),podSlab('pd','blue','pod · 10.1.0.12'),blk('ca',5,3,'orange','api',{z:22,s:2.2,h:34,ic:'box'})]})},
+{k:'conceito',s:()=>({e:[bigNode(),podSlab('pd','blue','pod · 10.1.0.12'),vol('vol','yellow'),blk('ca',5,3,'orange','api',{z:22,s:2.2,h:34,ic:'box'}),blk('cl',8.4,3,'violet','log',{z:22,s:2.2,h:34,ic:'log',b:['sidecar']})],f:[['ca','cl',2]]})},
+{k:'conceito',s:()=>({e:[...nodes({},2),pod('pw0',0,0,'web','web',{ic:'web',b:['× 3']}),pod('pw1',0,2,'web','web',{ic:'web'}),pod('pw2',0,4,'web','web',{ic:'web'}),pod('pdb',1,1,'ok','db',{ic:'db',b:['× 1']})],f:[['pw1','pdb',1],['pw2','pdb',1]]})},
+{k:'problema',cmd:'kubectl get pods',s:()=>({e:[bigNode(),podSlab('pd','red','pod · Failed'),vol('vol','grey'),blk('ca',5,3,'orange','api',{z:22,s:2.2,h:34,st:'dead'}),blk('cl',8.4,3,'violet','log',{z:22,s:2.2,h:34,st:'dead'})]})},
+{k:'conceito',s:()=>({e:[bigNode(),podSlab('pd2','green','pod · 10.1.0.47','new'),vol('vol2','yellow'),blk('ca2',5,3,'orange','api',{z:22,s:2.2,h:34,ic:'box'}),blk('cl2',8.4,3,'violet','log',{z:22,s:2.2,h:34,ic:'log'})],f:[['ca2','cl2',2]]})},
+{k:'solucao',cmd:'kubectl apply -f deployment.yaml',s:()=>({e:[kub('replicas: 3'),...cp(['api','etcd'])],f:[['kc','api',2],['api','etcd',1]]})},
+{k:'conceito',s:()=>({e:[...cp(['sched']),...nodes(),pod('a0',0,1,'new'),pod('a1',1,1,'new'),pod('a2',2,1,'new')],l:[['sched','a0','d'],['sched','a1','d'],['sched','a2','d']]})},
+{k:'problema',cmd:'kubectl get deploy api',s:()=>({e:[...cp(['ctrl']),...nodes(),pod('a0',0,1),pod('a1',1,1,'dead','api',{b:['OOMKilled','bad']}),pod('a2',2,1)],l:[['ctrl','a1','d']]})},
+{k:'solucao',s:()=>({e:[...cp(['ctrl','sched']),...nodes(),pod('a0',0,1),pod('a3',1,4,'new'),pod('a2',2,1)],l:[['sched','a3','d']]})},
+{k:'problema',s:()=>({e:[...cp(['ctrl']),...nodes({2:{st:'down'}}),pod('a0',0,1),pod('a3',1,4),pod('a2',2,1,'dead')],f:[['n2','ctrl',2,'bad']]})},
+{k:'solucao',cmd:'kubectl get pods -o wide',s:()=>({e:[...cp(['ctrl','sched']),...nodes({2:{st:'down'}}),pod('a0',0,1),pod('a3',1,4),pod('a4',0,4,'new')],l:[['sched','a4','d']]})},
+{k:'resumo',s:()=>({e:[...cp(['ctrl']),...nodes(),pod('a0',0,1),pod('a3',1,4),pod('a4',0,4)]})}
+]},
+service:{min:11,lvl:'beg',mod:1,steps:[
+{k:'contexto',s:()=>({e:[...nodes(),pod('w0',0,1,'web','web',{ic:'web'}),pod('b0',1,1),pod('b1',2,1),pod('b2',1,3)],f:[['w0','b0',1],['w0','b1',1],['w0','b2',1]]})},
+{k:'problema',s:()=>({e:[...nodes(),pod('w0',0,1,'web','web',{ic:'web',b:['→ 10.1.2.7 ?']}),pod('b0',1,1),pod('b1',2,1,'dead','api',{b:['10.1.2.7','bad']}),pod('b2',1,3),pod('b3',2,3,'new','api',{b:['10.1.2.9','ok']})],f:[['w0','b1',3,'bad']]})},
+{k:'solucao',cmd:'kubectl expose deployment api --port=80',s:()=>({e:[...nodes(),SV('api'),pod('w0',0,1,'web','web',{ic:'web'}),pod('b0',1,1),pod('b2',1,3),pod('b3',2,3)],l:[['w0','sv'],['sv','b0'],['sv','b2'],['sv','b3']]})},
+{k:'conceito',s:()=>({e:[...nodes(),SV('app=api'),pod('w0',0,1,'web','web',{ic:'web',b:['app=web']}),pod('b0',1,1,'ok','api',{b:['app=api','ok']}),pod('b2',1,3,'ok','api',{b:['app=api','ok']}),pod('b3',2,3,'ok','api',{b:['app=api','ok']})],l:[['sv','b0','d'],['sv','b2','d'],['sv','b3','d']]})},
+{k:'conceito',s:()=>({e:[...nodes(),SV('api'),pod('w0',0,1,'web','web',{ic:'web'}),pod('b0',1,1,'ok','api',{m:34}),pod('b2',1,3,'ok','api',{m:33}),pod('b3',2,3,'ok','api',{m:35})],f:[['w0','sv',3],['sv','b0',1],['sv','b2',1],['sv','b3',1]]})},
+{k:'problema',s:()=>({e:[...nodes(),SV('api'),pod('w0',0,1,'web','web',{ic:'web'}),pod('b0',1,1,'ok','api',{m:34}),pod('b2',1,3,'ok','api',{b:[tl('probeFail'),'bad']}),pod('b3',2,3,'ok','api',{m:35}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['w0','sv',3],['sv','b0',1],['sv','b3',1],['sv','b2',1,'bad'],['k1','b2',2,'hc']]})},
+{k:'solucao',cmd:'kubectl get endpoints api',s:()=>({e:[...nodes(),SV('api'),pod('w0',0,1,'web','web',{ic:'web'}),pod('b0',1,1,'ok','api',{m:50}),pod('b2',1,3,'dead','api',{b:[tl('outOfList'),'bad']}),pod('b3',2,3,'ok','api',{m:51}),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['w0','sv',3],['sv','b0',2],['sv','b3',2],['k1','b2',2,'hc']]})},
+{k:'problema',s:()=>({e:[...nodes(),users(9),SV(tl('internal')),pod('w0',0,1,'web','web',{ic:'web'}),pod('b0',1,1),pod('b2',1,3,'new'),pod('b3',2,3)],f:[['u','sv',3,'bad']]})},
+{k:'solucao',cmd:'kubectl get ingress',s:()=>({e:[...nodes(),users(9),ING(),SV('api'),pod('w0',0,1,'web','web',{ic:'web'}),pod('b0',1,1),pod('b2',1,3),pod('b3',2,3)],f:[['u','ing',3],['ing','sv',2],['sv','b0',1],['sv','b2',1],['sv','b3',1]]})},
+{k:'conceito',s:()=>({e:[...nodes(),users(9,...at(24,-24)),blk('ing',...at(9.3,-18),'yellow','Ingress',{ic:'globe',b:['https://loja.com']}),blk('ws',...at(1.7,-6.1),'orange','Service',{ic:'svc',b:['/']}),SV('/api'),pod('w0',0,1,'web','web',{ic:'web'}),pod('w1',0,3,'web','web',{ic:'web'}),pod('b0',1,1),pod('b2',1,3),pod('b3',2,3)],f:[['u','ing',3],['ing','ws',1],['ing','sv',2],['ws','w0',1],['ws','w1',1],['sv','b0',1],['sv','b2',1],['sv','b3',1]]})},
+{k:'resumo',s:()=>({e:[...nodes(),users(9,...at(24,-24)),blk('ing',...at(9.3,-18),'yellow','Ingress',{ic:'globe',b:['https://loja.com']}),blk('ws',...at(1.7,-6.1),'orange','Service',{ic:'svc',b:['/']}),SV('/api'),pod('w0',0,1,'web','web',{ic:'web'}),pod('w1',0,3,'web','web',{ic:'web'}),pod('b0',1,1),pod('b2',1,3),pod('b3',2,3)],f:[['u','ing',3],['ing','ws',1],['ing','sv',2],['ws','w0',1],['ws','w1',1],['sv','b0',1],['sv','b2',1],['sv','b3',1]]})}
+]},
+escala:{min:12,lvl:'int',mod:2,steps:[
+{k:'contexto',s:()=>({e:[...nodes({},2),UE(4),hpa(),SVE(),pod('e0',0,1,'ok','api',{m:30}),pod('e1',1,1,'ok','api',{m:31})],f:[['u','sv',1],['sv','e0',1],['sv','e1',1]]})},
+{k:'problema',s:()=>({e:[...nodes({},2),UE(9),hpa(),SVE(),pod('e0',0,1,'ok','api',{m:95}),pod('e1',1,1,'ok','api',{m:94})],f:[['u','sv',4],['sv','e0',3,'heavy'],['sv','e1',3,'heavy'],['sv','e0',1,'bad']]})},
+{k:'tradeoff',s:()=>({e:[...nodes({},2),UE(9),hpa(),SVE(),pod('e0',0,1,'pend','api',{b:[tl('restarting'),'bad']}),pod('e1',1,1,'ok','api',{m:99,b:['2 → 4 CPU']})],f:[['u','sv',4],['sv','e1',4,'heavy'],['sv','e1',1,'bad']]})},
+{k:'solucao',cmd:'kubectl scale deployment api --replicas=4',s:()=>({e:[...nodes({},2),UE(9),hpa(),SVE(),pod('e0',0,1,'ok','api',{m:50}),pod('e1',1,1,'ok','api',{m:49}),pod('e2',0,0,'new','api'),pod('e3',1,0,'new','api')],f:[['u','sv',4],['sv','e0',2,'heavy'],['sv','e1',2,'heavy'],['sv','e2',2,'heavy'],['sv','e3',2,'heavy']]})},
+{k:'conceito',s:()=>({e:[...nodes({},2),UE(9),hpa(),SVE(),pod('e0',0,1,'ok','api',{m:50,b:['request: 0.5 CPU']}),pod('e1',1,1,'ok','api',{m:49}),pod('e2',0,0,'ok','api'),pod('e3',1,0,'ok','api')],f:[['u','sv',3],['sv','e0',1],['sv','e1',1],['sv','e2',1],['sv','e3',1]]})},
+{k:'solucao',cmd:'kubectl autoscale deployment api --cpu-percent=70 --min=2 --max=10',s:()=>({e:[...nodes({},2),UE(9),hpa('hi','4 → 6'),SVE(),pod('e0',0,1,'ok','api',{m:66}),pod('e1',1,1,'ok','api',{m:64}),pod('e2',0,0,'ok','api'),pod('e3',1,0,'ok','api'),pod('e4',0,2,'new','api'),pod('e5',1,2,'new','api')],l:[['hpa','e4','d']],f:[['u','sv',4],['sv','e0',1,'heavy'],['sv','e1',1,'heavy'],['sv','e2',1],['sv','e3',1],['sv','e4',1],['sv','e5',1]]})},
+{k:'problema',cmd:'kubectl get pods --field-selector=status.phase=Pending',s:()=>({e:[...nodes({},2),UE(9),hpa('hi','6 → 7'),SVE(),pod('e0',0,1,'ok','api',{m:82}),pod('e1',1,1,'ok','api',{m:80}),pod('e2',0,0),pod('e3',1,0),pod('e4',0,2),pod('e5',1,2),...others(),pod('e6',2,1,'pend','api',{b:['Pending','bad'],z:0})],f:[['u','sv',4],['sv','e0',1,'heavy'],['sv','e1',1,'heavy'],['sv','e2',1],['sv','e3',1],['sv','e4',1],['sv','e5',1]]})},
+{k:'solucao',s:()=>({e:[...nodes({2:{st:'new'}}),UE(9),hpa('',tl('pods7')),SVE(),pod('e0',0,1,'ok','api',{m:63}),pod('e1',1,1,'ok','api',{m:62}),pod('e2',0,0),pod('e3',1,0),pod('e4',0,2),pod('e5',1,2),...others(),pod('e6',2,1,'new','api',{m:58})],f:[['u','sv',4],...['e0','e1','e2','e3','e4','e5','e6'].map(p=>['sv',p,1])]})},
+{k:'conceito',s:()=>({e:[...nodes({},2),UE(2),hpa('','7 → 2'),SVE(),pod('e0',0,1,'ok','api',{m:22}),pod('e1',1,1,'ok','api',{m:21}),...others()],f:[['u','sv',1],['sv','e0',1],['sv','e1',1]]})},
+{k:'tradeoff',s:()=>({e:[...nodes({2:{st:'new'}}),UE(9),hpa('hi','2 → 7'),SVE(),pod('e0',0,1,'ok','api',{m:96}),pod('e1',1,1,'ok','api',{m:97}),...others(),pod('e6',2,1,'pend','api',{b:[tl('booting')]}),pod('e7',2,0,'pend','api'),pod('e8',2,2,'pend','api')],f:[['u','sv',4],['sv','e0',2,'heavy'],['sv','e1',2,'heavy'],['sv','e0',1,'bad']]})},
+{k:'resumo',s:()=>({e:[...nodes(),UE(9),hpa('',tl('auto')),SVE(),pod('e0',0,1,'ok','api',{m:60}),pod('e1',1,1,'ok','api',{m:61}),pod('e6',2,1,'ok','api',{m:59})],f:[['u','sv',3],['sv','e0',1],['sv','e1',1],['sv','e6',1]]})}
+]},
+rollout:{min:11,lvl:'int',mod:2,steps:[
+{k:'contexto',s:()=>({e:[...nodes(),UR6(),SV(),pod('r1a',0,1,'ok','v1'),pod('r1b',1,1,'ok','v1'),pod('r1c',2,1,'ok','v1')],f:[['u','sv',3],['sv','r1a',1],['sv','r1b',1],['sv','r1c',1]]})},
+{k:'problema',s:()=>({e:[...nodes(),UR6(),SV(tl('maint'),undefined,undefined),pod('r1a',0,1,'dead','v1'),pod('r1b',1,1,'dead','v1'),pod('r1c',2,1,'dead','v1')],f:[['u','sv',4,'bad']]})},
+{k:'solucao',cmd:'kubectl set image deployment/api api=loja/api:2.0',s:()=>({e:[...nodes(),UR6(),SV(),pod('r1a',0,1,'ok','v1'),pod('r1b',1,1,'ok','v1'),pod('r1c',2,1,'ok','v1'),pod('r2a',0,3,'pend','v2')],f:[['u','sv',3],['sv','r1a',1],['sv','r1b',1],['sv','r1c',1]]})},
+{k:'conceito',s:()=>({e:[...nodes(),UR6(),SV(),pod('r1a',0,1,'ok','v1'),pod('r1b',1,1,'ok','v1'),pod('r1c',2,1,'ok','v1'),pod('r2a',0,3,'pend','v2',{b:['GET /health …']}),pod('k0',0,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','r1a',1],['sv','r1b',1],['sv','r1c',1],['k0','r2a',2,'hc']]})},
+{k:'solucao',s:()=>({e:[...nodes(),UR6(),SV(),pod('r2a',0,3,'v2','v2',{b:['200 OK','ok']}),pod('r1b',1,1,'ok','v1'),pod('r1c',2,1,'ok','v1')],f:[['u','sv',3],['sv','r2a',1],['sv','r1b',1],['sv','r1c',1]]})},
+{k:'tradeoff',s:()=>({e:[...nodes(),UR6(),SV(),pod('r2a',0,3,'v2','v2'),pod('r2b',1,3,'v2','v2'),pod('r1c',2,1,'ok','v1'),pod('r2c',2,3,'pend','v2')],f:[['u','sv',3],['sv','r2a',1],['sv','r2b',1],['sv','r1c',1]]})},
+{k:'solucao',cmd:'kubectl rollout status deployment/api',s:()=>({e:[...nodes(),UR6(),SV(),pod('r2a',0,3,'v2','v2'),pod('r2b',1,3,'v2','v2'),pod('r2c',2,3,'v2','v2')],f:[['u','sv',3],['sv','r2a',1],['sv','r2b',1],['sv','r2c',1]]})},
+{k:'problema',s:()=>({e:[...nodes(),UR6(),SV(),pod('r2a',0,3,'v2','v2',{b:['500','bad']}),pod('r2b',1,3,'v2','v2'),pod('r2c',2,3,'v2','v2',{b:['500','bad']})],f:[['u','sv',3],['sv','r2a',1,'bad'],['sv','r2b',1],['sv','r2c',1,'bad']]})},
+{k:'solucao',cmd:'kubectl rollout undo deployment/api',s:()=>({e:[...nodes(),UR6(),SV(),pod('r3a',0,1,'new','v1'),pod('r3b',1,1,'new','v1'),pod('r3c',2,1,'new','v1')],f:[['u','sv',3],['sv','r3a',1],['sv','r3b',1],['sv','r3c',1]]})},
+{k:'conceito',s:()=>({e:[...nodes(),UR6(),SV(),pod('r3a',0,1,'ok','v1'),pod('r3b',1,1,'dead','v1',{b:[tl('frozen'),'bad']}),pod('r3c',2,1,'ok','v1'),pod('k1',1,5,'other','kubelet',{ic:'srv'})],f:[['u','sv',3],['sv','r3a',2],['sv','r3c',2],['k1','r3b',2,'hc']]})},
+{k:'resumo',s:()=>({e:[...nodes(),UR6(),SV(),pod('r3a',0,1,'ok','v1'),pod('r3b',1,1,'new','v1',{b:[tl('restarted'),'ok']}),pod('r3c',2,1,'ok','v1')],f:[['u','sv',3],['sv','r3a',1],['sv','r3b',1],['sv','r3c',1]]})}
+]},
+tudo:{min:5,lvl:'beg',mod:2,steps:[
+{k:'resumo',s:()=>({e:[...cp([],at(-3,-16)),...nodes(),users(9),ING(),SV('HPA 2–10'),pod('t0',0,1,'ok','api',{m:41}),pod('t1',1,1,'ok','api',{m:39}),pod('t2',2,1,'ok','api',{m:40}),pod('t3',1,3,'ok','api',{m:42})],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})},
+{k:'resumo',s:()=>({e:[...cp(['api','etcd','sched','ctrl'],at(-3,-16)),...nodes({0:{st:'hi'},1:{st:'hi'},2:{st:'hi'}}),users(9),ING(),SV('HPA 2–10'),pod('t0',0,1),pod('t1',1,1),pod('t2',2,1),pod('t3',1,3)],l:[['cp','n0','d'],['cp','n1','d'],['cp','n2','d']],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})},
+{k:'resumo',cmd:'kubectl get all',s:()=>({e:[...cp(['api','etcd','sched','ctrl'],at(-3,-16)),...nodes(),users(9),ING(),SV(),pod('t0',0,1),pod('t1',1,1),pod('t2',2,1),pod('t3',1,3)],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})}
+]}
+};};
+window.LESSON_ORDER=['intro','cluster','pods','service','escala','rollout','tudo'];
