@@ -184,7 +184,7 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 .pill.ok rect{fill:var(--green)}
 .mtr .tr{fill:var(--line)}.mtr .fl{fill:var(--green3)}.mtr.hot .fl{fill:#e5534b}
 .slT{fill:var(--slabT)}.slS{fill:var(--slabS)}
-.lnk{fill:none;stroke:var(--ink);stroke-width:1.7;opacity:.85}
+.lnk{fill:none;stroke:var(--ink);stroke-width:1.9;stroke-linecap:round;opacity:.9}
 .lnk.d{stroke-dasharray:4 6;opacity:.45}
 .lnk.hc{stroke:var(--green3);stroke-dasharray:3 5;opacity:.8}
 .lnk.bad{stroke:var(--redink)}
@@ -244,7 +244,7 @@ const COL={blue:['#e3eefb','#cfe1f6','#bcd3ef','#a6c3e8'],green:['#e4f3d9','#d1e
 $('#defs').innerHTML=Object.entries(COL).map(([k,c])=>`<linearGradient id="g-${k}-t" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient><linearGradient id="g-${k}-s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[2]}"/><stop offset="1" stop-color="${c[3]}"/></linearGradient>`).join('')+
 `<filter id="blur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter><filter id="blurL" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="14"/></filter>
 <pattern id="iso" width="${2*UX}" height="${2*UY}" patternUnits="userSpaceOnUse"><path d="M0 ${UY}L${UX} 0L${2*UX} ${UY}L${UX} ${2*UY}Z" fill="none" stroke="var(--grid)" stroke-width="1"/></pattern>
-<marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arw"/></marker>`;
+<marker id="arw" viewBox="0 0 12 10" refX="11" refY="5" markerWidth="11" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0.5L12 5L0 9.5z" class="arw"/></marker>`;
 const f1=v=>+v.toFixed(1);
 function rp(a,r){const n=a.length;let d='';for(let i=0;i<n;i++){const p0=a[(i-1+n)%n],p1=a[i],p2=a[(i+1)%n],l1=Math.hypot(p0[0]-p1[0],p0[1]-p1[1]),l2=Math.hypot(p2[0]-p1[0],p2[1]-p1[1]),r1=Math.min(r,l1/2.2),r2=Math.min(r,l2/2.2),A=[p1[0]+(p0[0]-p1[0])/l1*r1,p1[1]+(p0[1]-p1[1])/l1*r1],B=[p1[0]+(p2[0]-p1[0])/l2*r2,p1[1]+(p2[1]-p1[1])/l2*r2];d+=`${i?'L':'M'}${f1(A[0])} ${f1(A[1])}Q${f1(p1[0])} ${f1(p1[1])} ${f1(B[0])} ${f1(B[1])}`}return d+'Z'}
 const pl=a=>a.map(p=>f1(p[0])+','+f1(p[1])).join(' ');
@@ -300,11 +300,14 @@ function bounds(e){const[x,y]=P(e.x,e.y),z=e.z||0;
  if(e.t==='block'){const a=e.s*UX,b=e.s*UY,lw=e.b?e.b[0].length*7.8+20:0;return[x-Math.max(a+18,lw/2+6),y-z-b-e.h-(e.b?34:12)-(e._bo||0),x+Math.max(a+18,lw/2+6,e.m!=null?a*.55+MW:0),y-z+b+14]}
  const c=[[0,0],[e.w*UX,e.w*UY],[(e.w-e.d)*UX,(e.w+e.d)*UY],[-e.d*UX,e.d*UY]];
  return[x+Math.min(...c.map(p=>p[0]))-(e.lb?60:10),y-z-e.th-(e.people?34:6),x+Math.max(...c.map(p=>p[0]))+10,y-z+Math.max(...c.map(p=>p[1]))+(e.lb?40:12)]}
-function anchor(e){const[x,y]=P(e.x,e.y),z=e.z||0;
- if(e.t==='block')return{x,y:y-z-e.h*.45,r:e.s*UX*.8};
- const[cx,cy]=P(e.x+e.w/2,e.y+e.d/2);return{x:cx,y:cy-z-e.th-(e.people?10:0),r:Math.min(e.w,e.d)*UX*.42}}
-function link(a,b){const A=anchor(a),B=anchor(b),dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L;
- return`M${f1(A.x+ux*A.r)} ${f1(A.y+uy*A.r)}L${f1(B.x-ux*(B.r+5))} ${f1(B.y-uy*(B.r+5))}`}
+function shape(e){const[x,y]=P(e.x,e.y),z=e.z||0;
+ if(e.t==='block'){const a=e.s*UX,b=e.s*UY,Y=y-z;return{c:[x,Y],poly:[[x,Y-b],[x+a,Y],[x,Y+b],[x-a,Y]]}}
+ const c=[[0,0],[e.w*UX,e.w*UY],[(e.w-e.d)*UX,(e.w+e.d)*UY],[-e.d*UX,e.d*UY]].map(p=>[x+p[0],y-z-e.th+p[1]]);
+ return{c:[(c[0][0]+c[2][0])/2,(c[0][1]+c[2][1])/2],poly:c}}
+function exitT(S,ux,uy){let best=0;const[cx,cy]=S.c,p=S.poly;for(let i=0;i<p.length;i++){const[x1,y1]=p[i],[x2,y2]=p[(i+1)%p.length],ex=x2-x1,ey=y2-y1,den=ux*ey-uy*ex;if(Math.abs(den)<1e-9)continue;const t=((x1-cx)*ey-(y1-cy)*ex)/den,u=((x1-cx)*uy-(y1-cy)*ux)/den;if(t>0&&u>=-1e-6&&u<=1+1e-6)best=Math.max(best,t)}return best}
+function link(a,b){const A=shape(a),B=shape(b),dx=B.c[0]-A.c[0],dy=B.c[1]-A.c[1],L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,
+ ta=Math.min(exitT(A,ux,uy)+7,L*.42),tb=Math.min(exitT(B,-ux,-uy)+7,L*.42);
+ return`M${f1(A.c[0]+ux*ta)} ${f1(A.c[1]+uy*ta)}L${f1(B.c[0]-ux*tb)} ${f1(B.c[1]-uy*tb)}`}
 
 /* ---------- scene helpers ---------- */
 const K=7.6,N=[[0,0],[K,-K],[2*K,-2*K]],SL=[[1.4,1.3],[4.3,1.3],[7.2,1.3],[1.4,3.9],[4.3,3.9],[7.2,3.9]];
@@ -379,7 +382,7 @@ function paint(sc,fresh){(sc.dead||[]).forEach(id=>{const e=sc.e.find(x=>x.id===
  $('#leg').innerHTML=['req','heavy','hc','bad'].filter(k=>kinds.has(k)).map(k=>`<span><i class="${k}"></i>${U_('leg_'+k)}</span>`).join('')}
 function drawLinks(){if(!lastScene)return;const{sc,by}=lastScene;let a='',b='';
  (sc.l||[]).forEach(([p,q,d])=>{if(by[p]&&by[q])a+=`<path d="${link(by[p],by[q])}" class="lnk ${d||''}" ${d?'':'marker-end="url(#arw)"'}/>`});
- (sc.f||[]).forEach(([p,q,n,k])=>{if(!by[p]||!by[q])return;k=k||'';const d=link(by[p],by[q]);a+=`<path d="${d}" class="lnk ${k}" ${k==='hc'?'':'marker-end="url(#arw)"'}/>`;
+ (sc.f||[]).forEach(([p,q,n,k])=>{if(!by[p]||!by[q])return;k=k||'';const d=link(by[p],by[q]);a+=`<path d="${d}" class="lnk ${k}" ${k==='hc'?'':'marker-start="url(#arw)" marker-end="url(#arw)"'}/>`;
   if(RM.matches)return;const dur=k==='heavy'?2.6:k==='hc'?1.4:1.7;
   for(let i=0;i<n;i++){const shape=k==='heavy'?`<rect x="-5.5" y="-5.5" width="11" height="11" rx="2" class="pk"/>`:k==='bad'?`<circle r="6" class="pk bad"/><path d="M-2.5-2.5l5 5M2.5-2.5l-5 5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`:k==='hc'?`<circle r="6" class="pk hc"/>`:`<circle r="5.5" class="pk"/>`;
    b+=`<g>${shape}<animateMotion dur="${dur}s" begin="-${f1(i*dur/n+Math.random()*.3)}s" repeatCount="indefinite" path="${d}"/></g>`}});
@@ -412,7 +415,7 @@ const lidx=id=>L.findIndex(l=>l.id===id);
 function certView(k){const C=window.CERTS[k],T=CT(),X=T[k],cols=['#cfe1f6','#fcd4ad','#d1e9c2','#e2d6f4','#fde3a7'];
  const all=C.weights.flatMap(([d])=>C.comp[d].map(c=>k+':'+d+':'+c[0])),done=all.filter(x=>CHK.has(x)).length;
  const cov=C.weights.reduce((a,[d,w])=>{const cs=C.comp[d];return a+w*cs.reduce((s,c)=>s+(c[2]==='full'?1:c[2]==='partial'?.5:0),0)/cs.length},0);
- const plans=[...new Set(C.weights.flatMap(([d])=>C.comp[d].filter(c=>c[3]&&c[2]!=='full').map(c=>c[3])))];
+ const plans=[...C.weights].sort((p,q)=>q[1]-p[1]).map(([d,w])=>X.dom[d]+' · '+w+'%');
  const R2=(v,c)=>{const r=44,L2=2*Math.PI*r;return`<svg viewBox="0 0 104 104"><circle cx="52" cy="52" r="${r}" fill="none" stroke="var(--line)" stroke-width="12"/><circle cx="52" cy="52" r="${r}" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${(L2*v/100).toFixed(1)} ${L2.toFixed(1)}" transform="rotate(-90 52 52)"/><text x="52" y="58" text-anchor="middle" style="font:800 18px 'JetBrains Mono',monospace;fill:var(--ink)">${Math.round(v)}%</text></svg>`};
  return `<section class="card chero"><div><div class="crumb">${esc(T.tabs[k])}</div><h1>${esc(X.t)}</h1><p>${esc(X.lede)}</p></div>
  <div class="ring2">${R2(cov,'var(--green3)')}<div><b>${esc(T.ui.coverage)}</b><small>${done}/${all.length} ${esc(T.ui.studied)}</small><div class="pbar" style="margin:8px 0 0"><i style="width:${all.length?done/all.length*100:0}%;background:var(--k8s)"></i></div></div></div></section>
@@ -420,7 +423,7 @@ function certView(k){const C=window.CERTS[k],T=CT(),X=T[k],cols=['#cfe1f6','#fcd
  ${C.weights.map(([d,w],i)=>`<div class="dom"><h3><i class="sw" style="background:${cols[i]}"></i>${esc(X.dom[d])}<span class="pct">${w}% ${esc(T.ui.weight)}</span></h3><ul class="comp">${C.comp[d].map(([c,ls,st,pl])=>{const id=k+':'+d+':'+c;return`<li><input type="checkbox" data-c="${id}" ${CHK.has(id)?'checked':''} aria-label="${esc(T.ui.mark)}"><div>${esc(X.c[c])}<div class="lk">${ls.map(l=>{const i=lidx(l);return i<0?'':`<button type="button" data-go="${i}">${esc(L[i].title)}</button>`}).join('')}${st!=='full'&&pl?`<span>+ ${esc(T.plan[pl])}</span>`:''}</div></div><span class="tag ${st}">${esc(T.st[st])}</span></li>`}).join('')}</ul></div>`).join('')}</section>
  <aside class="cside" style="display:grid;gap:18px"><section class="card csec"><h2>${esc(T.ui.facts)}</h2><dl class="facts">${X.facts.map(([a,b])=>`<div><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl></section>
  <section class="card csec"><h2>${esc(T.ui.tips)}</h2><div class="tips">${X.tips.map(([a,b])=>`<div class="tip"><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('')}</div></section>
- <section class="card csec"><h2>${esc(T.ui.roadmap)}</h2><ul class="rm">${plans.map((p,i)=>`<li><i>${i+1}</i>${esc(T.plan[p])}</li>`).join('')}</ul></section></aside></div><p class="csrc">${esc(T.ui.src)}</p>`}
+ <section class="card csec"><h2>${esc(T.ui.roadmap)}</h2><ul class="rm">${plans.map((p,i)=>`<li><i>${i+1}</i>${esc(p)}</li>`).join('')}</ul></section></aside></div><p class="csrc">${esc(T.ui.src)}</p>`}
 function setView(v){VIEW=v;document.body.classList.toggle('vcert',v!=='learn');$('#cert').hidden=v==='learn';document.querySelectorAll('#tabs button').forEach(b=>{b.querySelector('span').textContent=CT().tabs[b.dataset.v];b.setAttribute('aria-current',b.dataset.v===v?'page':'false')});if(v!=='learn'){$('#cert').innerHTML=certView(v);document.title=CT()[v].t;applyUI()}}
 function show(){const hv=location.hash.slice(1);if(hv==='cka'||hv==='ckad'){setView(hv);return}if(VIEW!=='learn')cur=null;setView('learn');$('#svw')._u=0;if(/^[a-z]+-\d+$/.test(hv))window._lastLesson=hv;const[li,si]=parse(),les=L[li],st=les.steps[si],fresh=!cur||cur[0]!==li;cur=[li,si];
  if(si===les.steps.length-1&&!DONE.has(les.id)){DONE.add(les.id);try{localStorage.setItem('k8s-done',JSON.stringify([...DONE]))}catch(e){}}buildSide();
