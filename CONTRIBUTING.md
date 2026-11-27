@@ -1,6 +1,6 @@
 # Contributing to Kubernetes Visual
 
-Thanks for helping! This project teaches Kubernetes with animated isometric diagrams, a simulated `kubectl` terminal and CKA/CKAD study tracks, in **Brazilian Portuguese and English**.
+Thanks for helping! This project teaches Kubernetes with animated isometric diagrams, a simulated `kubectl` terminal and CKA/CKAD/CKS study tracks, in **Brazilian Portuguese and English**.
 
 ## Ground rules
 

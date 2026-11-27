@@ -1,6 +1,6 @@
 # ADR-002 — Separar o `index.html` em arquivos por responsabilidade, com scripts clássicos
 
-- **Status:** implementado localmente (27/11/2026), aguardando aprovação para publicar
+- **Status:** aceito e implementado (publicado com a Fase 1 em 27/11/2026)
 - **Relacionado:** ADR-001 (Docker), `docs/IMPLEMENTATION_PLAN.md` item F4
 
 ## Contexto
@@ -16,7 +16,7 @@ Separar em arquivos por responsabilidade, mantendo **scripts clássicos**. As de
 ```
 index.html              estrutura da página (7 KB)
 css/app.css             todos os estilos
-data/certs.js           domínios e competências CKA/CKAD
+data/certs.js           domínios e competências CKA/CKAD/CKS
 data/scenes.js          cenas das lições (iguais nos dois idiomas)
 i18n/pt.js, i18n/en.js  textos
 js/term/lessons.js      terminal: ajustes por lição/passo (dados)

@@ -8,4 +8,4 @@ labels: enhancement
 
 **Why does it help? / Por que ajuda?**
 
-**Related CKA/CKAD competency (if any) / Competência relacionada:**
+**Related CKA/CKAD/CKS competency (if any) / Competência relacionada:**

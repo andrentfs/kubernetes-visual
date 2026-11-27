@@ -20,5 +20,5 @@ and indicate if changes were made.
 All **source code** (everything else: `index.html`, `css/`, `js/` except the data noted above, `tests/`, `docker/`, build and CI files)
 is licensed under the [MIT License](LICENSE).
 
-Kubernetes® is a registered trademark of The Linux Foundation. CKA and CKAD are certifications of the
+Kubernetes® is a registered trademark of The Linux Foundation. CKA, CKAD and CKS are certifications of the
 Cloud Native Computing Foundation / The Linux Foundation. This project is independent and not affiliated with or endorsed by them.

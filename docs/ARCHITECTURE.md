@@ -5,7 +5,7 @@ Static site, no production build, served by GitHub Pages from the root of `main`
 ```
 index.html ─┬─ css/app.css
             ├─ data/meta.js        reference Kubernetes version
-            ├─ data/certs.js       CKA/CKAD domains, weights, competencies → lessons
+            ├─ data/certs.js       CKA/CKAD/CKS domains, weights, competencies → lessons
             ├─ data/scenes.js      window.buildScenes(H): scenes per lesson/step (language-neutral)
             ├─ i18n/pt.js, en.js   window.TXT.{pt,en}: UI, lessons, captions, labels
             ├─ js/term/lessons.js  ┐
@@ -14,7 +14,7 @@ index.html ─┬─ css/app.css
             ├─ js/geometry.js      isometric projection, colours, icons, scene helpers
             ├─ js/content.js       active language, builds the lesson list L
             ├─ js/renderer.js      paint(): diff-based SVG rendering, links, packets, camera, anti-overlap
-            └─ js/ui.js            routing (#lesson-step, #cka, #ckad), panels, search, progress, theme, terminal wiring
+            └─ js/ui.js            routing (#lesson-step, #cka, #ckad, #cks), panels, “On the exam” box (CKA/CKAD/CKS tabs), search, progress, theme, terminal wiring
 ```
 
 Classic scripts share top-level declarations, so **the order of `<script>` tags matters** ([ADR-002](adr/ADR-002-file-structure.md)).
@@ -27,7 +27,7 @@ Classic scripts share top-level declarations, so **the order of `<script>` tags 
 
 ## State kept in the browser (`localStorage`)
 
-`k8s-lang`, `k8s-theme`, `k8s-done` (lessons completed), `k8s-chk` (CKA/CKAD checklist).
+`k8s-lang`, `k8s-theme`, `k8s-done` (lessons completed), `k8s-chk` (CKA/CKAD/CKS checklist), `k8s-exam` (tab chosen in the “On the exam” box).
 
 ## Quality gates
 

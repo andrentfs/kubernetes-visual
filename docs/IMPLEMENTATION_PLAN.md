@@ -1,6 +1,7 @@
 # Kubernetes Visual — Plano de implementação
 
-> Status: **Fase 1 concluída (27/11/2026).** Próxima: Fase 2 — Simulações. Ver “Progresso” abaixo.
+> Status (27/11/2026): **Fase 1 concluída e publicada. Trilha CKS completa** (página da prova, dicas e módulo 06, adiantados do item 16 da Fase 5). Próxima: Fase 2 — Simulações, que depende da aprovação do ADR-004. Ver “Progresso” abaixo.
+> Legenda do backlog: ✅ feito · 🟡 parcial · sem marca = não iniciado.
 > Data da análise: 27/11/2026 · Commit analisado: `7ad7b9f` (branch `main`).
 
 ---
@@ -82,14 +83,16 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 | P2 ✅ | Endpoints × EndpointSlice | As lições e o terminal usam `Endpoints` (4 menções em PT) e só citam EndpointSlice uma vez. A API `Endpoints` está *deprecated* desde v1.33; o material precisa priorizar EndpointSlice |
 | P3 | Rede: Service, kube-proxy e NetworkPolicy aparecem como blocos com setas | É preciso diferenciar visualmente **objeto declarativo**, **controlador** e **dataplane**, conforme o requisito §5 |
 | P4 | DNAT/SNAT, IP de origem e destino, portas | Ainda não são exibidos |
-| P5 | `node-monitor-grace-period` (40 s → 50 s na v1.32) | Já está citado; validar na documentação oficial ao fixar a versão de referência |
-| P6 ✅ | Pesos e competências CKA/CKAD em `certs.js` | Mapeados a partir do currículo de 18/02/2025. **Reconsultar `github.com/cncf/curriculum`** e registrar a data. A consulta não foi feita nesta análise porque o acesso web ficou bloqueado aguardando permissão |
+| P5 ✅ | `node-monitor-grace-period` (40 s → 50 s na v1.32) | Conferido na documentação oficial: padrão de 50 s. Linha do tempo de “Quando um node cai” recalculada (F5) |
+| P6 ✅ | Pesos e competências CKA/CKAD em `certs.js` | Reconsultados em 27/11/2026 no `cncf/curriculum` (commit `f5ab45e`), versão v1.37: CKA e CKAD batem 1:1. A CKS (v1.37) foi adicionada depois, com as 26 competências cobertas |
 | P7 | Selos GA/Beta/Alpha/deprecated | Não existem; cada recurso citado precisa do selo e da versão |
 | P8 | Referências oficiais por lição | Não existem |
 
 ---
 
 ## 2. Inventário das funcionalidades existentes
+
+> Retrato do commit `7ad7b9f`, antes da Fase 1. O estado atual está em “Progresso” e no [CHANGELOG](../CHANGELOG.md): hoje são 27 lições e 288 passos em 6 módulos, com abas CKA, CKAD e CKS.
 
 **Conteúdo**
 - 22 lições, 236 passos por idioma, em 5 módulos:
@@ -122,6 +125,8 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 
 ## 3. Lacunas em relação ao objetivo
 
+> Atualização de 27/11/2026: §13 (SEO básico), §14 (documentação), §15 (testes e CI) e a versão de referência do §16 foram resolvidos na Fase 1. No §9, a trilha CKS ficou pronta. Continuam abertos: páginas por lição e `hreflang` (§13), referências por lição e selos de maturidade (§16).
+
 | Área (seção do pedido) | Já existe | Falta |
 |---|---|---|
 | §4 Falha de node | Lição `nodefail`: 12 passos com linha do tempo, taints, tolerância, StatefulSet, out-of-service e terminal | Modo **simulador livre**: botão “derrubar node”, relógio com velocidade, pausar/avançar/voltar, tempo real × acelerado, EndpointSlices, scheduler escolhendo o node; comparativo restart × replacement × failure × drain × graceful shutdown × eviction × PDB |
@@ -144,13 +149,13 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 
 | ADR | Proposta | Motivo | Alternativa descartada |
 |---|---|---|---|
-| **ADR-001** | **Desenvolvimento orientado a Docker; produção estática sem build.** Servir, testar e medir sempre em containers (`make up/test/shell/preview`); imagem `dev` baseada em `mcr.microsoft.com/playwright` com versão fixa; o CI usa a mesma imagem. Detalhes em [`docs/adr/ADR-001-docker-first.md`](adr/ADR-001-docker-first.md) | Ambiente reprodutível (local = CI), contribuidor só precisa de Docker; o GitHub Pages continua sem build | Ferramentas instaladas no host; Vite/Next com build obrigatório |
-| **ADR-002** | Separar o `index.html` e o `term.js` em arquivos por responsabilidade (`css/`, `data/`, `i18n/`, `js/`, `js/term/`) usando **scripts clássicos** (não módulos ES, que não funcionam em `file://`). Detalhes em [`docs/adr/ADR-002-file-structure.md`](adr/ADR-002-file-structure.md) | Testabilidade e reuso sem perder abertura direta do arquivo nem exigir build | Módulos ES (quebram `file://`); manter o monólito |
+| **ADR-001** ✅ | **Desenvolvimento orientado a Docker; produção estática sem build.** Servir, testar e medir sempre em containers (`make up/test/shell/preview`); imagem `dev` baseada em `mcr.microsoft.com/playwright` com versão fixa; o CI usa a mesma imagem. Detalhes em [`docs/adr/ADR-001-docker-first.md`](adr/ADR-001-docker-first.md) | Ambiente reprodutível (local = CI), contribuidor só precisa de Docker; o GitHub Pages continua sem build | Ferramentas instaladas no host; Vite/Next com build obrigatório |
+| **ADR-002** ✅ | Separar o `index.html` e o `term.js` em arquivos por responsabilidade (`css/`, `data/`, `i18n/`, `js/`, `js/term/`) usando **scripts clássicos** (não módulos ES, que não funcionam em `file://`). Detalhes em [`docs/adr/ADR-002-file-structure.md`](adr/ADR-002-file-structure.md) | Testabilidade e reuso sem perder abertura direta do arquivo nem exigir build | Módulos ES (quebram `file://`); manter o monólito |
 | **ADR-003** | Carregar o idioma ativo sob demanda (`import()` de `i18n/pt.js` ou `i18n/en.js`) | Corta cerca de 150 KB da primeira carga | Bundle por idioma, que exigiria build |
 | **ADR-004** | **Motor de simulação único** (relógio com velocidade, pausa, passo a passo, estados versionados para voltar no tempo), usado por: falha de node, autoscaling, troubleshooting e YAML interativo | Evita quatro implementações paralelas (DRY) | Uma animação ad hoc por simulador |
 | **ADR-005** | Manter as rotas hash (compatibilidade) e **gerar páginas estáticas por lição** (`/licao/pods/`, `/en/lesson/pods/`) com metadados próprios, que redirecionam para o hash. Geradas por script no CI e versionadas, para o Pages continuar servindo a raiz | SEO e preview por lição sem quebrar links | Trocar para History API, o que quebraria links existentes e exigiria fallback 404 |
 | **ADR-006** | Validar os YAMLs das lições com `kubeconform` no CI, contra o schema da versão de referência | “Não inventar”: os manifestos ficam verificáveis | Revisão manual |
-| **ADR-007** | Escolher a licença | **Decisão sua.** Sugestões: MIT ou Apache-2.0 para o código e CC BY 4.0 para o conteúdo didático | — |
+| **ADR-007** ✅ | Licença: MIT para o código e CC BY 4.0 para o conteúdo. Detalhes em [`docs/adr/ADR-007-license.md`](adr/ADR-007-license.md) | Decisão do autor | Apache-2.0 para o código |
 
 ---
 
@@ -158,7 +163,7 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 
 As fases seguem o documento. Cada item é entregue separadamente, com testes e **sem publicar** até a sua aprovação.
 
-### Fase 1 — Fundação (pré-requisito de tudo)
+### Fase 1 — Fundação (pré-requisito de tudo) ✅
 1. Suíte de testes versionada a partir dos scripts já usados: percurso dos 236 passos × 2 idiomas, auditoria de sobreposição, varredura do terminal e paridade de traduções.
 2. GitHub Actions rodando os testes em PR, **sem mexer na publicação** (o Pages continua servindo `main`/raiz).
 3. Refatoração ADR-002 sem mudança visual, garantida por regressão visual (screenshots antes/depois).
@@ -182,7 +187,7 @@ As fases seguem o documento. Cada item é entregue separadamente, com testes e *
 15. VPA, Cluster Autoscaler, Karpenter, KEDA + RabbitMQ.
 
 ### Fase 5 — Plataforma educacional
-16. Trilhas independentes + estrutura para KCNA/KCSA/CKS.
+16. Trilhas independentes + estrutura para KCNA/KCSA/CKS. *(Trilha CKS pronta em 27/11/2026: página da prova, dicas por lição e módulo 06 com 5 lições.)*
 17. Quiz por lição, revisão de erros, modo revisão, glossário, favoritos, histórico, pré-requisitos, exportar/importar/zerar progresso.
 
 ### Fase 6 — Consolidação
@@ -196,14 +201,14 @@ Complexidade relativa: P (até ~1 dia), M (2–3 dias), G (1 semana), GG (mais d
 
 | ID | Item | Critérios de aceitação | Compl. | Depende de |
 |---|---|---|:-:|---|
-| F1 | Testes E2E versionados | `npm test` percorre 236×2 passos sem erro de console; auditoria aponta 0 sobreposições; varredura do terminal sem exceções; roda local e no CI | M | — |
-| F2 | Paridade i18n | Script falha se faltar chave, passo, legenda ou caixa de prova em um idioma | P | — |
-| F3 | GitHub Actions | Workflow em PR e push roda F1, F2, link-check e kubeconform; **não** altera o deploy | P | F1, F2 |
-| F4 | Refatoração em módulos | Screenshots de todos os passos idênticos antes/depois (diferença < 0,1%); nenhuma URL muda | G | F1 |
-| F5 | Versão de referência + EndpointSlice | Uma constante `K8S_REF` exibida no rodapé; textos e terminal usam EndpointSlice (`get endpointslices`); Endpoints citado como *deprecated* | M | F4 |
-| F6 | Currículo CKA/CKAD reconsultado | `certs.js` com data e link da consulta; pesos e competências conferidos no repositório oficial | P | acesso web |
+| F1 ✅ | Testes E2E versionados | `npm test` percorre 236×2 passos sem erro de console; auditoria aponta 0 sobreposições; varredura do terminal sem exceções; roda local e no CI | M | — |
+| F2 ✅ | Paridade i18n | Script falha se faltar chave, passo, legenda ou caixa de prova em um idioma | P | — |
+| F3 🟡 | GitHub Actions | Workflow em PR e push roda F1, F2, link-check e kubeconform; **não** altera o deploy. *Feito: F1 e F2 no CI. Faltam link-check e kubeconform (ADR-006).* | P | F1, F2 |
+| F4 ✅ | Refatoração em módulos | Screenshots de todos os passos idênticos antes/depois (diferença < 0,1%); nenhuma URL muda | G | F1 |
+| F5 ✅ | Versão de referência + EndpointSlice | Uma constante `K8S_REF` exibida no rodapé; textos e terminal usam EndpointSlice (`get endpointslices`); Endpoints citado como *deprecated* | M | F4 |
+| F6 ✅ | Currículo CKA/CKAD reconsultado | `certs.js` com data e link da consulta; pesos e competências conferidos no repositório oficial | P | acesso web |
 | F7 ✅ | Docs open source | Arquivos do §14 presentes, com screenshots reais e instruções de execução local | M | ADR-007 |
-| F8 | SEO básico | Preview correto no LinkedIn Post Inspector; `robots.txt` e `sitemap.xml` válidos | P | — |
+| F8 🟡 | SEO básico | Preview correto no LinkedIn Post Inspector; `robots.txt` e `sitemap.xml` válidos. *Feito: meta, OG, Twitter, JSON-LD, robots e sitemap, com teste unitário. Falta conferir no LinkedIn Post Inspector (precisa da conta do autor).* | P | — |
 | F9 ✅ | Lighthouse antes | Relatórios JSON e HTML reais versionados | P | — |
 | S1 | Motor de simulação | Testes unitários do relógio: velocidade, pausa, voltar para t−1 reproduz o estado exato | G | F4 |
 | S2 | Simulador de falha de node | O usuário derruba e restaura qualquer worker; Lease, Ready, taints, eviction, novo pod, EndpointSlice e scheduler visíveis na linha do tempo; nenhum pod “se move”; tempos reais configuráveis | GG | S1 |
@@ -214,7 +219,7 @@ Complexidade relativa: P (até ~1 dia), M (2–3 dias), G (1 semana), GG (mais d
 | T2 | 16 cenários | Cada um com os 10 itens do §6, logs e eventos com formato real de kubectl | GG | T1 |
 | A1 | HPA interativo | Controle de CPU/RPS altera réplicas pela fórmula oficial; gráfico ao vivo; janela de estabilização respeitada | G | S1 |
 | A2 | VPA, CA, Karpenter, KEDA + RabbitMQ | Diferença workload × recurso × node clara; KEDA escala a partir da fila, inclusive para 0 | GG | A1 |
-| E1 | Trilhas | 6 trilhas, cada lição mapeada a objetivos oficiais com data | G | F6 |
+| E1 🟡 | Trilhas | 6 trilhas, cada lição mapeada a objetivos oficiais com data | G | F6 |
 | E2 | Quiz e revisão | Quiz por lição, revisão dos erros, modo revisão por certificação | G | E1 |
 | E3 | Progresso completo | Favoritos, histórico, continuar, exportar/importar/zerar (JSON) | M | — |
 | E4 | Glossário | Termos com link para a lição e a documentação oficial; busca integrada | M | — |
@@ -270,14 +275,15 @@ Até sua autorização, **nada vai para `main` nem para o GitHub Pages**. Opçõ
 ## 10. Riscos, limitações e pendências
 
 - **Escopo muito grande:** as seis fases somam várias semanas de trabalho. A entrega é incremental, uma etapa aprovada por vez.
-- **Precisão:** comportamentos de componentes, pesos de prova e status GA/Beta precisam ser conferidos nas fontes oficiais. Nesta análise o acesso à web ficou bloqueado aguardando permissão, então **F6 e P1 seguem pendentes**.
+- **Precisão:** comportamentos de componentes, pesos de prova e status GA/Beta precisam ser conferidos nas fontes oficiais. F6 e P1 foram resolvidos na Fase 1 com consulta às fontes oficiais (27/11/2026); cada nova afirmação continua exigindo a mesma conferência.
 - **SEO com hash:** só se resolve de fato com páginas estáticas por lição (ADR-005).
 - **Lighthouse:** os números serão medidos de verdade (Chrome headless). Nenhum resultado será estimado.
-- **Licença:** depende da sua escolha (ADR-007).
+- **Licença:** decidida pelo autor: MIT para o código e CC BY 4.0 para o conteúdo ([ADR-007](adr/ADR-007-license.md)).
 - **Ferramentas dev** (Playwright, axe, kubeconform) entram só no CI e no ambiente local, nunca no site publicado.
 
-### Aprovações necessárias para começar
-1. Aprovar (ou ajustar) os ADR-001 a ADR-006.
-2. Escolher a licença (ADR-007).
-3. Escolher a forma de preview (seção 9).
-4. Autorizar a Fase 1 começando por F1 → F2 → F3 → F4.
+### Aprovações
+1. ✅ ADR-001 e ADR-002: aprovados e implementados.
+2. ✅ Licença (ADR-007): MIT + CC BY 4.0.
+3. ✅ Preview: servidor local em Docker (`make up`, porta 8082) e prévia privada no Claude.
+4. ✅ Fase 1 autorizada, concluída e publicada.
+5. ⏳ Pendentes: ADR-003, ADR-004 (necessário para a Fase 2), ADR-005 e ADR-006.

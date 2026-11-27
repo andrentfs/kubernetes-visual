@@ -1,6 +1,6 @@
 # ADR-001 — Desenvolvimento orientado a Docker, produção estática sem build
 
-- **Status:** proposto (aguardando aprovação do autor)
+- **Status:** aceito e implementado (aprovado pelo autor e publicado em 27/11/2026)
 - **Data:** 27/11/2026
 - **Contexto do plano:** `docs/IMPLEMENTATION_PLAN.md`, Fase 1
 
