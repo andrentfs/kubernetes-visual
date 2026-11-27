@@ -5,13 +5,14 @@ import { loadSite } from '../tools/load.mjs';
 
 const { CERTS, CERTS_META, CERTTXT } = loadSite(['data/certs.js']);
 
-// Pesos e quantidade de competências por domínio, como em CKA/CKAD_Curriculum_v1.37.pdf.
+// Pesos e quantidade de competências por domínio, como nos PDFs v1.37 de CKA, CKAD e CKS.
 const OFFICIAL = {
   cka: { storage: [10, 3], trouble: [30, 5], work: [15, 5], arch: [25, 8], net: [20, 6] },
   ckad: { design: [20, 4], deploy: [20, 4], obs: [15, 5], env: [25, 8], net: [20, 3] },
+  cks: { setup: [15, 5], harden: [15, 4], system: [10, 4], micro: [20, 4], supply: [20, 4], runtime: [20, 5] },
 };
 
-for (const exam of ['cka', 'ckad']) {
+for (const exam of ['cka', 'ckad', 'cks']) {
   test(`${exam}: pesos e competências batem com o currículo oficial`, () => {
     const c = CERTS[exam];
     assert.equal(c.weights.reduce((n, [, w]) => n + w, 0), 100);
@@ -30,4 +31,12 @@ for (const exam of ['cka', 'ckad']) {
 test('metadados da fonte do currículo estão preenchidos', () => {
   assert.match(CERTS_META.files.cka, /^CKA_Curriculum_v\d+\.\d+\.pdf$/);
   assert.match(CERTS_META.checked, /^\d{4}-\d{2}-\d{2}$/);
+});
+
+test('competências não cobertas apontam para uma lição planejada com nome nos dois idiomas', () => {
+  for (const exam of ['cka', 'ckad', 'cks']) for (const dom of Object.keys(CERTS[exam].comp))
+    for (const [id, , st, plan] of CERTS[exam].comp[dom]) if (st !== 'full') {
+      assert.ok(plan, `${exam}.${id} sem plano`);
+      for (const lang of ['pt', 'en']) assert.ok(CERTTXT[lang].plan[plan], `${lang}.plan.${plan}`);
+    }
 });

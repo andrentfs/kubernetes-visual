@@ -5,10 +5,10 @@
 /* ---------- UI ---------- */
 /* "Na prova" com abas CKA / CKAD; a escolha fica salva em k8s-exam */
 let EXSEL=(()=>{try{return localStorage.getItem('k8s-exam')||'cka'}catch(e){return'cka'}})(),EXLES=null;
-function renderExam(les){EXLES=les;const E=$('#exam');const ex={cka:les.exam,ckad:les.examD};E.hidden=!ex.cka&&!ex.ckad;if(E.hidden)return;
+function renderExam(les){EXLES=les;const E=$('#exam');const ex={cka:les.exam,ckad:les.examD,cks:les.examS};E.hidden=!ex.cka&&!ex.ckad;if(E.hidden)return;
  const cur=ex[EXSEL];
- E.innerHTML=`<h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg>${U_('examT')}<span class="exseg" role="group" aria-label="${esc(U_('examT'))}">${['cka','ckad'].map(k=>`<button type="button" data-x="${k}" aria-pressed="${k===EXSEL}">${k.toUpperCase()}</button>`).join('')}</span></h3>`+
- (cur?`<ul>${cur.t.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${cur.c?`<div class="exc">${cur.c.map(c=>`<code>${esc(c)}</code>`).join('')}</div>`:''}`:`<p class="exno">${esc(U_(EXSEL==='ckad'?'examNoCkad':'examNoCka'))}</p>`)}
+ E.innerHTML=`<h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg>${U_('examT')}<span class="exseg" role="group" aria-label="${esc(U_('examT'))}">${['cka','ckad','cks'].map(k=>`<button type="button" data-x="${k}" aria-pressed="${k===EXSEL}">${k.toUpperCase()}</button>`).join('')}</span></h3>`+
+ (cur?`<ul>${cur.t.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${cur.c?`<div class="exc">${cur.c.map(c=>`<code>${esc(c)}</code>`).join('')}</div>`:''}`:`<p class="exno">${esc(U_({ckad:'examNoCkad',cks:'examNoCks'}[EXSEL]||'examNoCka'))}</p>`)}
 $('#exam').addEventListener('click',e=>{const b=e.target.closest('button[data-x]');if(!b)return;EXSEL=b.dataset.x;try{localStorage.setItem('k8s-exam',EXSEL)}catch(_){}if(EXLES)renderExam(EXLES)});
 
 function refLine(){const r=window.K8S_REF;if(!r)return'';const d=new Date(r.checked+'T12:00:00').toLocaleDateString(LANG==='pt'?'pt-BR':'en-US',{day:'numeric',month:'short',year:'numeric'});return`<p class="refv">${esc(U_('refVer').replace('{v}',r.version).replace('{d}',d))} <a href="${r.source}" target="_blank" rel="noopener">${esc(U_('refSrc'))}</a></p>`}
@@ -34,7 +34,7 @@ const go=(li,si)=>{location.hash=window._lastLesson=`${L[li].id}-${si+1}`};
 const CT=()=>window.CERTTXT[LANG];let VIEW='learn';
 let CHK=new Set();try{CHK=new Set(JSON.parse(localStorage.getItem('k8s-chk')||'[]'))}catch(e){}
 const lidx=id=>L.findIndex(l=>l.id===id);
-function certView(k){const C=window.CERTS[k],T=CT(),X=T[k],cols=['#cfe1f6','#fcd4ad','#d1e9c2','#e2d6f4','#fde3a7'];
+function certView(k){const C=window.CERTS[k],T=CT(),X=T[k],cols=['#cfe1f6','#fcd4ad','#d1e9c2','#e2d6f4','#fde3a7','#f6c9cf'];
  const all=C.weights.flatMap(([d])=>C.comp[d].map(c=>k+':'+d+':'+c[0])),done=all.filter(x=>CHK.has(x)).length;
  const cov=C.weights.reduce((a,[d,w])=>{const cs=C.comp[d];return a+w*cs.reduce((s,c)=>s+(c[2]==='full'?1:c[2]==='partial'?.5:0),0)/cs.length},0);
  const plans=[...C.weights].sort((p,q)=>q[1]-p[1]).map(([d,w])=>X.dom[d]+' · '+w+'%');
@@ -47,7 +47,7 @@ function certView(k){const C=window.CERTS[k],T=CT(),X=T[k],cols=['#cfe1f6','#fcd
  <section class="card csec"><h2>${esc(T.ui.tips)}</h2><div class="tips">${X.tips.map(([a,b])=>`<div class="tip"><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('')}</div></section>
  <section class="card csec"><h2>${esc(T.ui.roadmap)}</h2><ul class="rm">${plans.map((p,i)=>`<li><i>${i+1}</i>${esc(p)}</li>`).join('')}</ul></section></aside></div><p class="csrc">${esc(T.ui.src.replace('{f}',(window.CERTS_META||{}).files?.[k]||'').replace('{d}',new Date(((window.CERTS_META||{}).checked||'2026-11-27')+'T12:00:00').toLocaleDateString(LANG==='pt'?'pt-BR':'en-US',{day:'numeric',month:'short',year:'numeric'})))} <a href="${(window.CERTS_META||{}).source}" target="_blank" rel="noopener">github.com/cncf/curriculum</a></p>`}
 function setView(v){VIEW=v;document.body.classList.toggle('vcert',v!=='learn');$('#cert').hidden=v==='learn';if(v==='learn')$('#cert').innerHTML='';document.querySelectorAll('#tabs button').forEach(b=>{b.querySelector('span').textContent=CT().tabs[b.dataset.v];b.setAttribute('aria-current',b.dataset.v===v?'page':'false')});if(v!=='learn'){$('#cert').innerHTML=certView(v);document.title=CT()[v].t;applyUI()}}
-function show(){const hv=location.hash.slice(1);if(hv==='cka'||hv==='ckad'){setView(hv);return}if(VIEW!=='learn')cur=null;setView('learn');$('#svw')._u=0;if(/^[a-z]+-\d+$/.test(hv))window._lastLesson=hv;const[li,si]=parse(),les=L[li],st=les.steps[si],fresh=!cur||cur[0]!==li;cur=[li,si];
+function show(){const hv=location.hash.slice(1);if(hv==='cka'||hv==='ckad'||hv==='cks'){setView(hv);return}if(VIEW!=='learn')cur=null;setView('learn');$('#svw')._u=0;if(/^[a-z]+-\d+$/.test(hv))window._lastLesson=hv;const[li,si]=parse(),les=L[li],st=les.steps[si],fresh=!cur||cur[0]!==li;cur=[li,si];
  if(si===les.steps.length-1&&!DONE.has(les.id)){DONE.add(les.id);try{localStorage.setItem('k8s-done',JSON.stringify([...DONE]))}catch(e){}}buildSide();
  $('#prog').textContent=`${U_('lesson')} ${li+1} ${U_('of')} ${L.length}`;
  const inMod=L.filter(l=>l.mod===les.mod),pos=inMod.indexOf(les)+1;

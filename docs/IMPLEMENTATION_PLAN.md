@@ -21,6 +21,7 @@
 | 27/11/2026 | F7 Documentação e licença | Licença MIT (código) + CC BY 4.0 (conteúdo), aprovadas pelo autor; README em inglês e `README.pt-BR.md`; CONTRIBUTING, CODE_OF_CONDUCT (Contributor Covenant 2.1), SECURITY, CHANGELOG, ROADMAP; `docs/ARCHITECTURE.md`; guias de lição e de animação; templates de issue e PR |
 | 27/11/2026 | F9 Lighthouse “antes” | Medido (Lighthouse 13.6.0, container): mobile 71/94/74/100, desktop 99/95/74/100 (performance/acessibilidade/boas práticas/SEO). Detalhes e o que é artefato do ambiente local em `docs/lighthouse/README.md`; `make lighthouse` |
 | 27/11/2026 | F3 CI | Enviado ao GitHub junto com a Fase 1 (autorizado pelo autor) |
+| 27/11/2026 | Trilha CKS (etapa 1) | Conferido `CKS_Curriculum v1.37.pdf` no `cncf/curriculum` (commit `f5ab45e`): 6 domínios (15/15/10/20/20/20) e 26 competências em `data/certs.js`, com cobertura honesta (4 cobertas, 12 parciais, 10 “em breve”, cada lacuna apontando para uma lição planejada). Aba CKS no topo e terceira aba na caixa “Na prova” em 9 lições. Testes: pesos oficiais da CKS, plano para toda lacuna, paridade de `examS`, E2E. Etapa 2 (módulo “Segurança avançada”, 5 lições) a fazer uma lição por vez com revisão do autor |
 
 ## 1. Diagnóstico da arquitetura atual
 

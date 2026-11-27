@@ -6,6 +6,8 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 
 ### Added
 - “On the exam” box now has **CKA | CKAD** tabs. CKAD tips for the 18 lessons in the CKAD v1.37 curriculum, in PT and EN; lessons outside it say so. The choice is remembered.
+- **CKS track**: new CKS tab with the 6 domains and weights of `CKS_Curriculum v1.37.pdf` (cncf/curriculum `f5ab45e`), honest coverage (covered / partial / coming soon, each gap pointing to a planned lesson), exam facts and tips.
+- “On the exam” box gains a **CKS** tab, with tips in 9 lessons (RBAC, NetworkPolicy, ConfigMaps/Secrets/securityContext, images, kubeadm, Service/Ingress, extensions, observability, review).
 
 ## 2026-11-27 — Phase 1 (foundation)
 

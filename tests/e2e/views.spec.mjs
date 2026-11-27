@@ -2,9 +2,9 @@
 import { test, expect } from '@playwright/test';
 import { open } from './helpers.mjs';
 
-test('voltar de CKA/CKAD para Aprender não deixa o painel de certificação visível', async ({ page }) => {
+test('voltar de CKA/CKAD/CKS para Aprender não deixa o painel de certificação visível', async ({ page }) => {
   await open(page, 'pods-3');
-  for (const tab of ['CKA', 'CKAD']) {
+  for (const tab of ['CKA', 'CKAD', 'CKS']) {
     await page.locator(`#tabs button[data-v="${tab.toLowerCase()}"]`).click();
     await expect(page.locator('#cert')).toBeVisible();
     await page.locator('#tabs button[data-v="learn"]').click();
@@ -40,4 +40,14 @@ test('caixa “Na prova” alterna CKA/CKAD e lembra a escolha', async ({ page }
   await expect(box.locator('.exno')).toContainText('CKAD');
   await page.reload();
   await expect(page.locator('#exam button[data-x="ckad"]')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('caixa “Na prova” tem aba CKS com dicas onde o tema aparece', async ({ page }) => {
+  await open(page, 'rbac-1');
+  const box = page.locator('#exam');
+  await box.locator('button[data-x="cks"]').click();
+  await expect(box.locator('button[data-x="cks"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(box).toContainText('automountServiceAccountToken');
+  await page.evaluate(() => { location.hash = 'pods-1'; });
+  await expect(box.locator('.exno')).toContainText('CKS');
 });
