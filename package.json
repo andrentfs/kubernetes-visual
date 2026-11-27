@@ -1,0 +1,19 @@
+{
+  "name": "kubernetes-visual",
+  "private": true,
+  "description": "Curso visual e interativo de Kubernetes (PT-BR / EN) — site estático, sem build.",
+  "type": "module",
+  "scripts": {
+    "serve": "node tests/tools/serve.mjs",
+    "test": "npm run test:unit && npm run test:i18n && npm run test:e2e",
+    "test:unit": "node --test \"tests/unit/**/*.test.mjs\"",
+    "test:i18n": "node tests/tools/i18n-parity.mjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

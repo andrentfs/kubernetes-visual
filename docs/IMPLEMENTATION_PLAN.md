@@ -1,9 +1,20 @@
 # Kubernetes Visual — Plano de implementação
 
-> Status: **diagnóstico — aguardando aprovação**. Nada deste plano foi implementado ainda.
+> Status: **Fase 1 em andamento (local, sem publicar).** Ver “Progresso” abaixo.
 > Data da análise: 27/11/2026 · Commit analisado: `7ad7b9f` (branch `main`).
 
 ---
+
+## Progresso
+
+| Data | Item | Situação |
+|---|---|---|
+| 27/11/2026 | ADR-001 (Docker) | Implementado localmente: `Dockerfile`, `docker/Dockerfile.dev`, `docker-compose.yml`, `Makefile`, CI em `.github/workflows/test.yml` (ainda não enviado) |
+| 27/11/2026 | F1 Testes E2E | Implementado: 10 testes Playwright (236 passos × 2 idiomas, terminal, abas, idioma, teclado, layout desktop/celular) |
+| 27/11/2026 | F2 Paridade i18n | Implementado: `npm run test:i18n` |
+| 27/11/2026 | Unitários do terminal | Implementado: 11 testes `node:test` |
+| 27/11/2026 | Bug encontrado pelos testes | Caixa “Na prova” estourava a largura no passo `sched-1` (rolagem horizontal da página) — corrigido |
+| — | F3 CI | Workflow escrito; precisa de push para rodar no GitHub |
 
 ## 1. Diagnóstico da arquitetura atual
 
@@ -125,7 +136,7 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 
 | ADR | Proposta | Motivo | Alternativa descartada |
 |---|---|---|---|
-| **ADR-001** | Manter o site **sem build em produção**. Ferramentas (testes, lint, pré-renderização) só como `devDependencies`, rodando no CI | Preserva a simplicidade e a compatibilidade com GitHub Pages | Vite/Next, que adicionam build obrigatório e mudam o processo de publicação |
+| **ADR-001** | **Desenvolvimento orientado a Docker; produção estática sem build.** Servir, testar e medir sempre em containers (`make up/test/shell/preview`); imagem `dev` baseada em `mcr.microsoft.com/playwright` com versão fixa; o CI usa a mesma imagem. Detalhes em [`docs/adr/ADR-001-docker-first.md`](adr/ADR-001-docker-first.md) | Ambiente reprodutível (local = CI), contribuidor só precisa de Docker; o GitHub Pages continua sem build | Ferramentas instaladas no host; Vite/Next com build obrigatório |
 | **ADR-002** | Separar `index.html` em módulos ES nativos (`<script type="module">`): `css/app.css`, `js/engine/` (iso, render, links, camera, layout), `js/ui/` (sidebar, search, progress, cert), `js/sim/` (relógio e linha do tempo compartilhados), `js/term/` (motor e dados por lição em `lessons/*.js`) | Testabilidade e reuso do motor nos simuladores | Manter o monólito |
 | **ADR-003** | Carregar o idioma ativo sob demanda (`import()` de `i18n/pt.js` ou `i18n/en.js`) | Corta cerca de 150 KB da primeira carga | Bundle por idioma, que exigiria build |
 | **ADR-004** | **Motor de simulação único** (relógio com velocidade, pausa, passo a passo, estados versionados para voltar no tempo), usado por: falha de node, autoscaling, troubleshooting e YAML interativo | Evita quatro implementações paralelas (DRY) | Uma animação ad hoc por simulador |

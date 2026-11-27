@@ -1,6 +1,9 @@
-# Uso:
-#   docker compose up            -> http://localhost:8080 (lê os arquivos da pasta: edite e recarregue)
-#   docker compose --profile preview up --build  -> http://localhost:8081 (imagem fechada, igual ao que vai publicado)
+# Desenvolvimento orientado a Docker — veja docs/adr/ADR-001-docker-first.md
+#
+#   make up        → site em http://localhost:8080 (lê os arquivos da pasta; edite e recarregue)
+#   make test      → testes unitários + paridade PT/EN + E2E (Playwright/Chromium)
+#   make shell     → terminal dentro do container de desenvolvimento
+#   make preview   → imagem fechada, igual ao que vai publicado, em http://localhost:8081
 services:
   site:
     image: nginx:1.27-alpine
@@ -10,8 +13,26 @@ services:
       - ./:/usr/share/nginx/html:ro
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
+  dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    image: kubernetes-visual-dev
+    init: true
+    ipc: host            # recomendado pelo Playwright para o Chromium
+    volumes:
+      - ./:/app
+      - node_modules:/app/node_modules
+    ports:
+      - "4173:4173"
+    profiles: ["dev"]
+
   preview:
     build: .
+    image: kubernetes-visual
     ports:
       - "8081:80"
     profiles: ["preview"]
+
+volumes:
+  node_modules:

@@ -1,4 +1,4 @@
 .git
-docs
-docker-compose.yml
-*.md
+node_modules
+test-results
+playwright-report

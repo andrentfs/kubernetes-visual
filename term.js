@@ -1198,5 +1198,7 @@ function step(c){if(!root)return;LANG=c.lang;const on=LESSONS.includes(c.lesson)
  const sg=suggest(ST,c.cmd);chipsEl.innerHTML=sg.map(x=>`<button type="button" data-c="${esc(x)}">${esc(x)}</button>`).join('');
  inp.value=c.cmd||'';out.scrollTop=out.scrollHeight}
 function runNow(cmd){if(!root||root.hidden)return;root.scrollIntoView({behavior:'smooth',block:'nearest'});inp.value='';run(cmd);inp.focus({preventScroll:true})}
-window.K8STERM={init,step,run:runNow,has:id=>LESSONS.includes(id),T:()=>T[LANG],_exec:exec,_state:()=>ST};
+window.K8STERM={init,step,run:runNow,has:id=>LESSONS.includes(id),T:()=>T[LANG],_exec:exec,_state:()=>ST,
+ /* test hooks: build the simulated state without the DOM */
+ _load:c=>{LANG=c.lang||'pt';ST=derive(c);return ST},_lessons:()=>LESSONS.slice()};
 })();

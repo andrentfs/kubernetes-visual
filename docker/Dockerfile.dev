@@ -1,0 +1,14 @@
+# Ambiente de desenvolvimento e testes do Kubernetes Visual.
+# Base oficial do Playwright: Node.js + Chromium + dependências de sistema, tudo com versão fixa.
+# A versão da imagem precisa ser a mesma do @playwright/test no package.json.
+ARG PLAYWRIGHT_IMAGE=mcr.microsoft.com/playwright:v1.63.0-noble
+FROM ${PLAYWRIGHT_IMAGE}
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY . .
+
+ENV PORT=4173
+EXPOSE 4173
+CMD ["npm", "test"]

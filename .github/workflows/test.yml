@@ -1,0 +1,26 @@
+# Roda a suíte de testes no mesmo container usado localmente (ADR-001).
+# Não publica nada: a publicação continua sendo o GitHub Pages servindo a raiz da main.
+name: test
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Constrói a imagem de desenvolvimento
+        run: docker compose --profile dev build dev
+      - name: Testes (unitários, paridade PT/EN, E2E)
+        run: docker compose --profile dev run --rm -e CI=1 dev npm test
+      - name: Relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: test-results/
+          retention-days: 7
