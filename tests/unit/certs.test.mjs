@@ -40,3 +40,16 @@ test('competências não cobertas apontam para uma lição planejada com nome no
       for (const lang of ['pt', 'en']) assert.ok(CERTTXT[lang].plan[plan], `${lang}.plan.${plan}`);
     }
 });
+
+test('toda lição citada nos mapas de cobertura existe no curso', () => {
+  const { LESSON_ORDER } = loadSite(['data/scenes.js']);
+  for (const exam of ['cka', 'ckad', 'cks']) for (const dom of Object.keys(CERTS[exam].comp))
+    for (const [id, les] of CERTS[exam].comp[dom]) for (const l of les)
+      assert.ok(LESSON_ORDER.includes(l), `${exam}.${id}: lição ${l} não existe`);
+});
+
+test('CKS: as 26 competências estão cobertas por lições', () => {
+  const all = Object.values(CERTS.cks.comp).flat();
+  assert.equal(all.length, 26);
+  assert.deepEqual(all.filter(([, les, st]) => st !== 'full' || !les.length).map(([id]) => id), []);
+});

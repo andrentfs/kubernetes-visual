@@ -5,6 +5,8 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- **Module 06 — Advanced security (CKS)**, 5 new lessons (69 min, 52 steps) in PT and EN: cluster security (CIS/kube-bench, API access, ServiceAccount tokens, cloud metadata, Ingress TLS, binary verification); system hardening (host footprint, ports, firewall, IAM, AppArmor, seccomp); isolation and encryption (Secrets at rest, multi-tenancy, RuntimeClass sandboxes, mTLS); supply chain (minimal images, Trivy, SBOM, Kubesec/KubeLinter, cosign, allowed registries); runtime security (Falco, threats, attack investigation, immutability, audit logs). Each has CKS exam tips.
+- CKS coverage is now **26 of 26 competencies**.
 - “On the exam” box now has **CKA | CKAD** tabs. CKAD tips for the 18 lessons in the CKAD v1.37 curriculum, in PT and EN; lessons outside it say so. The choice is remembered.
 - **CKS track**: new CKS tab with the 6 domains and weights of `CKS_Curriculum v1.37.pdf` (cncf/curriculum `f5ab45e`), honest coverage (covered / partial / coming soon, each gap pointing to a planned lesson), exam facts and tips.
 - “On the exam” box gains a **CKS** tab, with tips in 9 lessons (RBAC, NetworkPolicy, ConfigMaps/Secrets/securityContext, images, kubeadm, Service/Ingress, extensions, observability, review).

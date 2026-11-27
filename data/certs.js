@@ -19,12 +19,12 @@ ckad:{weights:[['design',20],['deploy',20],['obs',15],['env',25],['net',20]],
   net:[['netpol',['netpol'],'full'],['svc',['service','network'],'full'],['ing',['service','network'],'full']]}},
 cks:{weights:[['setup',15],['harden',15],['system',10],['micro',20],['supply',20],['runtime',20]],
  comp:{
-  setup:[['netsec',['netpol'],'full'],['cis',[],'planned','cksSetup'],['ingtls',['service'],'partial','cksSetup'],['meta',['netpol'],'partial','cksSetup'],['bin',['kubeadm'],'partial','cksSetup']],
-  harden:[['rbac',['rbac'],'full'],['sa',['rbac','config'],'partial','cksSetup'],['api',['rbac','extend'],'partial','cksSetup'],['upgrade',['kubeadm'],'full']],
-  system:[['host',[],'planned','cksSystem'],['iam',['rbac'],'partial','cksSystem'],['extnet',['netpol'],'partial','cksSystem'],['kernel',['config'],'partial','cksSystem']],
-  micro:[['pss',['config'],'full'],['secrets',['config'],'partial','cksIso'],['iso',[],'planned','cksIso'],['mtls',[],'planned','cksIso']],
-  supply:[['base',['images'],'partial','cksSupply'],['sbom',[],'planned','cksSupply'],['sign',[],'planned','cksSupply'],['static',[],'planned','cksSupply']],
-  runtime:[['behav',[],'planned','cksRuntime'],['threat',[],'planned','cksRuntime'],['attack',[],'planned','cksRuntime'],['immut',['config'],'partial','cksRuntime'],['audit',['observ'],'partial','cksRuntime']]}}
+  setup:[['netsec',['netpol','hardening'],'full'],['cis',['hardening'],'full'],['ingtls',['service','hardening'],'full'],['meta',['netpol','hardening'],'full'],['bin',['kubeadm','hardening'],'full']],
+  harden:[['rbac',['rbac'],'full'],['sa',['rbac','hardening'],'full'],['api',['rbac','extend','hardening'],'full'],['upgrade',['kubeadm'],'full']],
+  system:[['host',['sistema'],'full'],['iam',['rbac','sistema'],'full'],['extnet',['netpol','sistema'],'full'],['kernel',['config','sistema'],'full']],
+  micro:[['pss',['config'],'full'],['secrets',['config','isolamento'],'full'],['iso',['isolamento'],'full'],['mtls',['isolamento'],'full']],
+  supply:[['base',['images','supply'],'full'],['sbom',['supply'],'full'],['sign',['supply'],'full'],['static',['supply'],'full']],
+  runtime:[['behav',['runtime'],'full'],['threat',['runtime'],'full'],['attack',['runtime'],'full'],['immut',['config','runtime'],'full'],['audit',['observ','runtime'],'full']]}}
 };
 window.CERTTXT={
 pt:{tabs:{learn:'Aprender',cka:'CKA',ckad:'CKAD',cks:'CKS'},

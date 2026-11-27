@@ -2,7 +2,7 @@
 
 🇧🇷 Português · [🇺🇸 English](README.md)
 
-Curso interativo e visual sobre Kubernetes, em português (Brasil) e inglês. Cada conceito é um diagrama isométrico animado que você avança passo a passo, com terminal `kubectl` simulado e trilhas para as provas CKA e CKAD.
+Curso interativo e visual sobre Kubernetes, em português (Brasil) e inglês. Cada conceito é um diagrama isométrico animado que você avança passo a passo, com terminal `kubectl` simulado e trilhas para as provas CKA, CKAD e CKS.
 
 **No ar:** https://andrentfs.github.io/kubernetes-visual/
 
@@ -43,7 +43,7 @@ Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modu
 |---|---|---|
 | Unitários | `tests/unit/` (`node:test`) | Motor do terminal simulado: saídas, flags, pipes, determinismo, arquivos somente leitura |
 | Paridade PT/EN | `tests/tools/i18n-parity.mjs` | Mesmas chaves, lições, passos, campos e legendas nos dois idiomas |
-| E2E | `tests/e2e/` (Playwright) | Todos os passos nos dois idiomas sem erro e sem seta atravessando bloco; terminal; abas CKA/CKAD; idioma; teclado; layout desktop e celular |
+| E2E | `tests/e2e/` (Playwright) | Todos os passos nos dois idiomas sem erro e sem seta atravessando bloco; terminal; abas CKA/CKAD/CKS; idioma; teclado; layout desktop e celular |
 
 ## Estrutura
 
@@ -52,7 +52,7 @@ Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modu
 | `index.html` | Estrutura da página e ordem de carregamento dos scripts |
 | `css/app.css` | Estilos |
 | `data/scenes.js` | Cenas de cada lição (iguais nos dois idiomas) |
-| `data/certs.js` | Domínios e competências CKA/CKAD |
+| `data/certs.js` | Domínios e competências CKA/CKAD/CKS |
 | `i18n/pt.js`, `i18n/en.js` | Textos |
 | `js/geometry.js` · `content.js` · `renderer.js` · `ui.js` | Motor isométrico e interface ([ADR-002](docs/adr/ADR-002-file-structure.md)) |
 | `js/term/` | Terminal `kubectl` simulado: `lessons.js` (dados por lição), `files.js` (YAMLs), `engine.js` (interpretador) |

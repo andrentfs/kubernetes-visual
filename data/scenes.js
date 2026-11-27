@@ -322,6 +322,100 @@ tudo:{min:5,lvl:'beg',mod:4,steps:[
 {k:'resumo',s:()=>({e:[...cp([],at(-3,-16)),...nodes(),users(9),ING(),SV('HPA 2–10'),pod('t0',0,1,'ok','api',{m:41}),pod('t1',1,1,'ok','api',{m:39}),pod('t2',2,1,'ok','api',{m:40}),pod('t3',1,3,'ok','api',{m:42})],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})},
 {k:'resumo',s:()=>({e:[...cp(['api','etcd','sched','ctrl'],at(-3,-16)),...nodes({0:{st:'hi'},1:{st:'hi'},2:{st:'hi'}}),users(9),ING(),SV('HPA 2–10'),pod('t0',0,1),pod('t1',1,1),pod('t2',2,1),pod('t3',1,3)],l:[['cp','n0','d'],['cp','n1','d']],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})},
 {k:'resumo',cmd:'kubectl get all',s:()=>({e:[...cp(['api','etcd','sched','ctrl'],at(-3,-16)),...nodes(),users(9),ING(),SV(),pod('t0',0,1),pod('t1',1,1),pod('t2',2,1),pod('t3',1,3)],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})}
-]}
+]},
+hardening:{min:14,lvl:'adv',mod:5,steps:(()=>{
+const KL=(b={})=>[0,1,2].map(i=>pod('kl'+i,i,4,'other','kubelet',{ic:'srv',b:b[i]}));
+const AP=(o={})=>[pod('w0',0,1,'web','web',{ic:'web'}),pod('a1',1,1,o.a1||'ok','api',{b:o.ab}),pod('x',2,1,o.x||'other','app',{ic:'box',b:o.xb})];
+const KBN=b=>blk('kb',...at(-6,-12),'orange','kube-bench',{s:2.1,h:30,ic:'gauge',b});
+const MD=b=>blk('md',...at(36,-14),'red','169.254.169.254',{s:2.1,h:30,ic:'globe',b});
+const POL=b=>blk('pol',...at(40,-2),'violet','NetworkPolicy',{s:2.1,h:30,ic:'shield',b});
+return[
+{k:'contexto',s:()=>({e:[...cpb(['api'],{api:{b:[':6443']},etcd:{b:[':2379']}}),...nodes(),...KL({0:[':10250']}),...AP(),MD()]})},
+{k:'conceito',cmd:'kube-bench run --targets master',s:()=>({e:[...cp(['api','etcd','sched','ctrl']),...nodes(),...KL(),...AP(),KBN(['[FAIL] 1.2.x','bad'])],l:[['kb','cp','d']]})},
+{k:'solucao',cmd:'vi /etc/kubernetes/manifests/kube-apiserver.yaml',s:()=>({e:[...cpb(['api'],{api:{b:['--profiling=false','ok']}}),...nodes(),...KL(),...AP(),KBN(['[PASS]','ok'])],l:[['kb','cp','d']]})},
+{k:'problema',cmd:'crictl ps -a | grep kube-apiserver',s:()=>({e:[...cpb([],{api:{c:'red',b:['Exited','bad']}}),...nodes(),...KL(),...AP(),KBN()],f:[['kl0','cp',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...cpb(['api'],{api:{b:['Node,RBAC']}}),...nodes(),...KL({1:['NodeRestriction','ok']}),...AP(),blk('anon',...at(-6,-12),'grey','system:anonymous',{s:2.1,h:30,ic:'user',b:['403','bad']})],f:[['anon','cp',2,'bad'],['kl1','cp',1]]})},
+{k:'solucao',cmd:'kubectl patch sa default -n loja -p \'{"automountServiceAccountToken":false}\'',s:()=>({e:[...cp(['api']),...nodes(),...KL(),...AP({a1:'new',ab:['token: não','ok']})]})},
+{k:'problema',cmd:'kubectl exec app -- curl -s 169.254.169.254',s:()=>({e:[...cp([]),...nodes(),...KL(),...AP({x:'web',xb:[tl('invaded'),'bad']}),MD([tl('cloudCreds'),'bad'])],f:[['x','md',2]]})},
+{k:'solucao',cmd:'kubectl apply -f deny-metadata.yaml',s:()=>({e:[...cp([]),...nodes(),...KL(),...AP({x:'web'}),MD(),POL(['except /32'])],l:[['pol','x','d']],f:[['x','md',2,'bad']]})},
+{k:'solucao',cmd:'kubectl create secret tls loja-tls --cert=tls.crt --key=tls.key',s:()=>({e:[...nodes(),users(6),{...ING(),b:['TLS · loja.com','ok']},blk('sec',...at(4,-24),'yellow','loja-tls',{s:1.9,h:28,ic:'lock'}),SV(),pod('a0',0,1),pod('a1',1,1),pod('a2',2,1)],l:[['sec','ing','d']],f:[['u','ing',2],['ing','sv',2],['sv','a0',1],['sv','a1',1],['sv','a2',1]]})},
+{k:'conceito',cmd:'sha512sum /usr/bin/kubelet',s:()=>({e:[...cp([]),...nodes(),...KL({0:['sha512 ✓','ok'],1:['sha512 ✓','ok'],2:['sha512 ≠','bad']}),...AP()]})},
+{k:'resumo',s:()=>({e:[...cpb(['api'],{api:{b:['CIS ✓','ok']}}),...nodes(),...KL(),...AP({a1:'new'}),MD(),POL()],l:[['pol','x','d']],f:[['x','md',1,'bad']]})}
+]})()},
+sistema:{min:13,lvl:'adv',mod:5,steps:(()=>{
+const SVC=(o={})=>[pod('s0',0,0,'other','kubelet',{ic:'srv'}),pod('s1',0,1,'other','containerd',{ic:'box'}),pod('s2',0,2,'other','sshd',{ic:'term',b:o.ssh}),...(o.apache===null?[]:[pod('s3',0,3,o.apache||'web','apache2',{ic:'web',b:o.ab})]),...(o.cups===null?[]:[pod('s4',0,4,o.cups||'web','cups',{ic:'log',b:o.cb})])];
+const CPP=(b={})=>[pod('ke',0,0,'v2','etcd',{ic:'db',b:b.e}),pod('ka',0,2,'v2','apiserver',{ic:'api',b:b.a}),pod('ks',0,3,'v2','sched',{ic:'cal',b:b.s}),pod('kc2',0,5,'v2','ctrl-mgr',{ic:'loop',b:b.c})];
+const KLW=(b={})=>[pod('k1',1,4,'other','kubelet',{ic:'srv',b:b[1]}),pod('k2',2,4,'other','kubelet',{ic:'srv',b:b[2]})];
+const WEB=(i,st,b)=>pod('wb'+i,i,1,st||'web','web',{ic:'web',b});
+const AA=(b,id='aa',p=at(12,-16))=>blk(id,...p,'violet','AppArmor',{s:2,h:28,ic:'shield',b});
+return[
+{k:'contexto',cmd:'ss -tlnp',s:()=>({e:[node(0,{lb:'node-1'}),...SVC({ab:[':80','bad'],cb:[':631','bad']})]})},
+{k:'solucao',cmd:'systemctl disable --now apache2 cups',s:()=>({e:[node(0,{lb:'node-1'}),...SVC({apache:'dead',cups:'dead',ab:[tl('removed')],cb:[tl('removed')]})]})},
+{k:'conceito',s:()=>({e:[...KA.n(),...CPP({e:['2379-2380'],a:['6443'],s:['10259'],c:['10257']}),...KLW({1:['10250'],2:['10250']})]})},
+{k:'solucao',cmd:'ufw default deny incoming',s:()=>({e:[...KA.n(),...CPP({e:['2379-2380','bad'],a:['6443','ok']}),...KLW(),users(4,...at(-8,-14))],f:[['u','ka',2],['u','ke',2,'bad']]})},
+{k:'conceito',cmd:'id ana',s:()=>({e:[...KA.n(),...CPP(),...KLW(),users(4,...at(-8,-14),'ssh'),blk('iam',...at(30,-14),'orange','IAM',{s:2.1,h:30,ic:'user',b:[tl('minimum'),'ok']})],f:[['u','n0',1]],l:[['iam','n2','d']]})},
+{k:'conceito',cmd:'aa-status',s:()=>({e:[...KA.n(),...KLW(),WEB(1),AA(['k8s-deny-write'])],l:[['aa','n1','d']]})},
+{k:'solucao',cmd:'kubectl exec web -- touch /tmp/x',s:()=>({e:[...KA.n(),...KLW(),WEB(1,'new',['Permission denied','ok']),AA(['Localhost'])],l:[['aa','wb1','d']]})},
+{k:'tradeoff',cmd:'kubectl describe pod web-2',s:()=>({e:[...KA.n(),...KLW(),WEB(1,'new'),WEB(2,'dead',[tl('noProfile'),'bad']),AA()],l:[['aa','wb1','d']]})},
+{k:'conceito',s:()=>({e:[...KA.n(),...KLW(),WEB(1,'new'),WEB(2,'new'),blk('sc',...at(34,-16),'violet','seccomp',{s:2,h:28,ic:'shield',b:['RuntimeDefault']}),AA()],l:[['sc','wb2','d'],['aa','wb1','d']]})},
+{k:'resumo',s:()=>({e:[...KA.n(),...CPP(),...KLW(),WEB(1,'new'),WEB(2,'new'),AA(),blk('sc',...at(34,-16),'violet','seccomp',{s:2,h:28,ic:'shield'})],l:[['sc','wb2','d'],['aa','wb1','d']]})}
+]})()},
+isolamento:{min:14,lvl:'adv',mod:5,steps:(()=>{
+const T=(o={})=>[node(0,{id:'ns1',lb:'ns: tenant-a'}),node(1,{id:'nsb',lb:'ns: tenant-b'}),node(2,{id:'ns2',lb:'node-3'}),pod('ta',0,1,'ok','app-a',{b:o.ab}),pod('tb',1,1,o.tb||'web','app-b',{ic:'web',b:o.bb})];
+const ET=b=>blk('etcd',...at(-6,-12),'violet','etcd',{s:2.1,h:30,ic:'db',b});
+const API=b=>blk('apis',...at(17,-15),'violet','API server',{ic:'api',b});
+const ENC=b=>blk('enc',...at(30,-24),'green','EncryptionConfiguration',{s:2,h:28,ic:'lock',b});
+const SB=(st,b)=>pod('gv',2,1,st||'new','app-b',{ic:'box',b});
+const SEC=()=>blk('sec',...at(30,-24),'yellow','Secret',{s:2.1,h:30,ic:'lock'});
+return[
+{k:'contexto',s:()=>({e:[...T(),API(),ET(),SEC()],l:[['sec','apis','d'],['apis','etcd','d']]})},
+{k:'problema',cmd:'etcdctl get /registry/secrets/loja/db-pass',s:()=>({e:[...T(),API(),ET([tl('plainPwd'),'bad'])],f:[['apis','etcd',2]]})},
+{k:'solucao',cmd:'grep encryption-provider-config /etc/kubernetes/manifests/kube-apiserver.yaml',s:()=>({e:[...T(),API(['aescbc','ok']),ET(['k8s:enc:aescbc:v1:','ok']),ENC()],l:[['enc','apis','d']],f:[['apis','etcd',2]]})},
+{k:'conceito',cmd:'kubectl get secrets -A -o json | kubectl replace -f -',s:()=>({e:[...T(),API(),ET(['100%','ok']),ENC()],l:[['enc','apis','d']],f:[['apis','etcd',3]]})},
+{k:'conceito',s:()=>({e:[...T({ab:['volume','ok'],bb:['403','bad']}),API(),SEC()],l:[['sec','apis','d']],f:[['ta','apis',1],['tb','apis',1,'bad']]})},
+{k:'conceito',cmd:'kubectl label ns tenant-a pod-security.kubernetes.io/enforce=restricted',s:()=>({e:[...T({ab:['RBAC · quota'],bb:['RBAC · quota']}),blk('pol',...at(30,-12),'violet','NetworkPolicy',{s:2.2,h:30,ic:'shield'})],f:[['ta','tb',2,'bad']]})},
+{k:'problema',s:()=>({e:[...T(),SB('web',[tl('sharedKernel'),'bad']),blk('kern',...at(30,-14),'red','kernel',{s:2.2,h:30,ic:'srv'})],f:[['gv','kern',2,'bad']]})},
+{k:'solucao',cmd:'kubectl get runtimeclass',s:()=>({e:[...T(),SB('new',['runsc','ok']),blk('kern',...at(30,-14),'grey','kernel',{s:2.2,h:30,ic:'srv'}),blk('rc',...at(44,-2),'green','RuntimeClass',{s:2,h:28,ic:'box',b:['gvisor']})],l:[['rc','gv','d']],f:[['gv','kern',1]]})},
+{k:'conceito',s:()=>({e:[...T({ab:['mTLS','ok'],bb:['mTLS','ok']}),blk('mesh',...at(30,-12),'violet','Istio · Cilium',{s:2.2,h:30,ic:'lock'})],f:[['ta','tb',2]],l:[['mesh','tb','d']]})},
+{k:'tradeoff',s:()=>({e:[...T({ab:['+ proxy'],bb:['+ proxy']}),SB('new',['+ ms']),blk('mesh',...at(30,-12),'violet','Istio · Cilium',{s:2.2,h:30,ic:'lock'})],f:[['ta','tb',2]]})},
+{k:'resumo',s:()=>({e:[...T({ab:['mTLS','ok'],bb:['mTLS','ok']}),SB(),API(['aescbc','ok']),ET(['k8s:enc:…','ok']),ENC()],l:[['enc','apis','d']],f:[['apis','etcd',1],['ta','tb',1]]})}
+]})()},
+supply:{min:14,lvl:'adv',mod:5,steps:(()=>{
+const DEV=()=>blk('dev',...at(-8,-14),'paper','git',{s:2,h:28,ic:'link'});
+const CI=b=>blk('ci',...at(4,-20),'orange','CI',{s:2.1,h:30,ic:'loop',b});
+const REG=b=>blk('reg',...at(18,-24),'blue','registry',{s:2.2,h:32,ic:'db',b});
+const TV=b=>blk('tv',...at(-8,-26),'yellow','trivy',{s:2,h:28,ic:'gauge',b});
+const P=(o={})=>[...nodes(),pod('p0',0,1,o.st||'new','api',{b:o.b}),pod('p1',1,1,o.st||'new','api'),...(o.x?[pod('x',2,1,'dead','miner',{ic:'box',b:o.x})]:[])];
+const ADM=b=>blk('adm',...at(32,-12),'violet','admission',{s:2.1,h:30,ic:'shield',b});
+return[
+{k:'contexto',s:()=>({e:[DEV(),CI(),REG(),...P({st:'ok'})],f:[['dev','ci',2],['ci','reg',2],['reg','p1',2]]})},
+{k:'conceito',cmd:'podman build -t loja/api:v2 .',s:()=>({e:[DEV(),CI(['distroless · nonroot','ok']),REG(),...P({st:'ok'})],f:[['dev','ci',2],['ci','reg',1]]})},
+{k:'problema',cmd:'trivy image --severity HIGH,CRITICAL loja/api:v2',s:()=>({e:[DEV(),CI(),REG(['CRITICAL: 2','bad']),TV(),...P({st:'ok'})],l:[['tv','reg','d']]})},
+{k:'solucao',cmd:'trivy image --severity HIGH,CRITICAL loja/api:v3',s:()=>({e:[DEV(),CI(),REG(['CRITICAL: 0','ok']),TV(),...P()],l:[['tv','reg','d']],f:[['reg','p1',2]]})},
+{k:'conceito',cmd:'trivy image --format cyclonedx --output sbom.json loja/api:v3',s:()=>({e:[DEV(),CI(['SBOM','ok']),REG(['sbom.json']),...P()],f:[['ci','reg',1]]})},
+{k:'conceito',cmd:'kubesec scan pod.yaml',s:()=>({e:[DEV(),CI(['kubesec · kube-linter']),REG(),...P()],f:[['dev','ci',2]]})},
+{k:'solucao',cmd:'cosign verify --key cosign.pub registry.loja.com/api:v3',s:()=>({e:[DEV(),CI(['cosign sign','ok']),REG([tl('signed'),'ok']),...P()],f:[['ci','reg',2],['reg','p1',1]]})},
+{k:'solucao',cmd:'kubectl run x --image=docker.io/evil/miner',s:()=>({e:[DEV(),CI(),REG(),ADM(['registry.loja.com/*']),...P({x:['denied','bad']})],l:[['adm','x','d']]})},
+{k:'tradeoff',cmd:'kubectl set image deploy/api api=registry.loja.com/api@sha256:<digest>',s:()=>({e:[DEV(),CI(),REG(['@sha256','ok']),...P({b:[tl('pinned')]})],f:[['reg','p1',2]]})},
+{k:'resumo',s:()=>({e:[DEV(),CI(['scan · sign','ok']),REG(['✓','ok']),ADM(),...P()],f:[['dev','ci',1],['ci','reg',1],['reg','p1',1]]})}
+]})()},
+runtime:{min:14,lvl:'adv',mod:5,steps:(()=>{
+const N=(o={})=>[...nodes({1:{st:o.n1}}),pod('w0',0,1,'web','web',{ic:'web'}),pod('a1',1,0,o.a1||'ok','api',{b:o.ab}),pod('d2',2,1,'ok','db',{ic:'db'}),pod('fa',1,5,'other','falco',{ic:'gauge',b:o.fb})];
+const API=b=>blk('apis',...at(17,-15),'violet','API server',{ic:'api',b});
+const AUD=b=>blk('aud',...at(30,-24),'yellow','audit.log',{s:2,h:28,ic:'log',b});
+const HK=()=>users(1,...at(-8,-14),tl('attacker'));
+return[
+{k:'contexto',cmd:'kubectl exec -it api -- sh',s:()=>({e:[...N({a1:'web',ab:['sh','bad']}),HK()],f:[['u','a1',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...N({a1:'web',fb:['syscalls']}),HK()],f:[['a1','fa',2,'hc']]})},
+{k:'solucao',cmd:'journalctl -u falco --since "10 min ago"',s:()=>({e:[...N({a1:'web',ab:['Terminal shell','bad'],fb:['Notice','bad']}),HK()],f:[['fa','a1',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...N({a1:'web',ab:['CPU 100%','bad']}),blk('ext',...at(36,-14),'red','pool.miner:3333',{s:2,h:28,ic:'globe'})],f:[['a1','ext',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...N({a1:'dead',ab:['?','bad']}),HK(),API(),AUD()],f:[['u','a1',1,'bad']],l:[['apis','aud','d']]})},
+{k:'solucao',cmd:'kubectl get pod api -o jsonpath=\'{.spec.containers[*].securityContext}\'',s:()=>({e:[...N({a1:'new',ab:['readOnlyRootFilesystem','ok']}),HK()],f:[['u','a1',2,'bad']]})},
+{k:'conceito',s:()=>({e:[...N(),API(['policy.yaml']),AUD(['Metadata'])],f:[['apis','aud',2]]})},
+{k:'solucao',cmd:'grep audit /etc/kubernetes/manifests/kube-apiserver.yaml',s:()=>({e:[...N(),API(['--audit-log-path','ok']),AUD(['+ JSON','ok'])],f:[['apis','aud',2]]})},
+{k:'problema',cmd:'grep \'"resource":"secrets"\' /var/log/kubernetes/audit/audit.log | grep \'"verb":"delete"\'',s:()=>({e:[...N(),API(),AUD(['user: ci-bot','bad'])],f:[['apis','aud',1]]})},
+{k:'resumo',s:()=>({e:[...N({a1:'new',fb:['✓','ok']}),API(),AUD(['✓','ok'])],f:[['apis','aud',1],['a1','fa',1,'hc']]})}
+]})()}
+
 };};
-window.LESSON_ORDER=['intro','cluster','images','pods','workloads','config','storage','service','network','netpol','escala','sched','rollout','probes','nodefail','helm','observ','kubeadm','trouble','extend','rbac','tudo'];
+window.LESSON_ORDER=['intro','cluster','images','pods','workloads','config','storage','service','network','netpol','escala','sched','rollout','probes','nodefail','helm','observ','kubeadm','trouble','extend','rbac','tudo','hardening','sistema','isolamento','supply','runtime'];

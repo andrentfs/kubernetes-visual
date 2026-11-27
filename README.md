@@ -2,7 +2,7 @@
 
 [🇧🇷 Português](README.pt-BR.md) · 🇺🇸 English
 
-A free, visual and interactive Kubernetes course in **English and Brazilian Portuguese**. Each concept is an animated isometric diagram you step through, with a simulated `kubectl` terminal and study tracks for the **CKA** and **CKAD** exams.
+A free, visual and interactive Kubernetes course in **English and Brazilian Portuguese**. Each concept is an animated isometric diagram you step through, with a simulated `kubectl` terminal and study tracks for the **CKA**, **CKAD** and **CKS** exams.
 
 **Live:** https://andrentfs.github.io/kubernetes-visual/
 
@@ -10,10 +10,10 @@ A free, visual and interactive Kubernetes course in **English and Brazilian Port
 
 ## What's inside
 
-- **22 lessons, 236 steps** in 5 modules: fundamentals, running apps, operations, cluster administration, security. Content targets **Kubernetes v1.37**, the CKA/CKAD exam version on 27 Nov 2026 ([`data/meta.js`](data/meta.js)).
+- **27 lessons, 288 steps** in 6 modules: fundamentals, running apps, operations, cluster administration, security, advanced security (CKS). Content targets **Kubernetes v1.37**, the CKA/CKAD exam version on 27 Nov 2026 (the CKS curriculum is also v1.37) ([`data/meta.js`](data/meta.js)).
 - **Animated diagrams:** controllers creating pods, packets flowing through Services, nodes failing, probes, rollouts…
 - **Simulated terminal** in 10 lessons: `kubectl get/describe/logs/exec/scale/rollout…`, outputs derived from the diagram of each step. It's a deterministic simulation, not a real cluster.
-- **CKA and CKAD pages:** official domains and weights ([`cncf/curriculum`](https://github.com/cncf/curriculum) v1.37), competency → lesson mapping, checklist and exam tips.
+- **CKA, CKAD and CKS pages:** official domains and weights ([`cncf/curriculum`](https://github.com/cncf/curriculum) v1.37), competency → lesson mapping, checklist and exam tips.
 
 ## Development (Docker)
 
@@ -44,7 +44,7 @@ The site also opens straight from disk (`index.html`), no server needed.
 |---|---|
 | `index.html` | Page structure and script order |
 | `css/app.css` | Styles |
-| `data/` | `scenes.js` (diagrams per step), `certs.js` (CKA/CKAD), `meta.js` (reference version) |
+| `data/` | `scenes.js` (diagrams per step), `certs.js` (CKA/CKAD/CKS), `meta.js` (reference version) |
 | `i18n/` | `pt.js`, `en.js` (all texts) |
 | `js/` | `geometry.js`, `content.js`, `renderer.js`, `ui.js` (engine and UI) |
 | `js/term/` | Simulated terminal: `lessons.js` (data), `files.js` (example YAML), `engine.js` (interpreter) |

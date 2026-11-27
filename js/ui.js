@@ -5,10 +5,10 @@
 /* ---------- UI ---------- */
 /* "Na prova" com abas CKA / CKAD; a escolha fica salva em k8s-exam */
 let EXSEL=(()=>{try{return localStorage.getItem('k8s-exam')||'cka'}catch(e){return'cka'}})(),EXLES=null;
-function renderExam(les){EXLES=les;const E=$('#exam');const ex={cka:les.exam,ckad:les.examD,cks:les.examS};E.hidden=!ex.cka&&!ex.ckad;if(E.hidden)return;
- const cur=ex[EXSEL];
- E.innerHTML=`<h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg>${U_('examT')}<span class="exseg" role="group" aria-label="${esc(U_('examT'))}">${['cka','ckad','cks'].map(k=>`<button type="button" data-x="${k}" aria-pressed="${k===EXSEL}">${k.toUpperCase()}</button>`).join('')}</span></h3>`+
- (cur?`<ul>${cur.t.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${cur.c?`<div class="exc">${cur.c.map(c=>`<code>${esc(c)}</code>`).join('')}</div>`:''}`:`<p class="exno">${esc(U_({ckad:'examNoCkad',cks:'examNoCks'}[EXSEL]||'examNoCka'))}</p>`)}
+function renderExam(les){EXLES=les;const E=$('#exam');const ex={cka:les.exam,ckad:les.examD,cks:les.examS};const has=Object.keys(ex).filter(k=>ex[k]);E.hidden=!has.length;if(E.hidden)return;
+ const sel=ex[EXSEL]||has.length!==1?EXSEL:has[0],cur=ex[sel];
+ E.innerHTML=`<h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg>${U_('examT')}<span class="exseg" role="group" aria-label="${esc(U_('examT'))}">${['cka','ckad','cks'].map(k=>`<button type="button" data-x="${k}" aria-pressed="${k===sel}">${k.toUpperCase()}</button>`).join('')}</span></h3>`+
+ (cur?`<ul>${cur.t.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${cur.c?`<div class="exc">${cur.c.map(c=>`<code>${esc(c)}</code>`).join('')}</div>`:''}`:`<p class="exno">${esc(U_({ckad:'examNoCkad',cks:'examNoCks'}[sel]||'examNoCka'))}</p>`)}
 $('#exam').addEventListener('click',e=>{const b=e.target.closest('button[data-x]');if(!b)return;EXSEL=b.dataset.x;try{localStorage.setItem('k8s-exam',EXSEL)}catch(_){}if(EXLES)renderExam(EXLES)});
 
 function refLine(){const r=window.K8S_REF;if(!r)return'';const d=new Date(r.checked+'T12:00:00').toLocaleDateString(LANG==='pt'?'pt-BR':'en-US',{day:'numeric',month:'short',year:'numeric'});return`<p class="refv">${esc(U_('refVer').replace('{v}',r.version).replace('{d}',d))} <a href="${r.source}" target="_blank" rel="noopener">${esc(U_('refSrc'))}</a></p>`}
