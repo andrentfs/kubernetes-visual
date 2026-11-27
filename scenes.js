@@ -222,6 +222,26 @@ netpol:{min:12,lvl:'int',mod:1,steps:[
 {k:'solucao',cmd:'kubectl exec web -- nc -zv -w 2 db.dados 5432',s:()=>({e:[...NP.base(),pod('dns',1,5,'v2','coredns',{ic:'globe',b:[':53 ok','ok']}),NP.pol('egress: 53 + db')],l:[['pol','w0','d']],f:[['w0','dns',1],['w0','db',2]]})},
 {k:'resumo',s:()=>({e:[...NP.base(),pod('x',1,5,'other','hacker',{ic:'user'}),NP.pol('NetworkPolicy')],l:[['pol','db','d']],f:[['w0','db',2],['x','db',1,'bad']]})}
 ]},
+nodefail:{min:12,lvl:'int',mod:2,steps:(()=>{
+const HB=(n=[0,1,2])=>n.map(i=>['n'+i,'api',1,'hc']);
+const A=(o={})=>[pod('a0',0,1),pod('a1',1,1),...(o.a2===null?[]:[pod('a2',2,1,o.a2||'ok','api',{b:o.ab})]),...(o.a3?[pod('a3',0,4,o.a3)]:[])];
+const DB=(st,b)=>[pod('db0',2,3,st||'ok','db-0',{ic:'db',b}),pod('pv0',2,0,'other','data-0',{ic:'db'})];
+const TN=b=>[pod('tn',2,2,'other','taint',{ic:'lock',b:[b||'unreachable','bad']})];
+const D3=(lb)=>nodes({2:{st:'down',lb}});
+return[
+{k:'contexto',s:()=>({e:[...cp(['api']),...nodes(),...A(),...DB()],f:HB()})},
+{k:'problema',cmd:'kubectl get nodes',s:()=>({e:[...cp(['api']),...D3(),...A({ab:['Running?','bad']}),...DB('ok',['Running?','bad'])],f:HB([0,1])})},
+{k:'conceito',cmd:'kubectl get nodes',s:()=>({e:[...cp(['ctrl']),...D3('node-3 · NotReady'),...A({ab:['Ready: False','bad']}),...DB('ok',['Ready: False','bad'])],f:[...HB([0,1]),['n2','ctrl',2,'bad']]})},
+{k:'conceito',cmd:'kubectl describe node node-3',s:()=>({e:[...cp(['ctrl','sched']),...D3('node-3 · NotReady'),...A({ab:['Ready: False','bad']}),...DB('ok',['Ready: False','bad']),...TN('unreachable:NoExecute')],f:HB([0,1])})},
+{k:'conceito',s:()=>({e:[...cp(['ctrl']),...D3('node-3 · NotReady'),...A({ab:['tolerationSeconds: 300']}),...DB('ok',['300 s']),...TN()],f:HB([0,1])})},
+{k:'solucao',cmd:'kubectl get pods -o wide',s:()=>({e:[...cp(['ctrl','sched']),...D3('node-3 · NotReady'),...A({a2:'dead',ab:['Terminating','bad'],a3:'new'}),...DB('dead',['Terminating','bad']),...TN()],f:HB([0,1]),l:[['sched','a3','d']]})},
+{k:'conceito',s:()=>({e:[...cp(['ctrl']),...D3('node-3 · NotReady'),...A({a2:'dead',ab:['Terminating','bad'],a3:'ok'}),...DB('dead',['Terminating','bad']),...TN()],f:HB([0,1])})},
+{k:'problema',cmd:'kubectl get pods -l app=db',s:()=>({e:[...cp(['ctrl']),...D3('node-3 · NotReady'),...A({a2:'dead',ab:['Terminating'],a3:'ok'}),...DB('dead',['Terminating','bad']),pod('db1',1,3,'pend','db-0',{ic:'db',b:[tl('waiting'),'bad']}),...TN()],f:HB([0,1])})},
+{k:'problema',cmd:'kubectl delete pod db-0 --force --grace-period=0',s:()=>({e:[...cp(['ctrl']),...D3('node-3 · NotReady'),...A({a2:'dead',a3:'ok'}),pod('pv0',2,0,'other','data-0',{ic:'db'}),pod('db1',1,3,'pend','db-0',{ic:'db',b:['Multi-Attach error','bad']}),...TN()],f:[...HB([0,1]),['pv0','db1',2,'bad']]})},
+{k:'solucao',cmd:'kubectl taint nodes node-3 node.kubernetes.io/out-of-service=nodeshutdown:NoExecute',s:()=>({e:[...cp(['ctrl']),...D3('node-3 · NotReady'),...A({a2:null,a3:'ok'}),pod('db1',1,3,'new','db-0',{ic:'db'}),pod('pv1',1,5,'other','data-0',{ic:'db'}),...TN('out-of-service')],f:[...HB([0,1]),['pv1','db1',1]]})},
+{k:'solucao',cmd:'kubectl taint nodes node-3 node.kubernetes.io/out-of-service-',s:()=>({e:[...cp(['api']),...nodes({2:{st:'new'}}),...A({a2:null,a3:'ok'}),pod('db1',1,3,'ok','db-0',{ic:'db'}),pod('pv1',1,5,'other','data-0',{ic:'db'})],f:HB()})},
+{k:'resumo',s:()=>({e:[...cp([]),...nodes(),...A({a2:null,a3:'ok'}),pod('db1',1,3,'ok','db-0',{ic:'db'}),pod('pv1',1,5,'other','data-0',{ic:'db'})],f:HB()})}
+]})()},
 helm:{min:13,lvl:'int',mod:2,steps:[
 {k:'problema',s:()=>({e:[...nodes({},2),...['dev','hml','prod'].map((n,i)=>blk('y'+i,...at(-2+i*8,-15),'paper',n+'.yaml',{s:1.9,h:26,ic:'log',b:[i===2?tl('copyPaste'):null,'bad'].filter(Boolean).length>1?[tl('copyPaste'),'bad']:null})),pod('a0',0,1),pod('a1',1,1)],f:[['y0','a0',1],['y1','a0',1],['y2','a1',1]]})},
 {k:'conceito',s:()=>({e:[...nodes({},2),blk('ch',...at(9,-16),'violet','chart',{s:2.3,h:32,ic:'box',b:['templates/ + values.yaml']}),blk('rp',...at(-6,-16),'yellow','repo',{s:2,h:28,ic:'globe',b:['bitnami']})],f:[['rp','ch',1]]})},
@@ -304,4 +324,4 @@ tudo:{min:5,lvl:'beg',mod:4,steps:[
 {k:'resumo',cmd:'kubectl get all',s:()=>({e:[...cp(['api','etcd','sched','ctrl'],at(-3,-16)),...nodes(),users(9),ING(),SV(),pod('t0',0,1),pod('t1',1,1),pod('t2',2,1),pod('t3',1,3)],f:[['u','ing',3],['ing','sv',3],['sv','t0',1],['sv','t1',1],['sv','t2',1],['sv','t3',1]]})}
 ]}
 };};
-window.LESSON_ORDER=['intro','cluster','images','pods','workloads','config','storage','service','network','netpol','escala','sched','rollout','probes','helm','observ','kubeadm','trouble','extend','rbac','tudo'];
+window.LESSON_ORDER=['intro','cluster','images','pods','workloads','config','storage','service','network','netpol','escala','sched','rollout','probes','nodefail','helm','observ','kubeadm','trouble','extend','rbac','tudo'];

@@ -3,7 +3,7 @@
    with realistic output. Language-neutral output; UI strings in T. */
 (function(){
 'use strict';
-const LESSONS=['pods','workloads','service','probes','trouble'];
+const LESSONS=['pods','workloads','service','probes','nodefail','trouble'];
 const T={
  pt:{title:'Terminal',sim:'simulado',disc:'Apenas um exemplo simulado para estudo: as respostas são geradas a partir do diagrama deste passo e não vêm de um cluster real. Nomes, IPs, horários e detalhes podem ser diferentes do que você verá no seu cluster.',try:'Experimente:',ph:'digite um comando kubectl e aperte Enter',run:'Rodar no terminal',clear:'limpar',step:'Passo',
   unknownCmd:c=>`# Este terminal simulado não conhece "${c}". Digite help para ver o que dá para rodar.`,
@@ -56,7 +56,7 @@ function ageS(a){const m=/^(\d+)([smhd])$/.exec(a||'');if(!m)return 3600;return 
 
 /* ---------- images / owners ---------- */
 const IMG={api:'loja/api:1.0',web:'nginx:1.27',db:'postgres:16',agent:'fluent/fluent-bit:3.0',relatorio:'busybox:1.36',backup:'busybox:1.36',relatorios:'loja/relatorios:2.3',app:'loja/app:1.4','loja-v1':'loja/loja:1.0','loja-v2':'loja/loja:2.0',log:'busybox:1.36'};
-const NOTPOD=new Set(['kubelet','registry','crictl','etcd','apiserver','sched','init','proxy','adapter']);
+const NOTPOD=new Set(['kubelet','registry','crictl','etcd','apiserver','sched','init','proxy','adapter','taint']);
 function ownerOf(lb){
  if(/^db-\d$/.test(lb))return{kind:'StatefulSet',name:'db',fixed:lb};
  if(/^job(-\d)?$/.test(lb))return{kind:'Job',name:'relatorio'};
@@ -78,6 +78,8 @@ function statusOf(e,bad,nodeDown){
  const b=(e.b||[]).filter(x=>x!=='bad'&&x!=='ok').join(' · ');
  const r={status:'Running',ready:true,restarts:0,reason:'',badge:b};
  const t=b;
+ if(/Ready: False|tolerationSeconds|^300 s/.test(t))return{...r,ready:false,reason:'nodeNR'};
+ if(/Multi-Attach/.test(t))return{...r,status:'ContainerCreating',ready:false,phase:'Pending',reason:'multiattach',age:'40s'};
  if(/Completed/.test(t))return{...r,status:'Completed',ready:false,phase:'Succeeded'};
  if(/OOMKilled|exit 137/.test(t))return{...r,status:/exit 137/.test(t)?'CrashLoopBackOff':'OOMKilled',ready:false,restarts:/exit 137/.test(t)?5:1,reason:'OOMKilled'};
  if(/CrashLoopBackOff|restarting/.test(t))return{...r,status:'CrashLoopBackOff',ready:false,restarts:6,reason:'crash'};
@@ -142,6 +144,18 @@ const OV={
   8:{out:[[/^kubectl describe pod relatorios$/,'@describe:relatorios-6d5f8b7c9-m2xkp']]},
   10:{pods:{db:{status:'Error',ready:false,reason:'error',phase:'Failed'},p2:{status:'CrashLoopBackOff',ready:false,restarts:4,reason:'crash',probeDb:true},p0:{probeDb:true},p1b:{probeDb:true}}},
  },
+ nodefail:{
+  all:{stsReplicas:1,svcAdd:[{name:'api',selector:{app:'api'}},{name:'db',selector:{app:'db'},port:'5432/TCP',target:5432,ip:'None'}],pods:{a3:{age:'5m'},db1:{age:'3m'}}},
+  1:{chips:['kubectl get nodes','kubectl get leases -n kube-node-lease','kubectl get pods -o wide']},
+  6:{pods:{a3:{age:'4s'}}},
+  2:{nodeReady:{'node-3':true},chips:['kubectl get nodes','kubectl get pods -o wide']},
+  3:{chips:['kubectl get nodes','kubectl get pods -o wide','kubectl get endpoints','kubectl describe node node-3']},
+  5:{chips:['kubectl describe pod $A2','kubectl get pods -o wide']},
+  8:{pods:{db1:{gone:1}},chips:['kubectl get pods -l app=db','kubectl get sts','kubectl describe pod db-0']},
+  9:{out:[[/^kubectl delete pod db-0 --force/,'Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.\npod "db-0" force deleted']],chips:['kubectl delete pod db-0 --force --grace-period=0','kubectl describe pod db-0','kubectl get pods -o wide']},
+  10:{taintOOS:true,pods:{db1:{status:'Running',ready:true,phase:'Running',age:'40s',reason:''}},chips:['kubectl taint nodes node-3 node.kubernetes.io/out-of-service=nodeshutdown:NoExecute','kubectl get pods -o wide','kubectl describe node node-3']},
+  11:{chips:['kubectl taint nodes node-3 node.kubernetes.io/out-of-service-','kubectl get nodes','kubectl get pods -o wide']},
+ },
  trouble:{
   all:{names:{cr:'api-7d9',ip:'web'},svc:{sv:{name:'web'}},images:{ip:'nginx:1.2O'},pods:{cr:{reason:'OOMKilled'}}},
   1:{chips:['kubectl get pods -A | grep -v Running','kubectl describe pod web','kubectl logs api-7d9 --previous']},
@@ -165,10 +179,11 @@ function derive(c){
  const nodes=[{name:'controlplane',role:'control-plane',ip:'192.168.1.10',eid:slabs.find(s=>s.lb==='controlplane'||s.id==='cp')?.id,ready:true}];
  for(let k=1;k<=3;k++){const s=nodeSlab('node-'+k);nodes.push({name:'node-'+k,role:'<none>',ip:'192.168.1.1'+k,eid:s?.id,ready:!(s&&(s.st==='down'||/NotReady/.test(s.lb)))})}
  if(so.kubelet==='dead')nodes[3].ready=false;
+ if(so.nodeReady)nodes.forEach(n=>{if(so.nodeReady[n.name]!=null)n.ready=so.nodeReady[n.name]});
  const nodeOfSlab=s=>{if(!s)return null;if(s.lb==='controlplane')return'controlplane';const m=/node-(\d)/.exec(s.lb||'');if(m)return'node-'+m[1];return null};
  let pods=[];
  if(so.set){pods=clone(so.set).map(p=>({ns:'default',restarts:0,ready:true,status:'Running',age:'2d',containers:[p.lb],owner:p.owner===undefined?ownerOf(p.lb):p.owner,ip:p.ip||ipFor(p.name,p.node),...p}))}
- else E.filter(e=>e.pod&&!NOTPOD.has(e.lb)).forEach(e=>{
+ else E.filter(e=>e.pod&&!NOTPOD.has(e.lb)&&!/^data-\d$/.test(e.lb||'')).forEach(e=>{
   const host=c.hostOf(e,slabs),node=nodeOfSlab(host)||'node-1',nd=nodes.find(n=>n.name===node);
   const st=statusOf(e,0,nd&&!nd.ready);
   if(so.skipPend&&e.st==='pend'&&!st.badge)return;
@@ -191,6 +206,7 @@ function derive(c){
   const name=o.name||(e.id==='ws'?'web':/^[a-z][a-z-]*$/.test(b)?b:'api');
   let sel=o.selector;if(!sel){const m=/(?:selector:\s*)?(app|version)=(\S+)/.exec(b);sel=m?(m[1]==='version'?{app:'loja',version:m[2]}:{app:m[2]}):{app:name}}
   if(!svcs.some(s=>s.name===name))svcs.push({name,eid:e.id,ip:'10.96.'+hn(name,200)+'.'+(10+hn(name+'x',200)),port:'80/TCP',target:name==='web'?80:8080,selector:sel,type:'ClusterIP',age:'5d'})});
+ (so.svcAdd||[]).forEach(x=>{if(!svcs.some(v=>v.name===x.name))svcs.push({ip:'10.96.'+hn(x.name,200)+'.'+(10+hn(x.name+'x',200)),port:'80/TCP',target:8080,type:'ClusterIP',age:'5d',...x})});
  // ingress
  const ings=E.filter(e=>e.lb==='Ingress').map(e=>({name:'loja',eid:e.id,host:'loja.com',tls:/https/.test((e.b||[]).join()),rules:svcs.filter(s=>s.selector).map(s=>({path:s.name==='web'?'/':'/'+s.name,svc:s.name}))}));
  // pvcs
@@ -221,7 +237,7 @@ function parseArgs(argv){const f={ns:null,all:false,o:null,l:null,w:false,prev:f
   else f.rest.push(a)}
  return f}
 function matchSel(labels,sel){if(!sel)return true;return sel.split(',').every(t=>{const[k,v]=t.split('=');return labels&&labels[k]===v})}
-const RT={po:'pods',pod:'pods',pods:'pods',deploy:'deployments',deployment:'deployments',deployments:'deployments',rs:'replicasets',replicaset:'replicasets',replicasets:'replicasets',svc:'services',service:'services',services:'services',ep:'endpoints',endpoints:'endpoints',no:'nodes',node:'nodes',nodes:'nodes',ing:'ingress',ingress:'ingress',ingresses:'ingress',ds:'daemonsets',daemonset:'daemonsets',daemonsets:'daemonsets',sts:'statefulsets',statefulset:'statefulsets',statefulsets:'statefulsets',job:'jobs',jobs:'jobs',cj:'cronjobs',cronjob:'cronjobs',cronjobs:'cronjobs',pvc:'pvc',persistentvolumeclaim:'pvc',persistentvolumeclaims:'pvc',ev:'events',event:'events',events:'events',ns:'namespaces',namespace:'namespaces',namespaces:'namespaces',all:'all',pv:'pv',persistentvolume:'pv',persistentvolumes:'pv'};
+const RT={po:'pods',pod:'pods',pods:'pods',deploy:'deployments',deployment:'deployments',deployments:'deployments',rs:'replicasets',replicaset:'replicasets',replicasets:'replicasets',svc:'services',service:'services',services:'services',ep:'endpoints',endpoints:'endpoints',no:'nodes',node:'nodes',nodes:'nodes',ing:'ingress',ingress:'ingress',ingresses:'ingress',ds:'daemonsets',daemonset:'daemonsets',daemonsets:'daemonsets',sts:'statefulsets',statefulset:'statefulsets',statefulsets:'statefulsets',job:'jobs',jobs:'jobs',cj:'cronjobs',cronjob:'cronjobs',cronjobs:'cronjobs',pvc:'pvc',persistentvolumeclaim:'pvc',persistentvolumeclaims:'pvc',ev:'events',event:'events',events:'events',ns:'namespaces',namespace:'namespaces',namespaces:'namespaces',lease:'leases',leases:'leases',all:'all',pv:'pv',persistentvolume:'pv',persistentvolumes:'pv'};
 
 /* ---------- system pods ---------- */
 function sysPods(s){const so=s.so;const L=[
@@ -283,7 +299,7 @@ function getDS(s,f){const rows=[];const n=s.nodes.filter(x=>x.name!=='controlpla
  const head=['NAMESPACE','NAME','DESIRED','CURRENT','READY','UP-TO-DATE','AVAILABLE','NODE SELECTOR','AGE'];
  return{txt:f.all?table(rows,head):table(rows.map(r=>r.slice(1)),head.slice(1)),hi:ag}}
 function getSTS(s){const p=s.pods.filter(x=>x.owner?.kind==='StatefulSet');if(!p.length)return{txt:'No resources found in default namespace.'};
- const r=p.filter(x=>x.ready&&x.status==='Running').length;return{txt:table([['db',`${r}/3`,'8d']],['NAME','READY','AGE']),hi:p}}
+ const r=p.filter(x=>x.ready&&x.status==='Running').length;return{txt:table([['db',`${r}/${s.so.stsReplicas||3}`,'8d']],['NAME','READY','AGE']),hi:p}}
 function getJobs(s){const p=s.pods.filter(x=>x.owner?.kind==='Job');if(!p.length)return{txt:'No resources found in default namespace.'};
  const by={};p.forEach(x=>{(by[x.owner.name]=by[x.owner.name]||[]).push(x)});
  const st=s.so;return{txt:table(Object.entries(by).map(([n,L])=>{const done=L.filter(x=>x.status==='Completed').length,failed=L.filter(x=>x.status==='Error').length;const tot=n==='relatorio'?3:1;return[n,failed>=3?'Failed':done>=tot?'Complete':'Running',`${done}/${tot}`,done>=tot?'21s':failed>=3?'2m':'34s','2m']}),['NAME','STATUS','COMPLETIONS','DURATION','AGE']),hi:p}}
@@ -303,6 +319,7 @@ function podEvents(s,p){const n=p.name,img=p.image,E=[];const node=p.node;
  E.push(['Normal','Scheduled',p.age,'default-scheduler',`Successfully assigned default/${n} to ${node}`]);
  if(p.init)E.push(['Normal','Started','40s','kubelet','Started container wait-for-db']);
  if(p.status==='ImagePullBackOff'){E.push(['Normal','Pulling','95s (x4 over 3m)','kubelet',`Pulling image "${img}"`]);E.push(['Warning','Failed','94s (x4 over 3m)','kubelet',`Failed to pull image "${img}": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/${img}": failed to resolve reference "docker.io/library/${img}": docker.io/library/${img}: not found`]);E.push(['Warning','Failed','94s (x4 over 3m)','kubelet','Error: ErrImagePull']);E.push(['Normal','BackOff','8s (x12 over 3m)','kubelet',`Back-off pulling image "${img}"`]);E.push(['Warning','Failed','8s (x12 over 3m)','kubelet','Error: ImagePullBackOff']);return E}
+ if(p.reason==='multiattach'){E.push(['Warning','FailedAttachVolume','38s','attachdetach-controller',`Multi-Attach error for volume "pvc-${hs('pv0'+s.lesson,8)}" Volume is already exclusively attached to one node and can't be attached to another`]);E.push(['Warning','FailedMount','6s','kubelet',`Unable to attach or mount volumes: unmounted volumes=[data], unattached volumes=[data]: timed out waiting for the condition`]);return E}
  if(p.status==='ContainerCreating'){E.push(['Normal','Pulling','3s','kubelet',`Pulling image "${img}"`]);return E}
  E.push(['Normal','Pulled',p.restarts?'2m (x'+(p.restarts+1)+' over 9m)':p.age,'kubelet',`Container image "${img}" already present on machine`]);
  E.push(['Normal','Created',p.restarts?'2m (x'+(p.restarts+1)+' over 9m)':p.age,'kubelet',`Created container: ${p.containers[0]}`]);
@@ -314,6 +331,7 @@ function podEvents(s,p){const n=p.name,img=p.image,E=[];const node=p.node;
  if(p.reason==='crash'&&p.lb==='java'){E.push(['Warning','Unhealthy','2m (x18 over 9m)','kubelet',`Liveness probe failed: Get "${url}": dial tcp ${p.ip}:8080: connect: connection refused`]);E.push(['Normal','Killing','2m (x6 over 9m)','kubelet','Container relatorios failed liveness probe, will be restarted'])}
  if(p.probeDb){E.push(['Warning','Unhealthy','20s (x9 over 70s)','kubelet','Liveness probe failed: HTTP probe failed with statuscode: 500']);E.push(['Normal','Killing','20s (x3 over 70s)','kubelet',`Container ${p.containers[0]} failed liveness probe, will be restarted`])}
  if(p.status==='CrashLoopBackOff'||p.status==='OOMKilled')E.push(['Warning','BackOff','5s (x'+(p.restarts*4+3)+' over 9m)','kubelet',`Back-off restarting failed container ${p.containers[0]} in pod ${n}_default(${hs(n,8)}-${hs(n+'u',4)})`]);
+ if(p.reason==='nodeNR')E.push(['Warning','NodeNotReady','30s','node-controller','Node is not ready']);
  if(p.status==='Terminating')E.push(['Warning','NodeNotReady','90s','node-controller','Node is not ready']);
  return E}
 function evTable(E){if(!E.length)return'Events:            <none>';return'Events:\n'+table(E,['Type','Reason','Age','From','Message']).split('\n').map((l,i)=>'  '+(i===0?l:l)).join('\n').replace(/^(  .*)\n/,(m,h)=>m+'  '+h.replace(/[^ ]/g,'-').replace(/-+/g,x=>x)+'\n').replace(/\n  (-[ -]+)\n/,'\n  $1\n')}
@@ -346,7 +364,7 @@ function describeNode(s,n){const pods=s.pods.filter(p=>p.node===n.name);const cp
  const cond=n.ready?[['MemoryPressure','False','KubeletHasSufficientMemory','kubelet has sufficient memory available'],['DiskPressure','False','KubeletHasNoDiskPressure','kubelet has no disk pressure'],['PIDPressure','False','KubeletHasSufficientPID','kubelet has sufficient PID available'],['Ready','True','KubeletReady','kubelet is posting ready status']]
   :[['MemoryPressure','Unknown','NodeStatusUnknown','Kubelet stopped posting node status.'],['DiskPressure','Unknown','NodeStatusUnknown','Kubelet stopped posting node status.'],['PIDPressure','Unknown','NodeStatusUnknown','Kubelet stopped posting node status.'],['Ready','Unknown','NodeStatusUnknown','Kubelet stopped posting node status.']];
  return[`Name:               ${n.name}`,`Roles:              ${n.role}`,`Labels:             kubernetes.io/arch=amd64\n                    kubernetes.io/hostname=${n.name}\n                    kubernetes.io/os=linux${n.name==='controlplane'?'\n                    node-role.kubernetes.io/control-plane=':''}`,
-  `CreationTimestamp:  ${rfc(ago(86400*29))}`,`Taints:             ${n.name==='controlplane'?'node-role.kubernetes.io/control-plane:NoSchedule':n.ready?'<none>':'node.kubernetes.io/unreachable:NoExecute\n                    node.kubernetes.io/unreachable:NoSchedule'}`,`Unschedulable:      false`,
+  `CreationTimestamp:  ${rfc(ago(86400*29))}`,`Taints:             ${s.so.taintOOS&&n.name==='node-3'?'node.kubernetes.io/out-of-service=nodeshutdown:NoExecute\n                    node.kubernetes.io/unreachable:NoExecute\n                    node.kubernetes.io/unreachable:NoSchedule':n.name==='controlplane'?'node-role.kubernetes.io/control-plane:NoSchedule':n.ready?'<none>':'node.kubernetes.io/unreachable:NoExecute\n                    node.kubernetes.io/unreachable:NoSchedule'}`,`Unschedulable:      false`,
   `Conditions:\n  ${table(cond.map(c=>[c[0],c[1],n.ready?'Thu, 26 Nov 2026 17:01:12':'Thu, 26 Nov 2026 16:52:40',c[2],c[3]]),['Type','Status','LastHeartbeatTime','Reason','Message']).split('\n').join('\n  ')}`,
   `Addresses:\n  InternalIP:  ${n.ip}\n  Hostname:    ${n.name}`,`Capacity:\n  cpu:                2\n  memory:             4015300Ki\n  pods:               110`,`Allocatable:\n  cpu:                2\n  memory:             3912900Ki\n  pods:               110`,
   `System Info:\n  Kernel Version:             6.8.0-48-generic\n  OS Image:                   Ubuntu 24.04.1 LTS\n  Container Runtime Version:  containerd://1.7.22\n  Kubelet Version:            v1.31.2`,
@@ -555,6 +573,7 @@ function dispatch(s,verb,f,argv){const one=f.rest[2];
   const n=f.rest[2];let r;
   if(R==='pods'){r=getPods(s,{...f,rest:['get','pods',n].filter(Boolean)});if(f.w&&!r.err){const w=typeof s.so.watch==='function'?s.so.watch(s.pods):[];r.watch=[...w,T[LANG].watch]}}
   else if(R==='deployments')r=getDeps(s,f,n);else if(R==='replicasets')r=getRS(s,f);else if(R==='services')r=getSvc(s,f,n);else if(R==='endpoints')r=getEp(s,f,n);else if(R==='nodes')r=getNodes(s,f,n);else if(R==='ingress')r=getIng(s,f);else if(R==='daemonsets')r=getDS(s,f);else if(R==='statefulsets')r=getSTS(s);else if(R==='jobs')r=getJobs(s);else if(R==='cronjobs')r=getCJ(s);else if(R==='pvc')r=getPVC(s);else if(R==='events')r=getEvents(s);else if(R==='all')r=getAll(s,f);
+  else if(R==='leases')r=f.ns!=='kube-node-lease'?{txt:`No resources found in ${f.ns||'default'} namespace.\n# ${LANG==='pt'?'Dica: os leases dos nodes ficam no namespace kube-node-lease (-n kube-node-lease)':'Tip: node leases live in the kube-node-lease namespace (-n kube-node-lease)'}`}:{txt:table(s.nodes.map(n=>[n.name,n.name,n.ready?'30d':'30d']),['NAME','HOLDER','AGE'])+`\n# ${LANG==='pt'?'Cada kubelet renova o seu lease a cada 10 s. Veja: kubectl get lease node-1 -n kube-node-lease -o yaml':'Each kubelet renews its lease every 10 s. See: kubectl get lease node-1 -n kube-node-lease -o yaml'}`,hiE:s.nodes.map(n=>n.eid).filter(Boolean)};
   else if(R==='namespaces')r={txt:table([['default','Active','30d'],['kube-node-lease','Active','30d'],['kube-public','Active','30d'],['kube-system','Active','30d']],['NAME','STATUS','AGE'])};
   else if(R==='pv')r=s.pvcs.length?{txt:table(s.pvcs.map(p=>[p.vol,'1Gi','RWO','Delete','Bound','default/'+p.name,'standard','<unset>','','8d']),['NAME','CAPACITY','ACCESS MODES','RECLAIM POLICY','STATUS','CLAIM','STORAGECLASS','VOLUMEATTRIBUTESCLASS','REASON','AGE'])}:{txt:'No resources found'};
   if(r&&f.o==='yaml'&&R!=='pods'&&!r.err)r={...r,txt:`# (${LANG==='pt'?'simulado: YAML completo só para pods':'simulated: full YAML only for pods'})\n`+r.txt};
@@ -599,12 +618,13 @@ function dispatch(s,verb,f,argv){const one=f.rest[2];
  if(verb==='config')return{txt:/current-context/.test(argv.join(' '))?'kubernetes-admin@kubernetes':table([['*','kubernetes-admin@kubernetes','kubernetes','kubernetes-admin','']],['CURRENT','NAME','CLUSTER','AUTHINFO','NAMESPACE'])};
  if(verb==='api-resources')return{txt:table([['pods','po','v1','true','Pod'],['services','svc','v1','true','Service'],['deployments','deploy','apps/v1','true','Deployment'],['daemonsets','ds','apps/v1','true','DaemonSet'],['statefulsets','sts','apps/v1','true','StatefulSet'],['jobs','','batch/v1','true','Job'],['cronjobs','cj','batch/v1','true','CronJob'],['ingresses','ing','networking.k8s.io/v1','true','Ingress'],['nodes','no','v1','false','Node']],['NAME','SHORTNAMES','APIVERSION','NAMESPACED','KIND'])};
  if(verb==='exec')return{txt:/env/.test(argv.join(' '))?'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin\nHOSTNAME='+(f.rest[1]||'pod'):`# ${LANG==='pt'?'(simulado: exec não abre shell aqui)':'(simulated: exec does not open a shell here)'}`};
+ if(verb==='taint'){const k=f.rest[1],n=f.rest[2];if(!/^(node|nodes|no)$/.test(k||''))return{txt:'error: at least one taint update is required',err:1};const nd=s.nodes.find(x=>x.name===n);if(!nd)return err404('nodes',n||'');const t=f.rest[3]||'';if(!t)return{txt:'error: at least one taint update is required',err:1};return{txt:`node/${n} ${/-$/.test(t)?'untainted':'tainted'}`,hiE:[nd.eid].filter(Boolean)}}
  if(verb==='cordon'||verb==='uncordon'||verb==='drain'){const n=f.rest[1];const nd=s.nodes.find(x=>x.name===n);if(!nd)return err404('nodes',n||'');return{txt:verb==='drain'?`node/${n} cordoned\nevicting pod default/${(s.pods.find(p=>p.node===n)||{name:'api'}).name}\nnode/${n} drained`:`node/${n} ${verb}ed`,hiE:[nd.eid].filter(Boolean)}}
  return{txt:`error: unknown command "${verb}" for "kubectl"\n\nDid you mean this?\n\tget\n\tdescribe\n\tlogs\n`+T[LANG].unknownVerb(verb),err:1}}
 
 /* ---------- suggestions ---------- */
 function suggest(s,cmd){const o=[];const add=c=>{if(c&&!o.includes(c))o.push(c)};
- const res=c=>c&&c.replace('$P0',(s.pods[0]||{}).name||'api');
+ const res=c=>c&&c.replace('$P0',(s.pods[0]||{}).name||'api').replace('$A2',(s.pods.find(p=>p.eid&&p.eid.includes('a2'))||{}).name||'api');
  if(s.so.chips)s.so.chips.forEach(c=>add(res(c)));
  if(cmd)add(cmd.replace(/^kubectl logs api-7d9/,'kubectl logs api-7d9'));
  if(s.so.apiDown)return o.slice(0,4);

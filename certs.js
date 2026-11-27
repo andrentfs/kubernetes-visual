@@ -4,8 +4,8 @@ window.CERTS={
 cka:{weights:[['storage',10],['trouble',30],['work',15],['arch',25],['net',20]],
  comp:{
   storage:[['sc',['storage'],'full'],['vol',['storage'],'full'],['pvpvc',['storage'],'full']],
-  trouble:[['tnode',['trouble','kubeadm'],'full'],['tcomp',['trouble','cluster'],'full'],['tmon',['observ','escala'],'full'],['tlogs',['observ','trouble'],'full'],['tsvc',['trouble','network'],'full']],
-  work:[['roll',['rollout'],'full'],['cm',['config'],'full'],['hpa',['escala'],'full'],['heal',['pods','probes','workloads'],'full'],['sched',['sched','escala'],'full']],
+  trouble:[['tnode',['trouble','nodefail','kubeadm'],'full'],['tcomp',['trouble','cluster'],'full'],['tmon',['observ','escala'],'full'],['tlogs',['observ','trouble'],'full'],['tsvc',['trouble','network'],'full']],
+  work:[['roll',['rollout'],'full'],['cm',['config'],'full'],['hpa',['escala'],'full'],['heal',['pods','probes','nodefail','workloads'],'full'],['sched',['sched','escala'],'full']],
   arch:[['rbac',['rbac'],'full'],['infra',['kubeadm'],'full'],['kubeadm',['kubeadm'],'full'],['life',['kubeadm'],'full'],['ha',['kubeadm'],'full'],['helm',['helm'],'full'],['ext',['extend','network'],'full'],['crd',['extend'],'full']],
   net:[['podnet',['network'],'full'],['netpol',['netpol'],'full'],['svctype',['network','service'],'full'],['gw',['network'],'full'],['ing',['service'],'full'],['dns',['network'],'full']]}},
 ckad:{weights:[['design',20],['deploy',20],['obs',15],['env',25],['net',20]],
