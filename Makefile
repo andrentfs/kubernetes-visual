@@ -2,7 +2,7 @@
 COMPOSE ?= docker compose
 DEV = $(COMPOSE) --profile dev run --rm dev
 
-.PHONY: up down build test test-unit test-i18n test-e2e manifests shell serve preview lighthouse clean
+.PHONY: up down build test test-unit test-i18n test-e2e pages manifests shell serve preview lighthouse clean
 
 up:          ## Site em http://localhost:8082 (arquivos da pasta, sem cache)
 	$(COMPOSE) up site
@@ -24,6 +24,9 @@ test-i18n: build
 
 test-e2e: build
 	$(DEV) npm run test:e2e
+
+pages: build ## Gera as páginas estáticas por lição e o sitemap (ADR-005)
+	$(DEV) node scripts/gen-lesson-pages.mjs
 
 manifests: build ## Valida os YAMLs das lições com kubeconform (ADR-006)
 	$(DEV) node tests/tools/extract-manifests.mjs build/manifests

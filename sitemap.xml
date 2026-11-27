@@ -1,8 +1,332 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://andrentfs.github.io/kubernetes-visual/</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/intro/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/intro/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/intro/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/intro/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/intro/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/intro/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/cluster/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/cluster/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/cluster/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/cluster/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/cluster/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/cluster/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/images/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/images/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/images/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/images/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/images/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/images/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/pods/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/pods/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/pods/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/pods/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/pods/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/pods/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/workloads/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/workloads/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/workloads/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/workloads/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/workloads/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/workloads/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/config/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/config/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/config/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/config/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/config/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/config/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/storage/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/storage/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/storage/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/storage/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/storage/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/storage/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/service/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/service/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/service/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/service/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/network/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/network/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/network/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/network/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/network/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/network/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/netpol/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/netpol/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/netpol/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/netpol/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/netpol/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/netpol/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/escala/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/escala/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/escala/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/escala/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/escala/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/escala/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/sched/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/sched/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/sched/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/sched/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/sched/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/sched/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/rollout/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/rollout/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/rollout/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/rollout/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/rollout/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/rollout/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/probes/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/probes/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/probes/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/probes/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/probes/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/probes/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/nodefail/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/nodefail/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/nodefail/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/nodefail/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/nodefail/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/nodefail/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/helm/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/helm/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/helm/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/helm/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/helm/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/helm/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/observ/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/observ/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/observ/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/observ/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/observ/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/observ/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/kubeadm/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/kubeadm/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/kubeadm/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/kubeadm/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/kubeadm/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/kubeadm/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/trouble/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/trouble/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/trouble/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/trouble/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/trouble/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/trouble/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/extend/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/extend/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/extend/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/extend/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/extend/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/extend/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/rbac/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/rbac/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/rbac/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/rbac/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/rbac/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/rbac/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/tudo/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/tudo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/tudo/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/tudo/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/tudo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/tudo/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/hardening/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/hardening/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/hardening/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/hardening/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/hardening/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/hardening/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/sistema/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/sistema/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/sistema/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/sistema/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/sistema/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/sistema/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/isolamento/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/isolamento/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/isolamento/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/isolamento/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/isolamento/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/isolamento/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/supply/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/supply/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/supply/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/supply/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/supply/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/supply/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/licao/runtime/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/runtime/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/runtime/"/>
+  </url>
+  <url>
+    <loc>https://andrentfs.github.io/kubernetes-visual/en/lesson/runtime/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/runtime/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/runtime/"/>
   </url>
 </urlset>

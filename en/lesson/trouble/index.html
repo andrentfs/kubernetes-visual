@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cluster troubleshooting — Kubernetes Visual</title>
+<meta name="description" content="The heaviest domain in the CKA: finding the problem methodically, from the pod to the node to the control plane. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/trouble/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/trouble/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/trouble/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Cluster troubleshooting">
+<meta property="og:description" content="The heaviest domain in the CKA: finding the problem methodically, from the pod to the node to the control plane.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/trouble/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cluster troubleshooting">
+<meta name="twitter:description" content="The heaviest domain in the CKA: finding the problem methodically, from the pod to the node to the control plane.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Cluster troubleshooting","description":"The heaviest domain in the CKA: finding the problem methodically, from the pod to the node to the control plane.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/trouble/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT14M","educationalLevel":"Intermediate","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Cluster administration · <a href="../../../licao/trouble/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Cluster troubleshooting</h1>
+<p class="lede">The heaviest domain in the CKA: finding the problem methodically, from the pod to the node to the control plane.</p>
+<p class="chips"><span>14 min</span><span>Intermediate</span><span>11 steps</span></p>
+<a class="cta" href="../../../?lang=en#trouble-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Follow a fixed investigation routine</li><li>Fix ImagePullBackOff, Pending and CrashLoopBackOff</li><li>Find Services with no endpoints</li><li>Recover a NotReady node</li><li>Recover the control plane with crictl and the manifests</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Context</span>A routine for any problem</h3>
+<p>Under pressure, always follow the same order: kubectl get to see the state, describe to read the events, logs to see what the app said.</p>
+<p>If the problem is the cluster itself, go one level down: the node (kubelet, runtime) and, last, the control plane components.</p>
+<p class="nt key"><b>Key idea:</b> The pod’s STATUS already tells you where to start: Pending is scheduling, ImagePullBackOff is the image, CrashLoopBackOff is the app or its config.</p>
+<pre><code>kubectl get pods -A | grep -v Running</code></pre></section>
+<section class="st"><h3><span>Step 2 · Problem</span>ImagePullBackOff: the image didn’t arrive</h3>
+<p>The node couldn’t pull the image. describe shows why in the events: wrong name or tag (nginx:1.2O, with the letter O), a private registry without a login, or the registry is down.</p>
+<p>Fix the image in the Deployment (kubectl set image) or create the registry Secret and add it to imagePullSecrets.</p>
+<p class="nt warn"><b>Watch out:</b> Read the Events section of describe. The exact message (not found, unauthorized) already shows the cause.</p>
+<pre><code>kubectl describe pod web</code></pre></section>
+<section class="st"><h3><span>Step 3 · Problem</span>Pending: nobody accepted the pod</h3>
+<p>A Pending pod hasn’t been scheduled. describe shows FailedScheduling and the reason: Insufficient cpu or memory, a tainted node without a toleration, a nodeSelector no node matches, or a PVC that didn’t bind.</p>
+<p>The fix depends on the reason: lower requests, free up space, fix the label or toleration, or sort out the PVC.</p>
+<p class="nt good"><b>Good to know:</b> “0/3 nodes are available: 3 Insufficient cpu” means all 3 nodes were ruled out for the same reason.</p></section>
+<section class="st"><h3><span>Step 4 · Problem</span>CrashLoopBackOff: the app starts and dies</h3>
+<p>The container starts and exits right away, over and over. The current log may be empty; use kubectl logs --previous to see the run that crashed.</p>
+<p>The exit code in describe helps: 137 is killed for lack of memory (OOMKilled) or by a kill; 1 is usually an app error; a wrong command or argument also shows up here.</p>
+
+<table><thead><tr><th>Exit code</th><th>Common cause</th></tr></thead><tbody><tr><td>0</td><td>Command finished (missing a loop?)</td></tr><tr><td>1</td><td>Application error</td></tr><tr><td>127</td><td>Command not found</td></tr><tr><td>137</td><td>Killed: OOM or kill</td></tr></tbody></table>
+<pre><code>kubectl logs api-7d9 --previous</code></pre></section>
+<section class="st"><h3><span>Step 5 · Problem</span>A Service with no endpoints</h3>
+<p>The pods are Running, but nobody can reach the Service. kubectl get endpointslices -l kubernetes.io/service-name=web shows an empty ENDPOINTS column (&lt;unset&gt;).</p>
+<p>It’s almost always the selector: the Service looks for app=wbe and the pods have app=web. Also check targetPort (the container’s port) and whether the pods pass readiness.</p>
+<p class="nt warn"><b>Watch out:</b> Compare kubectl describe svc (Selector, TargetPort) with kubectl get pods --show-labels.</p>
+<pre><code>kubectl get endpointslices -l kubernetes.io/service-name=web</code></pre></section>
+<section class="st"><h3><span>Step 6 · Problem</span>Node NotReady</h3>
+<p>node-3 shows NotReady in kubectl get nodes. With no news from the kubelet, the control plane stops sending pods there.</p>
+<p>Log into the node (ssh) and check the kubelet: systemctl status kubelet. It may be stopped, unable to talk to the runtime, or misconfigured.</p>
+<p class="nt warn"><b>Watch out:</b> In the exam the kubelet is often stopped or disabled on purpose. systemctl enable --now kubelet fixes both.</p>
+<pre><code>kubectl describe node node-3</code></pre></section>
+<section class="st"><h3><span>Step 7 · Solution</span>Reading the kubelet</h3>
+<p>journalctl -u kubelet shows why: a wrong certificate path, a broken config file, the wrong runtime socket.</p>
+<p>The config lives in /var/lib/kubelet/config.yaml, and the credentials to talk to the API server in /etc/kubernetes/kubelet.conf. Fix it, restart, and watch the node go back to Ready.</p>
+
+<pre><code>systemctl restart kubelet</code></pre></section>
+<section class="st"><h3><span>Step 8 · Problem</span>The API server is down</h3>
+<p>kubectl answers “connection refused” on port 6443. Without the API server, kubectl doesn’t work, so you can’t use kubectl describe to investigate.</p>
+<p>This usually comes from a mistake in the static pod manifest /etc/kubernetes/manifests/kube-apiserver.yaml: a wrong flag, a certificate path that doesn’t exist.</p>
+<p class="nt warn"><b>Watch out:</b> The kubelet recreates the static pod on every change to the file. A typo there takes the API server down immediately.</p></section>
+<section class="st"><h3><span>Step 9 · Solution</span>crictl: looking at containers without kubectl</h3>
+<p>With no API server, you go straight to the node’s runtime. crictl ps -a lists every container, including the ones that crashed; crictl logs &lt;id&gt; shows the error.</p>
+<p>Logs are also in /var/log/pods and /var/log/containers. Fix the manifest and wait for the kubelet to restart the static pod.</p>
+<p class="nt good"><b>Good to know:</b> Before editing a manifest, save a copy outside the manifests folder. Extra .yaml files inside it also become pods.</p>
+<pre><code>crictl ps -a | grep kube-apiserver</code></pre></section>
+<section class="st"><h3><span>Step 10 · Problem</span>Scheduler or controller-manager down</h3>
+<p>If every new pod stays Pending with no scheduling event at all, the scheduler is down. If you scale a Deployment and nothing happens, suspect the controller-manager.</p>
+<p>Both are static pods too. Check kubectl get pods -n kube-system and their logs, and fix the manifest.</p>
+<p class="nt key"><b>Key idea:</b> Pending with no FailedScheduling event = nobody tried to schedule it. That points to the scheduler, not the nodes.</p></section>
+<section class="st"><h3><span>Step 11 · Summary</span>Summary: symptom, where to look</h3>
+<p>Memorise the table. In the exam it solves most troubleshooting tasks.</p>
+
+<table><thead><tr><th>Symptom</th><th>First command</th></tr></thead><tbody><tr><td>ImagePullBackOff</td><td>describe pod (Events)</td></tr><tr><td>Pending</td><td>describe pod (FailedScheduling)</td></tr><tr><td>CrashLoopBackOff</td><td>logs --previous</td></tr><tr><td>Silent Service</td><td>get endpointslices, --show-labels</td></tr><tr><td>Node NotReady</td><td>systemctl status kubelet</td></tr><tr><td>kubectl refused</td><td>crictl ps -a, manifests</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#trouble-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/kubeadm/" rel="prev">Previous lesson: Installing and maintaining the cluster with kubeadm</a><a href="../../../en/lesson/extend/" rel="next">Next lesson: Extensions: CRI, CNI, CSI, CRDs and Operators</a></nav>
+</main>
+</body>
+</html>

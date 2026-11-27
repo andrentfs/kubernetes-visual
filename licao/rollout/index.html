@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atualizar sem derrubar — Kubernetes Visual</title>
+<meta name="description" content="Publicar uma versão nova com a loja cheia, sem um segundo fora do ar, e voltar atrás se der errado. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/rollout/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/rollout/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/rollout/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Atualizar sem derrubar">
+<meta property="og:description" content="Publicar uma versão nova com a loja cheia, sem um segundo fora do ar, e voltar atrás se der errado.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/rollout/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Atualizar sem derrubar">
+<meta name="twitter:description" content="Publicar uma versão nova com a loja cheia, sem um segundo fora do ar, e voltar atrás se der errado.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Atualizar sem derrubar","description":"Publicar uma versão nova com a loja cheia, sem um segundo fora do ar, e voltar atrás se der errado.","url":"https://andrentfs.github.io/kubernetes-visual/licao/rollout/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT11M","educationalLevel":"Intermediário","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Operação · <a href="../../en/lesson/rollout/" hreflang="en">English version</a></p>
+<h1>Atualizar sem derrubar</h1>
+<p class="lede">Publicar uma versão nova com a loja cheia, sem um segundo fora do ar, e voltar atrás se der errado.</p>
+<p class="chips"><span>11 min</span><span>Intermediário</span><span>11 passos</span></p>
+<a class="cta" href="../../?lang=pt#rollout-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Entender por que parar tudo para atualizar é ruim</li><li>Saber como funciona um rolling update</li><li>Desfazer uma versão ruim com rollback</li><li>Diferenciar readiness e liveness probes</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>A versão 2.0 está pronta</h3>
+<p>A loja roda com 3 pods da versão 1.0 da API. A equipe terminou a 2.0, com um carrinho novo, e quer publicar hoje à tarde, com a loja cheia.</p>
+<p>Publicar uma versão nova é o momento mais arriscado da vida de um sistema. Vamos ver por quê, e como o Kubernetes deixa isso tranquilo.</p>
+</section>
+<section class="st"><h3><span>Passo 2 · Problema</span>O jeito antigo: fechar a loja</h3>
+<p>O jeito mais simples é desligar todos os pods da 1.0 e depois ligar os da 2.0. No meio do caminho, não há ninguém para atender.</p>
+<p>Por alguns minutos, todo cliente vê uma página de erro. Por isso, antigamente, atualizações eram feitas de madrugada, com aviso de “em manutenção”.</p>
+<p class="nt warn"><b>Atenção:</b> Parar tudo para atualizar significa sair do ar a cada versão nova. Com várias versões por semana, isso vira um problema sério.</p></section>
+<section class="st"><h3><span>Passo 3 · Solução</span>Rolling update: um de cada vez</h3>
+<p>O Deployment faz melhor, por padrão. Quando você troca a imagem, ele cria um pod da 2.0 antes de desligar qualquer pod da 1.0.</p>
+<p>Os três pods antigos continuam atendendo enquanto o novo liga. Essa troca gradual se chama rolling update.</p>
+
+<pre><code>kubectl set image deployment/api api=loja/api:2.0</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Conceito</span>Readiness probe: “já posso atender?”</h3>
+<p>Ligar não é estar pronto. A versão 2.0 leva alguns segundos para carregar configurações e conectar ao banco.</p>
+<p>O kubelet pergunta repetidamente ao pod novo, num endereço como /health, se ele já está pronto. Só quando a resposta é sim o pod entra no Service e começa a receber clientes.</p>
+<p class="nt warn"><b>Atenção:</b> Sem readiness probe, o Kubernetes mandaria clientes para um pod que ainda está carregando, e eles veriam erro.</p></section>
+<section class="st"><h3><span>Passo 5 · Solução</span>Pronto? Então um antigo sai</h3>
+<p>O pod da 2.0 respondeu 200 OK, o código de sucesso, e entrou no Service. Só agora um pod da 1.0 é desligado.</p>
+<p>Em nenhum momento a loja teve menos de 3 pods prontos.</p>
+</section>
+<section class="st"><h3><span>Passo 6 · Trade-off</span>Trade-off: duas versões ao mesmo tempo</h3>
+<p>O ciclo se repete: liga um 2.0, espera ficar pronto, desliga um 1.0. Durante alguns minutos, clientes são atendidos ora pela versão nova, ora pela antiga.</p>
+<p>Se a 2.0 mudou o formato de algum dado, a 1.0 precisa continuar entendendo esse dado, e vice-versa.</p>
+<p class="nt warn"><b>Atenção:</b> Mudanças de banco de dados e de API precisam ser compatíveis com a versão anterior, porque as duas rodam juntas por um tempo.</p></section>
+<section class="st"><h3><span>Passo 7 · Solução</span>Versão 2.0 em produção</h3>
+<p>Os três pods estão na 2.0 e nenhum cliente percebeu a troca: zero segundo fora do ar.</p>
+<p>Dois ajustes controlam o ritmo: maxSurge (quantos pods extras podem existir durante a troca) e maxUnavailable (quantos podem faltar).</p>
+
+<pre><code>kubectl rollout status deployment/api</code></pre></section>
+<section class="st"><h3><span>Passo 8 · Problema</span>Ops: a 2.0 tem um bug</h3>
+<p>Meia hora depois, o suporte avisa: alguns clientes não conseguem pagar. A 2.0 tem um bug que só aparece com certos cartões, e parte das requisições volta com erro 500, “erro no servidor”.</p>
+<p>A readiness probe não pegou o problema, porque o /health respondia normalmente. Probes checam se o pod está vivo, não se o código está certo.</p>
+<p class="nt warn"><b>Atenção:</b> Testes automáticos e monitoramento de erros continuam essenciais. O Kubernetes garante a troca suave, não a qualidade do código.</p></section>
+<section class="st"><h3><span>Passo 9 · Solução</span>Rollback: voltar com um comando</h3>
+<p>O Deployment guarda as versões anteriores. Um único comando faz o caminho de volta: rollout undo.</p>
+<p>O processo é o mesmo rolling update, só que ao contrário: liga pods 1.0, espera ficarem prontos, desliga os 2.0. Em um ou dois minutos a loja está como antes, sem sair do ar.</p>
+<p class="nt key"><b>Ideia-chave:</b> Como voltar atrás é fácil e seguro, publicar versões novas deixa de dar medo. Times que publicam com frequência dependem disso.</p>
+<pre><code>kubectl rollout undo deployment/api</code></pre></section>
+<section class="st"><h3><span>Passo 10 · Conceito</span>Liveness probe: “ainda está vivo?”</h3>
+<p>Às vezes um programa trava sem morrer: o processo continua ligado, mas não responde a nada. Para o sistema operacional, ele parece vivo.</p>
+<p>A liveness probe é outro health check do kubelet: “você ainda responde?”. Se o pod falha algumas vezes seguidas, o kubelet reinicia o container. A readiness tira do Service; a liveness reinicia.</p>
+</section>
+<section class="st"><h3><span>Passo 11 · Resumo</span>Resumo: atualizar sem medo</h3>
+<p>O container travado foi reiniciado pelo kubelet e voltou para o Service sozinho.</p>
+<p class="nt good"><b>Bom saber:</b> Para trocas ainda mais cautelosas existem estratégias como canary (mandar só 5% dos clientes para a versão nova) e blue-green (duas cópias completas, troca instantânea).</p>
+<table><thead><tr><th>Recurso</th><th>Pergunta</th><th>O que faz</th></tr></thead><tbody><tr><td>Rolling update</td><td>Como trocar?</td><td>Um pod por vez, sem parar</td></tr><tr><td>Readiness</td><td>Pode atender?</td><td>Tira ou põe no Service</td></tr><tr><td>Liveness</td><td>Está vivo?</td><td>Reinicia o container</td></tr><tr><td>Rollback</td><td>Deu errado?</td><td>Volta à versão anterior</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#rollout-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/sched/" rel="prev">Lição anterior: Scheduling: recursos, afinidade e taints</a><a href="../../licao/probes/" rel="next">Próxima lição: Health checks: readiness, liveness e startup</a></nav>
+</main>
+</body>
+</html>

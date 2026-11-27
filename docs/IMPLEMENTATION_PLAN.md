@@ -153,7 +153,7 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 | **ADR-002** ✅ | Separar o `index.html` e o `term.js` em arquivos por responsabilidade (`css/`, `data/`, `i18n/`, `js/`, `js/term/`) usando **scripts clássicos** (não módulos ES, que não funcionam em `file://`). Detalhes em [`docs/adr/ADR-002-file-structure.md`](adr/ADR-002-file-structure.md) | Testabilidade e reuso sem perder abertura direta do arquivo nem exigir build | Módulos ES (quebram `file://`); manter o monólito |
 | **ADR-003** ✅ | Carregar o idioma ativo sob demanda. *Implementado com `js/boot.js` (scripts clássicos em ordem, sem `import()`, para manter `file://`). Detalhes em [`docs/adr/ADR-003-lazy-language.md`](adr/ADR-003-lazy-language.md)* | Corta cerca de 150 KB da primeira carga | Bundle por idioma, que exigiria build |
 | **ADR-004** | **Motor de simulação único** (relógio com velocidade, pausa, passo a passo, estados versionados para voltar no tempo), usado por: falha de node, autoscaling, troubleshooting e YAML interativo | Evita quatro implementações paralelas (DRY) | Uma animação ad hoc por simulador |
-| **ADR-005** | Manter as rotas hash (compatibilidade) e **gerar páginas estáticas por lição** (`/licao/pods/`, `/en/lesson/pods/`) com metadados próprios, que redirecionam para o hash. Geradas por script no CI e versionadas, para o Pages continuar servindo a raiz | SEO e preview por lição sem quebrar links | Trocar para History API, o que quebraria links existentes e exigiria fallback 404 |
+| **ADR-005** ✅ | Manter as rotas hash (compatibilidade) e **gerar páginas estáticas por lição** (`/licao/pods/`, `/en/lesson/pods/`) com metadados próprios, que redirecionam para o hash. Geradas por script no CI e versionadas, para o Pages continuar servindo a raiz | SEO e preview por lição sem quebrar links. *Implementado com uma mudança: as páginas têm o texto da lição e um botão para a versão interativa, sem redirecionar (redirecionar impediria a indexação). Detalhes em [`docs/adr/ADR-005-lesson-pages.md`](adr/ADR-005-lesson-pages.md)* | Trocar para History API, o que quebraria links existentes e exigiria fallback 404 |
 | **ADR-006** ✅ | Validar os YAMLs das lições com `kubeconform` no CI, contra o schema da versão de referência. Detalhes em [`docs/adr/ADR-006-kubeconform.md`](adr/ADR-006-kubeconform.md) | “Não inventar”: os manifestos ficam verificáveis | Revisão manual |
 | **ADR-007** ✅ | Licença: MIT para o código e CC BY 4.0 para o conteúdo. Detalhes em [`docs/adr/ADR-007-license.md`](adr/ADR-007-license.md) | Decisão do autor | Apache-2.0 para o código |
 
@@ -225,7 +225,7 @@ Complexidade relativa: P (até ~1 dia), M (2–3 dias), G (1 semana), GG (mais d
 | E4 | Glossário | Termos com link para a lição e a documentação oficial; busca integrada | M | — |
 | C1 | Acessibilidade AA | axe sem violações sérias; navegação 100% por teclado; reduced-motion desliga pacotes | G | F4 |
 | C2 | Performance | Lighthouse ≥ 90 (quando viável), idioma sob demanda, fonte local | M | F4, F9 |
-| C3 | SEO por lição | Páginas estáticas por lição com OG próprio e hreflang; hash antigo continua funcionando | G | F4 |
+| C3 ✅ | SEO por lição | Páginas estáticas por lição com OG próprio e hreflang; hash antigo continua funcionando | G | F4 |
 
 ---
 
@@ -286,5 +286,5 @@ Até sua autorização, **nada vai para `main` nem para o GitHub Pages**. Opçõ
 2. ✅ Licença (ADR-007): MIT + CC BY 4.0.
 3. ✅ Preview: servidor local em Docker (`make up`, porta 8082) e prévia privada no Claude.
 4. ✅ Fase 1 autorizada, concluída e publicada.
-5. ✅ ADR-006 e ADR-003 implementados (27/11/2026).
-6. ⏳ Pendentes: ADR-004 (necessário para a Fase 2) e ADR-005.
+5. ✅ ADR-006, ADR-003 e ADR-005 implementados (27/11/2026).
+6. ⏳ Pendente: ADR-004 (necessário para a Fase 2).

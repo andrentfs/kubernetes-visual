@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Updating without downtime — Kubernetes Visual</title>
+<meta name="description" content="Ship a new version while the store is busy, without a second offline, and roll back if it goes wrong. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/rollout/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/rollout/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/rollout/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Updating without downtime">
+<meta property="og:description" content="Ship a new version while the store is busy, without a second offline, and roll back if it goes wrong.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/rollout/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Updating without downtime">
+<meta name="twitter:description" content="Ship a new version while the store is busy, without a second offline, and roll back if it goes wrong.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Updating without downtime","description":"Ship a new version while the store is busy, without a second offline, and roll back if it goes wrong.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/rollout/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT11M","educationalLevel":"Intermediate","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Operations · <a href="../../../licao/rollout/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Updating without downtime</h1>
+<p class="lede">Ship a new version while the store is busy, without a second offline, and roll back if it goes wrong.</p>
+<p class="chips"><span>11 min</span><span>Intermediate</span><span>11 steps</span></p>
+<a class="cta" href="../../../?lang=en#rollout-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Understand why stopping everything to update is bad</li><li>Know how a rolling update works</li><li>Undo a bad version with a rollback</li><li>Tell readiness and liveness probes apart</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Context</span>Version 2.0 is ready</h3>
+<p>The store runs 3 pods of version 1.0 of the API. The team has finished 2.0, with a new cart, and wants to ship it this afternoon while the store is busy.</p>
+<p>Shipping a new version is the riskiest moment in a system’s life. Let’s see why, and how Kubernetes makes it calm.</p>
+</section>
+<section class="st"><h3><span>Step 2 · Problem</span>The old way: close the shop</h3>
+<p>The simplest way is to switch off all the 1.0 pods and then start the 2.0 ones. In between, there’s nobody to serve customers.</p>
+<p>For a few minutes, every customer sees an error page. That’s why updates used to happen in the middle of the night, with an “under maintenance” notice.</p>
+<p class="nt warn"><b>Watch out:</b> Stopping everything to update means going offline with every new version. With several releases a week, that becomes a serious problem.</p></section>
+<section class="st"><h3><span>Step 3 · Solution</span>Rolling update: one at a time</h3>
+<p>A Deployment does better by default. When you change the image, it creates a 2.0 pod before switching off any 1.0 pod.</p>
+<p>The three old pods keep serving while the new one starts. This gradual swap is called a rolling update.</p>
+
+<pre><code>kubectl set image deployment/api api=loja/api:2.0</code></pre></section>
+<section class="st"><h3><span>Step 4 · Concept</span>Readiness probe: “can I serve yet?”</h3>
+<p>Started isn’t the same as ready. Version 2.0 needs a few seconds to load settings and connect to the database.</p>
+<p>The kubelet keeps asking the new pod, at an address like /health, whether it’s ready. Only when the answer is yes does the pod join the Service and start getting customers.</p>
+<p class="nt warn"><b>Watch out:</b> Without a readiness probe, Kubernetes would send customers to a pod that’s still loading, and they’d see errors.</p></section>
+<section class="st"><h3><span>Step 5 · Solution</span>Ready? Then an old one leaves</h3>
+<p>The 2.0 pod answered 200 OK, the success code, and joined the Service. Only now is one 1.0 pod switched off.</p>
+<p>At no point did the store have fewer than 3 ready pods.</p>
+</section>
+<section class="st"><h3><span>Step 6 · Trade-off</span>Trade-off: two versions at once</h3>
+<p>The cycle repeats: start a 2.0, wait until it’s ready, switch off a 1.0. For a few minutes, customers are served sometimes by the new version, sometimes by the old one.</p>
+<p>If 2.0 changed the format of some data, 1.0 must still understand it, and vice versa.</p>
+<p class="nt warn"><b>Watch out:</b> Database and API changes must be compatible with the previous version, because both run together for a while.</p></section>
+<section class="st"><h3><span>Step 7 · Solution</span>Version 2.0 is live</h3>
+<p>All three pods are on 2.0 and no customer noticed the swap: zero seconds offline.</p>
+<p>Two settings control the pace: maxSurge (how many extra pods may exist during the swap) and maxUnavailable (how many may be missing).</p>
+
+<pre><code>kubectl rollout status deployment/api</code></pre></section>
+<section class="st"><h3><span>Step 8 · Problem</span>Oops: 2.0 has a bug</h3>
+<p>Half an hour later, support calls: some customers can’t pay. 2.0 has a bug that only shows up with certain cards, and some requests come back with error 500, “server error”.</p>
+<p>The readiness probe didn’t catch it, because /health answered normally. Probes check that the pod is alive, not that the code is right.</p>
+<p class="nt warn"><b>Watch out:</b> Automated tests and error monitoring are still essential. Kubernetes guarantees a smooth swap, not code quality.</p></section>
+<section class="st"><h3><span>Step 9 · Solution</span>Rollback: back in one command</h3>
+<p>The Deployment keeps previous versions. A single command takes you back: rollout undo.</p>
+<p>It’s the same rolling update in reverse: start 1.0 pods, wait until they’re ready, switch off the 2.0 ones. In a minute or two the store is back as it was, without going offline.</p>
+<p class="nt key"><b>Key idea:</b> Because going back is easy and safe, shipping new versions stops being scary. Teams that release often depend on this.</p>
+<pre><code>kubectl rollout undo deployment/api</code></pre></section>
+<section class="st"><h3><span>Step 10 · Concept</span>Liveness probe: “are you still alive?”</h3>
+<p>Sometimes a program freezes without dying: the process is still running, but it doesn’t answer anything. To the operating system, it looks alive.</p>
+<p>The liveness probe is another kubelet health check: “do you still answer?”. If the pod fails a few times in a row, the kubelet restarts the container. Readiness takes it out of the Service; liveness restarts it.</p>
+</section>
+<section class="st"><h3><span>Step 11 · Summary</span>Summary: updating without fear</h3>
+<p>The frozen container was restarted by the kubelet and rejoined the Service on its own.</p>
+<p class="nt good"><b>Good to know:</b> For even more careful releases there are strategies like canary (sending only 5% of customers to the new version) and blue-green (two full copies, instant switch).</p>
+<table><thead><tr><th>Feature</th><th>Question</th><th>What it does</th></tr></thead><tbody><tr><td>Rolling update</td><td>How to swap?</td><td>One pod at a time, no stop</td></tr><tr><td>Readiness</td><td>Can it serve?</td><td>Adds or removes from the Service</td></tr><tr><td>Liveness</td><td>Is it alive?</td><td>Restarts the container</td></tr><tr><td>Rollback</td><td>Did it go wrong?</td><td>Goes back to the last version</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#rollout-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/sched/" rel="prev">Previous lesson: Scheduling: resources, affinity and taints</a><a href="../../../en/lesson/probes/" rel="next">Next lesson: Health checks: readiness, liveness and startup</a></nav>
+</main>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Juntando tudo — Kubernetes Visual</title>
+<meta name="description" content="Do toque no celular até o container, com todas as peças trabalhando juntas. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/tudo/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/tudo/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/tudo/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Juntando tudo">
+<meta property="og:description" content="Do toque no celular até o container, com todas as peças trabalhando juntas.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/tudo/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Juntando tudo">
+<meta name="twitter:description" content="Do toque no celular até o container, com todas as peças trabalhando juntas.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Juntando tudo","description":"Do toque no celular até o container, com todas as peças trabalhando juntas.","url":"https://andrentfs.github.io/kubernetes-visual/licao/tudo/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT5M","educationalLevel":"Iniciante","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Segurança e visão geral · <a href="../../en/lesson/tudo/" hreflang="en">English version</a></p>
+<h1>Juntando tudo</h1>
+<p class="lede">Do toque no celular até o container, com todas as peças trabalhando juntas.</p>
+<p class="chips"><span>5 min</span><span>Iniciante</span><span>3 passos</span></p>
+<a class="cta" href="../../?lang=pt#tudo-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Seguir uma requisição do cliente até o pod</li><li>Ver o control plane trabalhando nos bastidores</li><li>Revisar o papel de cada peça</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Resumo</span>A viagem de uma requisição</h3>
+<p>Uma cliente abre loja.com no celular. A requisição chega ao Ingress, a portaria pública, que lê o endereço e encaminha para o Service api.</p>
+<p>O Service escolhe um dos pods prontos, em qualquer node, e a resposta faz o caminho de volta. Tudo isso em poucos milissegundos.</p>
+</section>
+<section class="st"><h3><span>Passo 2 · Resumo</span>Enquanto isso, nos bastidores</h3>
+<p>O control plane não participa da requisição, mas vigia tudo. O HPA acompanha a CPU, os controllers contam réplicas, o scheduler aloca pods novos, e o kubelet de cada node faz health checks.</p>
+<p>Se algo sai do lugar (um pod morre, um node cai, o tráfego dobra), alguém do time percebe e corrige, sem acordar você.</p>
+<p class="nt key"><b>Ideia-chave:</b> Seu trabalho muda de fazer para declarar. Você descreve o estado desejado; o Kubernetes trabalha sem parar para a realidade ficar igual.</p></section>
+<section class="st"><h3><span>Passo 3 · Resumo</span>Glossário de bolso</h3>
+<p>Com estas peças você já acompanha a maior parte das conversas sobre Kubernetes.</p>
+<p class="nt good"><b>Bom saber:</b> Para praticar: instale o kind ou o minikube no seu computador e crie o seu primeiro Deployment.</p>
+<table><thead><tr><th>Peça</th><th>Em uma frase</th></tr></thead><tbody><tr><td>Container</td><td>App empacotado com tudo de que precisa</td></tr><tr><td>Pod</td><td>Casa do container no cluster, com IP</td></tr><tr><td>Node</td><td>Uma máquina do cluster</td></tr><tr><td>Deployment</td><td>Quantas cópias e qual versão</td></tr><tr><td>Service</td><td>Nome fixo e divisão de carga</td></tr><tr><td>Ingress</td><td>Porta de entrada da internet</td></tr><tr><td>HPA</td><td>Ajusta o número de pods</td></tr><tr><td>Probes</td><td>Checam se o pod está pronto e vivo</td></tr><tr><td>RBAC</td><td>Quem pode fazer o quê</td></tr><tr><td>Control plane</td><td>A gerência que decide tudo</td></tr></tbody></table>
+<pre><code>kubectl get all</code></pre></section>
+<a class="cta" href="../../?lang=pt#tudo-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/rbac/" rel="prev">Lição anterior: Segurança e RBAC</a><a href="../../licao/hardening/" rel="next">Próxima lição: Segurança do cluster: CIS, API, tokens, metadados e TLS</a></nav>
+</main>
+</body>
+</html>

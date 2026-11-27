@@ -64,3 +64,16 @@ test('baixa só os textos do idioma em uso; o outro só na troca (ADR-003)', asy
   expect(got.sort()).toEqual(['en', 'labels', 'pt']);
   await expect(page.locator('#title')).toHaveText(/Pod/);
 });
+
+for (const [lang, path, title] of [['pt', 'licao/nodefail/', 'Quando um node cai'], ['en', 'en/lesson/nodefail/', 'When a node goes down']]) {
+  test(`página estática da lição abre a versão interativa no idioma dela (${lang}, ADR-005)`, async ({ page }) => {
+    await page.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, r => r.fulfill({ status: 200, body: '' }));
+    await page.addInitScript(() => { try { localStorage.setItem('k8s-lang', 'xx'); } catch {} });
+    await page.goto('/' + path);
+    await expect(page.locator('h1')).toHaveText(title);
+    await expect(page.locator('section.st')).toHaveCount(12);
+    await page.locator('a.cta').first().click();
+    await expect(page).toHaveURL(/#nodefail-1$/);
+    await expect(page.locator('#title')).toHaveText(title);
+  });
+}

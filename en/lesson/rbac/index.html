@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security and RBAC — Kubernetes Visual</title>
+<meta name="description" content="Who can do what in the cluster: users, ServiceAccounts, Roles, ClusterRoles and their bindings. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/rbac/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/rbac/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/rbac/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Security and RBAC">
+<meta property="og:description" content="Who can do what in the cluster: users, ServiceAccounts, Roles, ClusterRoles and their bindings.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/rbac/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Security and RBAC">
+<meta name="twitter:description" content="Who can do what in the cluster: users, ServiceAccounts, Roles, ClusterRoles and their bindings.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Security and RBAC","description":"Who can do what in the cluster: users, ServiceAccounts, Roles, ClusterRoles and their bindings.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/rbac/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT13M","educationalLevel":"Intermediate","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Security and overview · <a href="../../../licao/rbac/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Security and RBAC</h1>
+<p class="lede">Who can do what in the cluster: users, ServiceAccounts, Roles, ClusterRoles and their bindings.</p>
+<p class="chips"><span>13 min</span><span>Intermediate</span><span>12 steps</span></p>
+<a class="cta" href="../../../?lang=en#rbac-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>See why everyone being admin is dangerous</li><li>Understand authentication, authorization and admission</li><li>Create a Role and a RoleBinding</li><li>Know when to use ClusterRole and ClusterRoleBinding</li><li>Give pods permissions with ServiceAccounts</li><li>Protect Secrets</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Context</span>At first, everyone is admin</h3>
+<p>The store now has two areas in the cluster, separated by namespaces: “loja” (the website) and “financeiro” (payments). A namespace is like a folder: it groups one team’s resources.</p>
+<p>To keep things simple, developer Ana and the deploy robot (ci-bot) were given cluster-admin: they can read, change and delete anything in any namespace.</p>
+<p class="nt good"><b>Good to know:</b> Namespaces alone protect nothing. They organise; RBAC is what protects.</p>
+<pre><code>kubectl get clusterrolebindings</code></pre></section>
+<section class="st"><h3><span>Step 2 · Problem</span>One command in the wrong place</h3>
+<p>Ana wanted to clean up test pods in her namespace, but her terminal was pointing at “financeiro”. One kubectl delete pods --all and payments went down.</p>
+<p>Nobody acted in bad faith. The problem was access: she could do something her job never required.</p>
+<p class="nt warn"><b>Watch out:</b> Too much permission turns any typo, or leaked password, into a serious incident.</p>
+<pre><code>kubectl delete pods --all -n financeiro</code></pre></section>
+<section class="st"><h3><span>Step 3 · Concept</span>Every request goes through 3 gates</h3>
+<p>Every request to the API server goes through three stages, in order. Authentication: who are you? (certificate, token, or company login via OIDC). Authorization: are you allowed to do this? (this is where RBAC comes in).</p>
+<p>Admission: does the request follow the cluster’s rules? Admission controllers can reject it (for example, a pod without resource limits) or adjust it before it’s saved.</p>
+<p class="nt key"><b>Key idea:</b> Fail the first gate: 401 Unauthorized. Pass the first and get stopped at the second: 403 Forbidden.</p></section>
+<section class="st"><h3><span>Step 4 · Concept</span>Who asks: users, groups and ServiceAccounts</h3>
+<p>Kubernetes has no list of people. A user (like “ana”) and their groups (like “devs”) come from outside: from the certificate or the login provider.</p>
+<p>Programs running inside the cluster use ServiceAccounts instead: identities created by Kubernetes itself, one or more per namespace, for robots and pods.</p>
+<p class="nt good"><b>Good to know:</b> These three are called subjects. Every RBAC permission is given to a subject.</p></section>
+<section class="st"><h3><span>Step 5 · Concept</span>Role: the list of what’s allowed</h3>
+<p>A Role is a list of rules inside one namespace. Each rule says which resources (pods, services, secrets…) and which verbs (get, list, watch, create, update, patch, delete).</p>
+<p>Here, the Role “leitor-pods” in the loja namespace allows only get, list and watch on pods. It doesn’t apply to anyone yet: it’s just the list.</p>
+<p class="nt key"><b>Key idea:</b> RBAC only adds permissions. There is no “deny” rule: anything not in some Role is forbidden.</p>
+<pre><code>kubectl create role leitor-pods --verb=get,list,watch --resource=pods -n loja</code></pre></section>
+<section class="st"><h3><span>Step 6 · Concept</span>RoleBinding: handing the list to someone</h3>
+<p>A RoleBinding connects a Role to one or more subjects. It’s like handing the right badge to the right person.</p>
+<p>The RoleBinding “ana-leitora” says: user ana gets the Role leitor-pods in the loja namespace. Now the rule applies.</p>
+
+<pre><code>kubectl create rolebinding ana-leitora --role=leitor-pods --user=ana -n loja</code></pre></section>
+<section class="st"><h3><span>Step 7 · Solution</span>Allowed here, not there</h3>
+<p>Ana lists the store’s pods: it works. She tries to delete a pod in financeiro: the API server answers 403 Forbidden, and nothing happens.</p>
+<p>To check without risk, use kubectl auth can-i. With --as, an admin can test someone else’s permissions.</p>
+<p class="nt good"><b>Good to know:</b> The principle of least privilege: everyone gets only what their own job needs, and nothing more.</p>
+<pre><code>kubectl auth can-i delete pods -n financeiro --as ana</code></pre></section>
+<section class="st"><h3><span>Step 8 · Concept</span>ClusterRole: rules for the whole cluster</h3>
+<p>Some things don’t live in any namespace, like nodes and PersistentVolumes. Other times, someone needs to read every namespace. That’s what a ClusterRole is for.</p>
+<p>Prometheus (monitoring) needs to read everything. A ClusterRoleBinding connects the “view” ClusterRole to its ServiceAccount, across the whole cluster.</p>
+<p class="nt warn"><b>Watch out:</b> A ClusterRoleBinding to cluster-admin is the cluster’s master key. Review who has one, regularly.</p>
+<pre><code>kubectl create clusterrolebinding monitor-view --clusterrole=view --serviceaccount=monitoring:prometheus</code></pre></section>
+<section class="st"><h3><span>Step 9 · Concept</span>One ClusterRole, many namespaces</h3>
+<p>A handy trick: a RoleBinding can point to a ClusterRole. Then the ClusterRole’s rules apply only inside that RoleBinding’s namespace.</p>
+<p>That way you write the list once (the “view” ClusterRole) and hand it out per namespace, with one RoleBinding in each.</p>
+
+<table><thead><tr><th>Binding</th><th>Points to</th><th>Applies in</th></tr></thead><tbody><tr><td>RoleBinding</td><td>Role</td><td>1 namespace</td></tr><tr><td>RoleBinding</td><td>ClusterRole</td><td>1 namespace</td></tr><tr><td>ClusterRoleBinding</td><td>ClusterRole</td><td>Whole cluster</td></tr></tbody></table></section>
+<section class="st"><h3><span>Step 10 · Concept</span>Pods have identities too</h3>
+<p>Every pod runs as a ServiceAccount. If you don’t pick one, it uses the namespace’s “default”, which has no RBAC permissions.</p>
+<p>When an app needs to talk to the API server (an operator, a deploy tool), create its own ServiceAccount, give it a small Role and set it on the pod with serviceAccountName.</p>
+<p class="nt good"><b>Good to know:</b> If the pod doesn’t talk to the API server, set automountServiceAccountToken: false. Fewer credentials inside the container means less risk if it’s compromised.</p></section>
+<section class="st"><h3><span>Step 11 · Trade-off</span>Trade-off: careful with Secrets</h3>
+<p>Secrets hold passwords and keys. But by default their content is only base64, which is an encoding, not encryption: whoever reads the Secret reads the password.</p>
+<p>So get or list permission on secrets is the same as having the passwords. And anyone who can create pods in a namespace can mount any Secret from it inside a pod.</p>
+<p class="nt warn"><b>Watch out:</b> Turn on etcd encryption at rest, don’t grant list/get on secrets without need, and remember the “view” ClusterRole deliberately leaves Secrets out.</p>
+<pre><code>kubectl auth can-i get secrets -n financeiro --as ana</code></pre></section>
+<section class="st"><h3><span>Step 12 · Summary</span>Summary: the pieces of RBAC</h3>
+<p>Build permissions from the ground up: the minimum needed, per namespace, reviewed regularly.</p>
+<p class="nt good"><b>Good to know:</b> In the exam: kubectl create role, create rolebinding and auth can-i --as solve most RBAC tasks without hand-writing YAML.</p>
+<table><thead><tr><th>Object</th><th>What it is</th><th>Scope</th></tr></thead><tbody><tr><td>Role</td><td>List of rules</td><td>1 namespace</td></tr><tr><td>ClusterRole</td><td>List of rules</td><td>Whole cluster</td></tr><tr><td>RoleBinding</td><td>Connects rules to who</td><td>1 namespace</td></tr><tr><td>ClusterRoleBinding</td><td>Connects rules to who</td><td>Whole cluster</td></tr><tr><td>ServiceAccount</td><td>Identity for programs</td><td>1 namespace</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#rbac-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/extend/" rel="prev">Previous lesson: Extensions: CRI, CNI, CSI, CRDs and Operators</a><a href="../../../en/lesson/tudo/" rel="next">Next lesson: Putting it all together</a></nav>
+</main>
+</body>
+</html>

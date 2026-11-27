@@ -3,8 +3,9 @@
    Scripts clássicos inseridos com async=false executam na ordem de inserção, também em file://.
    O outro idioma é baixado só quando o usuário troca (window.K8S_loadLang). */
 (function(){
-  var l;
-  try{l=localStorage.getItem('k8s-lang')}catch(e){}
+  var l,q=/[?&]lang=(pt|en)\b/.exec(location.search);
+  if(q){l=q[1];try{localStorage.setItem('k8s-lang',l)}catch(e){}}  // vindo de uma página estática de lição (ADR-005)
+  else try{l=localStorage.getItem('k8s-lang')}catch(e){}
   if(l!=='pt'&&l!=='en')l=(navigator.language||'pt').toLowerCase().indexOf('pt')===0?'pt':'en';
   window.K8S_LANG=l;
   function add(src,cb){var s=document.createElement('script');s.src=src;s.async=false;if(cb){s.onload=cb;s.onerror=cb}document.head.appendChild(s)}

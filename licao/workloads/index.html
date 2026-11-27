@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workloads: DaemonSet, StatefulSet, Job e mais — Kubernetes Visual</title>
+<meta name="description" content="Nem todo app é um Deployment. Agentes, bancos, tarefas que terminam e estratégias de lançamento. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/workloads/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/workloads/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/workloads/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Workloads: DaemonSet, StatefulSet, Job e mais">
+<meta property="og:description" content="Nem todo app é um Deployment. Agentes, bancos, tarefas que terminam e estratégias de lançamento.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/workloads/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Workloads: DaemonSet, StatefulSet, Job e mais">
+<meta name="twitter:description" content="Nem todo app é um Deployment. Agentes, bancos, tarefas que terminam e estratégias de lançamento.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Workloads: DaemonSet, StatefulSet, Job e mais","description":"Nem todo app é um Deployment. Agentes, bancos, tarefas que terminam e estratégias de lançamento.","url":"https://andrentfs.github.io/kubernetes-visual/licao/workloads/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT14M","educationalLevel":"Intermediário","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Rodando apps · <a href="../../en/lesson/workloads/" hreflang="en">English version</a></p>
+<h1>Workloads: DaemonSet, StatefulSet, Job e mais</h1>
+<p class="lede">Nem todo app é um Deployment. Agentes, bancos, tarefas que terminam e estratégias de lançamento.</p>
+<p class="chips"><span>14 min</span><span>Intermediário</span><span>12 passos</span></p>
+<a class="cta" href="../../?lang=pt#workloads-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Escolher o workload certo para cada caso</li><li>Usar DaemonSet para um pod por node</li><li>Entender StatefulSet: nome, ordem e disco fixos</li><li>Rodar tarefas com Job e CronJob</li><li>Usar init containers e sidecars</li><li>Fazer blue/green e canary com o básico do Kubernetes</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Deployment: para apps sem estado</h3>
+<p>O Deployment é perfeito para apps sem estado, como a API da loja: as réplicas são iguais e qualquer uma pode ser trocada por outra.</p>
+<p>Mas há casos em que isso não serve: um agente que precisa rodar em toda máquina, um banco em que cada réplica é diferente, uma tarefa que deve terminar.</p>
+</section>
+<section class="st"><h3><span>Passo 2 · Conceito</span>DaemonSet: um pod em cada node</h3>
+<p>Um DaemonSet garante exatamente um pod em cada node (ou em cada node que combine com um seletor). Entrou um node novo, ele já recebe o seu pod.</p>
+<p>É o jeito certo para agentes de log (Fluent Bit), monitoramento (node-exporter) e rede (o próprio CNI e o kube-proxy).</p>
+<p class="nt good"><b>Bom saber:</b> DaemonSets ignoram o número de réplicas: quem decide quantos pods existem é a quantidade de nodes.</p>
+<pre><code>kubectl get ds -A</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Conceito</span>StatefulSet: cada réplica é única</h3>
+<p>Bancos de dados precisam que cada réplica tenha identidade fixa. O StatefulSet cria pods com nomes estáveis (db-0, db-1, db-2) e, com volumeClaimTemplates, um PVC próprio para cada um.</p>
+<p>Se db-1 morrer, nasce outro db-1, que monta o mesmo disco data-db-1. Um Service headless dá o endereço db-1.db de cada réplica.</p>
+<p class="nt key"><b>Ideia-chave:</b> Deployment: réplicas trocáveis. StatefulSet: réplicas com nome, ordem e disco próprios.</p></section>
+<section class="st"><h3><span>Passo 4 · Conceito</span>StatefulSet sobe em ordem</h3>
+<p>Por padrão, o StatefulSet liga db-0, espera ficar pronto, depois db-1, e só então db-2. Para desligar ou escalar para baixo, faz o caminho inverso.</p>
+<p>Isso permite que o banco eleja o primário antes de as réplicas entrarem.</p>
+</section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>Job: uma tarefa que termina</h3>
+<p>Um Job roda pods até completar a tarefa e para. completions diz quantas vezes precisa dar certo; parallelism, quantos rodam ao mesmo tempo.</p>
+<p>Pod de Job usa restartPolicy Never ou OnFailure. Ao terminar, fica com status Completed para você ler os logs.</p>
+
+<pre><code>kubectl create job relatorio --image=busybox -- sh -c &quot;echo ok&quot;</code></pre></section>
+<section class="st"><h3><span>Passo 6 · Problema</span>Quando o Job falha</h3>
+<p>Se os pods falham, o Job tenta de novo, esperando cada vez mais. Depois de backoffLimit tentativas (padrão 6), desiste e marca o Job como Failed.</p>
+<p>activeDeadlineSeconds limita o tempo total, e ttlSecondsAfterFinished apaga o Job sozinho depois de um tempo.</p>
+<p class="nt warn"><b>Atenção:</b> Sem backoffLimit ou prazo, um Job com bug pode ficar criando pods por muito tempo.</p></section>
+<section class="st"><h3><span>Passo 7 · Conceito</span>CronJob: tarefa com horário</h3>
+<p>Um CronJob cria um Job novo em cada horário marcado. O formato é o do cron do Linux: &quot;0 3 * * *&quot; é todo dia às 3 da manhã.</p>
+<p>concurrencyPolicy define o que fazer se a execução anterior ainda não terminou: permitir (Allow), pular (Forbid) ou trocar (Replace).</p>
+
+<table><thead><tr><th>Expressão</th><th>Quando</th></tr></thead><tbody><tr><td>*/5 * * * *</td><td>A cada 5 minutos</td></tr><tr><td>0 3 * * *</td><td>Todo dia às 3h</td></tr><tr><td>0 0 * * 0</td><td>Domingo à meia-noite</td></tr></tbody></table>
+<pre><code>kubectl create cronjob backup --image=busybox --schedule=&quot;0 3 * * *&quot; -- sh -c &quot;date&quot;</code></pre></section>
+<section class="st"><h3><span>Passo 8 · Conceito</span>Init containers: preparar antes de ligar</h3>
+<p>Init containers rodam antes do container principal, um de cada vez, e precisam terminar com sucesso. Só então o app liga.</p>
+<p>Usos típicos: esperar o banco responder, baixar uma configuração, ajustar permissões de um volume.</p>
+<p class="nt warn"><b>Atenção:</b> Pod preso em Init:0/1? O init container não terminou. Veja o log dele com kubectl logs pod -c nome-do-init.</p></section>
+<section class="st"><h3><span>Passo 9 · Conceito</span>Sidecars e outros padrões</h3>
+<p>Um sidecar roda ao lado do app no mesmo pod: um proxy, um coletor de logs. No formato nativo, ele é declarado em initContainers com restartPolicy: Always: liga antes do app e fica rodando junto.</p>
+<p>Outros padrões: adapter (traduz a saída do app para outro formato) e ambassador (um proxy local para serviços de fora).</p>
+</section>
+<section class="st"><h3><span>Passo 10 · Conceito</span>Blue/green: trocar tudo de uma vez</h3>
+<p>Você roda dois Deployments completos: o azul (v1, em produção) e o verde (v2, novo). O Service aponta para um deles pelo label version.</p>
+<p>Quando o verde estiver testado, muda o selector do Service para version=v2. A troca é instantânea, e voltar é só mudar o selector de novo.</p>
+<p class="nt good"><b>Bom saber:</b> Custa o dobro de pods durante a troca, mas o rollback leva um segundo.</p>
+<pre><code>kubectl patch svc loja -p '{&quot;spec&quot;:{&quot;selector&quot;:{&quot;version&quot;:&quot;v2&quot;}}}'</code></pre></section>
+<section class="st"><h3><span>Passo 11 · Conceito</span>Canary: testar com poucos clientes</h3>
+<p>Dois Deployments com o mesmo label app=loja: três pods v1 e um pod v2. O Service manda tráfego para os quatro, então mais ou menos 25% dos clientes usam a versão nova.</p>
+<p>Se tudo correr bem, aumente as réplicas da v2 e diminua as da v1 até a troca completa.</p>
+<p class="nt good"><b>Bom saber:</b> Para porcentagens exatas sem mexer em réplicas, a Gateway API permite pesos nas rotas.</p></section>
+<section class="st"><h3><span>Passo 12 · Resumo</span>Resumo: qual workload usar</h3>
+<p>Escolha pela natureza do trabalho, não pelo hábito.</p>
+
+<table><thead><tr><th>Workload</th><th>Use para</th></tr></thead><tbody><tr><td>Deployment</td><td>Apps sem estado</td></tr><tr><td>StatefulSet</td><td>Bancos e apps com identidade</td></tr><tr><td>DaemonSet</td><td>Um agente por node</td></tr><tr><td>Job</td><td>Tarefa que termina</td></tr><tr><td>CronJob</td><td>Tarefa com horário</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#workloads-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/pods/" rel="prev">Lição anterior: Pods e Deployments</a><a href="../../licao/config/" rel="next">Próxima lição: ConfigMaps, Secrets e SecurityContext</a></nav>
+</main>
+</body>
+</html>

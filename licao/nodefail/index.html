@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quando um node cai — Kubernetes Visual</title>
+<meta name="description" content="O que acontece, minuto a minuto, quando uma máquina do cluster some, e por que os pods não mudam de casa na hora. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/nodefail/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/nodefail/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/nodefail/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Quando um node cai">
+<meta property="og:description" content="O que acontece, minuto a minuto, quando uma máquina do cluster some, e por que os pods não mudam de casa na hora.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/nodefail/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Quando um node cai">
+<meta name="twitter:description" content="O que acontece, minuto a minuto, quando uma máquina do cluster some, e por que os pods não mudam de casa na hora.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Quando um node cai","description":"O que acontece, minuto a minuto, quando uma máquina do cluster some, e por que os pods não mudam de casa na hora.","url":"https://andrentfs.github.io/kubernetes-visual/licao/nodefail/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT12M","educationalLevel":"Intermediário","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Operação · <a href="../../en/lesson/nodefail/" hreflang="en">English version</a></p>
+<h1>Quando um node cai</h1>
+<p class="lede">O que acontece, minuto a minuto, quando uma máquina do cluster some, e por que os pods não mudam de casa na hora.</p>
+<p class="chips"><span>12 min</span><span>Intermediário</span><span>12 passos</span></p>
+<a class="cta" href="../../?lang=pt#nodefail-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Entender o batimento (heartbeat) dos nodes</li><li>Saber quanto tempo até o node virar NotReady</li><li>Entender os taints automáticos e os 5 minutos de tolerância</li><li>Ver por que StatefulSet e volumes travam</li><li>Destravar com o taint out-of-service</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Cada node avisa que está vivo</h3>
+<p>O cluster tem três nodes. A API roda com 3 réplicas, uma em cada node, e o banco (db-0, de um StatefulSet) roda no node-3, com o disco dele.</p>
+<p>O kubelet de cada node manda um “estou vivo” para o API server a cada 10 segundos, renovando um objeto chamado Lease. No controller-manager, um controlador fica de olho nesses sinais: o node lifecycle controller.</p>
+<p class="nt key"><b>Ideia-chave:</b> O Kubernetes não enxerga as máquinas. Ele só sabe que um node está vivo porque o kubelet continua avisando.</p></section>
+<section class="st"><h3><span>Passo 2 · Problema</span>0 s: a máquina apaga</h3>
+<p>A fonte do node-3 queimou. A máquina sumiu, junto com a réplica da API e o banco que rodavam nela.</p>
+<p>Mas, para o cluster, nada mudou ainda: o node continua Ready e os pods continuam Running no kubectl. A única diferença é o silêncio: os avisos do node-3 pararam de chegar.</p>
+<p class="nt warn"><b>Atenção:</b> Nos primeiros segundos, o kubectl mostra Running o que já não existe. Ele mostra o último estado conhecido, não o estado real.</p>
+<pre><code>kubectl get nodes</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Conceito</span>50 s: o node vira NotReady</h3>
+<p>O controlador espera um prazo antes de desconfiar: o node-monitor-grace-period, de 50 segundos (era 40 s até a versão 1.31). Sem nenhum aviso nesse tempo, ele marca o node-3 como NotReady, com status Unknown.</p>
+<p>Na mesma hora, ele marca os pods do node-3 como não prontos (Ready: False). Isso já tira esses pods dos endpoints dos Services: a partir daqui, nenhum cliente é mandado para o node morto.</p>
+<p class="nt key"><b>Ideia-chave:</b> O primeiro efeito de um node caído é no tráfego, não nos pods: em ~50 s o Service para de mandar clientes para lá.</p>
+<p class="nt good"><b>Bom saber:</b> Entre 0 e 50 s, parte das requisições ainda cai no node morto e falha. Retries no cliente ou no Ingress cobrem esse buraco.</p>
+<pre><code>kubectl get nodes</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Conceito</span>O node ganha uma placa de “interditado”</h3>
+<p>Junto com o NotReady, o controlador coloca dois taints no node-3: node.kubernetes.io/unreachable com o efeito NoSchedule, e o mesmo com o efeito NoExecute.</p>
+<p>Taint é uma placa na porta do node. NoSchedule quer dizer “não coloque pods novos aqui”, e o scheduler passa a ignorar o node-3. NoExecute quer dizer “quem estiver aqui tem que sair”, mas só depois do prazo que cada pod tolera.</p>
+<p class="nt good"><b>Bom saber:</b> Se a máquina só perdeu a rede, os containers continuam rodando lá dentro, sem saber de nada. Por isso o Kubernetes é cauteloso antes de recriar pods em outro lugar.</p>
+<pre><code>kubectl describe node node-3</code></pre></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>Cada pod tolera 5 minutos</h3>
+<p>Todo pod ganha, sem você pedir, uma tolerância a esses taints: tolerationSeconds: 300. É como dizer “se o meu node sumir, eu espero 5 minutos antes de ir embora”.</p>
+<p>O motivo: quedas curtas de rede são comuns. Se o Kubernetes recriasse tudo a cada piscada, um switch reiniciando faria metade do cluster mudar de lugar à toa.</p>
+<p class="nt key"><b>Ideia-chave:</b> Os pods do node caído só são despejados uns 5 minutos depois do NotReady. Somando tudo, a réplica nova aparece uns 5 min e 50 s depois da queda.</p>
+<p class="nt good"><b>Bom saber:</b> Dá para mudar por pod: uma tolerância para node.kubernetes.io/unreachable com tolerationSeconds: 30 faz o pod trocar de node bem mais rápido. Bom para apps sem estado; arriscado para bancos.</p></section>
+<section class="st"><h3><span>Passo 6 · Solução</span>5 min 50 s: os pods são despejados</h3>
+<p>O prazo acabou. O controlador apaga os pods do node-3, que passam a aparecer como Terminating.</p>
+<p>O ReplicaSet da API percebe que só tem 2 réplicas de verdade e cria uma nova. O scheduler escolhe o node-1, que tem espaço, e respeita o taint: o node-3 nem entra na conta. Em poucos segundos a API volta a ter 3 réplicas prontas.</p>
+
+<pre><code>kubectl get pods -o wide</code></pre></section>
+<section class="st"><h3><span>Passo 7 · Conceito</span>O pod antigo fica Terminating</h3>
+<p>O pod antigo da API continua aparecendo como Terminating, e pode ficar assim por horas. Para ele sumir de vez, o kubelet do node-3 precisaria confirmar que parou o container, e ele não está lá para responder.</p>
+<p>Para um Deployment, isso não importa: ele já criou a substituta e não conta pods que estão sendo apagados. O pod “zumbi” só ocupa uma linha no kubectl.</p>
+<p class="nt warn"><b>Atenção:</b> Pods presos em Terminating num node NotReady são normais. Não é sinal de que o cluster travou.</p></section>
+<section class="st"><h3><span>Passo 8 · Problema</span>O banco não volta sozinho</h3>
+<p>Com o db-0 é diferente. Um StatefulSet promete que nunca vão existir dois pods com o mesmo nome ao mesmo tempo. Enquanto o db-0 antigo estiver Terminating, ele não cria outro db-0.</p>
+<p>E o cluster não tem como saber se a máquina morreu ou se só perdeu a rede, com o banco ainda gravando no disco. Criar um segundo db-0 poderia deixar dois bancos escrevendo nos mesmos dados.</p>
+<p class="nt key"><b>Ideia-chave:</b> Para Deployment, um node caído se resolve sozinho em uns 6 minutos. Para StatefulSet, alguém precisa confirmar que a máquina morreu de verdade.</p>
+<pre><code>kubectl get pods -l app=db</code></pre></section>
+<section class="st"><h3><span>Passo 9 · Problema</span>Forçar a exclusão não basta</h3>
+<p>Muita gente força a exclusão: kubectl delete pod db-0 --force --grace-period=0. O pod antigo some do cluster e o StatefulSet cria o db-0 novo no node-2.</p>
+<p>Só que o disco do banco (ReadWriteOnce) ainda consta como ligado ao node-3. O pod novo fica em ContainerCreating com o erro Multi-Attach, porque um volume RWO só pode estar ligado a um node por vez. O Kubernetes espera mais 6 minutos antes de soltar o disco à força.</p>
+<p class="nt warn"><b>Atenção:</b> --force só apaga o registro no cluster, não desliga nada. Use só quando tiver certeza de que a máquina está desligada; senão, podem ficar dois bancos no mesmo disco.</p>
+<pre><code>kubectl delete pod db-0 --force --grace-period=0</code></pre></section>
+<section class="st"><h3><span>Passo 10 · Solução</span>O jeito certo: avisar que o node morreu</h3>
+<p>Desde a versão 1.28 existe um jeito oficial: depois de confirmar que a máquina está desligada, você coloca no node o taint node.kubernetes.io/out-of-service.</p>
+<p>É como dizer ao cluster “pode confiar, essa máquina não volta tão cedo”. O Kubernetes apaga na hora os pods presos, solta os volumes e deixa o StatefulSet recriar o db-0 em outro node, sem esperar os 6 minutos.</p>
+<p class="nt good"><b>Bom saber:</b> Em nuvem, quando a VM é apagada, o cloud controller manager costuma remover o objeto Node do cluster, e o efeito é parecido.</p>
+<pre><code>kubectl taint nodes node-3 node.kubernetes.io/out-of-service=nodeshutdown:NoExecute</code></pre></section>
+<section class="st"><h3><span>Passo 11 · Solução</span>A máquina volta, mas fica vazia</h3>
+<p>A fonte foi trocada e o node-3 ligou de novo. O kubelet volta a mandar avisos, o node fica Ready e os taints unreachable saem sozinhos. O out-of-service, você tira à mão.</p>
+<p>Os pods não voltam para o node-3: o Kubernetes não rebalanceia o que já está rodando. O node-3 só recebe pods novos daqui para a frente. Para redistribuir, use kubectl rollout restart ou uma ferramenta como o descheduler.</p>
+
+<pre><code>kubectl taint nodes node-3 node.kubernetes.io/out-of-service-</code></pre></section>
+<section class="st"><h3><span>Passo 12 · Resumo</span>Resumo: a linha do tempo de um node caído</h3>
+<p>Quando um node cai, o Kubernetes primeiro desconfia, depois isola e só então recria. Cada etapa tem um prazo, e todos podem ser ajustados.</p>
+<p>Para sofrer menos: tenha pelo menos 2 réplicas, espalhe as réplicas por nodes diferentes (topologySpreadConstraints ou anti-affinity) e use retries. Um PodDisruptionBudget não protege contra queda de máquina; ele vale só para saídas planejadas, como um drain.</p>
+
+<table><thead><tr><th>Quando</th><th>O que acontece</th></tr></thead><tbody><tr><td>0 s</td><td>O node para de avisar; nada muda no kubectl</td></tr><tr><td>~50 s</td><td>NotReady, pods saem dos Services, taints unreachable</td></tr><tr><td>~5 min 50 s</td><td>Pods despejados; o Deployment recria em outro node</td></tr><tr><td>StatefulSet</td><td>Espera confirmação: out-of-service ou --force</td></tr><tr><td>Volume RWO</td><td>Só solta com out-of-service ou após mais 6 min</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#nodefail-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/probes/" rel="prev">Lição anterior: Health checks: readiness, liveness e startup</a><a href="../../licao/helm/" rel="next">Próxima lição: Helm e Kustomize</a></nav>
+</main>
+</body>
+</html>

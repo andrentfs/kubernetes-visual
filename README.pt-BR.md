@@ -28,7 +28,7 @@ docker compose --profile dev run --rm dev npm test        # testes
 docker compose --profile preview up --build preview       # http://localhost:8081
 ```
 
-Também dá para rodar só uma parte: `make test-unit`, `make test-i18n`, `make test-e2e`.
+Também dá para rodar só uma parte: `make test-unit`, `make test-i18n`, `make test-e2e`. `make pages` regera as páginas estáticas por lição e o sitemap. `make manifests` valida os YAMLs das lições com o kubeconform (também roda no CI).
 Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modules`.
 
 | Container | Imagem | Uso |
@@ -41,7 +41,9 @@ Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modu
 
 | Suíte | Onde | O que verifica |
 |---|---|---|
-| Unitários | `tests/unit/` (`node:test`) | Motor do terminal simulado: saídas, flags, pipes, determinismo, arquivos somente leitura |
+| Unitários | `tests/unit/` (`node:test`) | Motor do terminal simulado; dados de certificação; SEO; cenas × textos; páginas por lição atualizadas; checagem rápida dos YAMLs |
+| Manifestos (CI) | `tests/tools/extract-manifests.mjs` + kubeconform | Os 28 YAMLs de exemplo contra o schema da versão de referência ([ADR-006](docs/adr/ADR-006-kubeconform.md)) |
+| Links (CI) | lychee | Links dos documentos `.md` |
 | Paridade PT/EN | `tests/tools/i18n-parity.mjs` | Mesmas chaves, lições, passos, campos e legendas nos dois idiomas |
 | E2E | `tests/e2e/` (Playwright) | Todos os passos nos dois idiomas sem erro e sem seta atravessando bloco; terminal; abas CKA/CKAD/CKS; idioma; teclado; layout desktop e celular |
 
@@ -55,6 +57,7 @@ Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modu
 | `data/certs.js` | Domínios e competências CKA/CKAD/CKS |
 | `i18n/pt.js`, `i18n/en.js` | Textos (só o idioma em uso é baixado) |
 | `i18n/labels.js` | Rótulos dos diagramas, nos dois idiomas ([ADR-003](docs/adr/ADR-003-lazy-language.md)) |
+| `licao/`, `en/lesson/` | Páginas estáticas por lição, geradas por `scripts/gen-lesson-pages.mjs` ([ADR-005](docs/adr/ADR-005-lesson-pages.md)) |
 | `js/geometry.js` · `content.js` · `renderer.js` · `ui.js` | Motor isométrico e interface ([ADR-002](docs/adr/ADR-002-file-structure.md)) |
 | `js/term/` | Terminal `kubectl` simulado: `lessons.js` (dados por lição), `files.js` (YAMLs), `engine.js` (interpretador) |
 

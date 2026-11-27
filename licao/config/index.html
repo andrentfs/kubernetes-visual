@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ConfigMaps, Secrets e SecurityContext — Kubernetes Visual</title>
+<meta name="description" content="Tirar configuração e senhas de dentro da imagem, e rodar containers com o mínimo de poder. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/config/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/config/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/config/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="ConfigMaps, Secrets e SecurityContext">
+<meta property="og:description" content="Tirar configuração e senhas de dentro da imagem, e rodar containers com o mínimo de poder.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/config/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ConfigMaps, Secrets e SecurityContext">
+<meta name="twitter:description" content="Tirar configuração e senhas de dentro da imagem, e rodar containers com o mínimo de poder.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"ConfigMaps, Secrets e SecurityContext","description":"Tirar configuração e senhas de dentro da imagem, e rodar containers com o mínimo de poder.","url":"https://andrentfs.github.io/kubernetes-visual/licao/config/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT12M","educationalLevel":"Intermediário","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Rodando apps · <a href="../../en/lesson/config/" hreflang="en">English version</a></p>
+<h1>ConfigMaps, Secrets e SecurityContext</h1>
+<p class="lede">Tirar configuração e senhas de dentro da imagem, e rodar containers com o mínimo de poder.</p>
+<p class="chips"><span>12 min</span><span>Intermediário</span><span>11 passos</span></p>
+<a class="cta" href="../../?lang=pt#config-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Separar configuração da imagem com ConfigMap</li><li>Escolher entre variável de ambiente e arquivo</li><li>Guardar senhas em Secrets</li><li>Rodar containers sem root</li><li>Barrar pods inseguros com Pod Security</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Problema</span>Configuração presa dentro da imagem</h3>
+<p>O endereço do banco foi escrito direto no código da API: DB_HOST=prod-db. Para rodar a mesma API em homologação, a equipe precisa gerar outra imagem.</p>
+<p>Uma imagem por ambiente é lenta e arriscada: a imagem que você testou não é a mesma que vai para produção.</p>
+<p class="nt warn"><b>Atenção:</b> A regra dos apps modernos: a mesma imagem em todo lugar, só a configuração muda.</p></section>
+<section class="st"><h3><span>Passo 2 · Solução</span>ConfigMap: a configuração fora da imagem</h3>
+<p>Um ConfigMap é um objeto do Kubernetes que guarda pares chave-valor ou arquivos inteiros de configuração, como DB_HOST=db.</p>
+<p>Os pods leem o ConfigMap ao ligar. Para outro ambiente, basta outro ConfigMap com o mesmo nome em outro namespace; a imagem é a mesma.</p>
+<p class="nt key"><b>Ideia-chave:</b> ConfigMap é para dados que não são segredo. Limite de 1 MiB por objeto.</p>
+<pre><code>kubectl create configmap loja-config --from-literal=DB_HOST=db</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Conceito</span>Duas formas de entregar: variável ou arquivo</h3>
+<p>Como variável de ambiente: env com valueFrom.configMapKeyRef (uma chave) ou envFrom (todas as chaves de uma vez).</p>
+<p>Como arquivo: um volume do tipo configMap montado numa pasta, por exemplo /etc/config. Cada chave vira um arquivo dentro dela.</p>
+<p class="nt good"><b>Bom saber:</b> Use env para valores curtos (portas, URLs) e volume para arquivos inteiros (nginx.conf, application.yaml).</p></section>
+<section class="st"><h3><span>Passo 4 · Trade-off</span>Trade-off: quem vê a mudança?</h3>
+<p>Você mudou o ConfigMap. O pod que recebeu como volume vê o arquivo novo em até um minuto, sozinho.</p>
+<p>O pod que recebeu como variável de ambiente continua com o valor antigo: variáveis só são lidas quando o container liga. Precisa reiniciar.</p>
+<p class="nt warn"><b>Atenção:</b> Montagem com subPath também não atualiza sozinha. Na dúvida, kubectl rollout restart.</p>
+<pre><code>kubectl rollout restart deployment/api</code></pre></section>
+<section class="st"><h3><span>Passo 5 · Solução</span>Secret: para senhas e chaves</h3>
+<p>Senhas, tokens e certificados vão num Secret. Ele funciona quase igual ao ConfigMap: env ou volume.</p>
+<p>A diferença é o tratamento: o RBAC pode separar quem lê Secrets, o kubelet guarda os volumes de Secret em memória (tmpfs) no node, e dá para criptografar no etcd.</p>
+<p class="nt warn"><b>Atenção:</b> Por padrão o valor só fica em base64. echo … | base64 -d mostra a senha. Não é criptografia.</p>
+<pre><code>kubectl create secret generic db-cred --from-literal=password=s3nh4</code></pre></section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>Tipos de Secret</h3>
+<p>Opaque é o genérico, para qualquer chave-valor. kubernetes.io/tls guarda certificado e chave (usado pelo Ingress para HTTPS).</p>
+<p>kubernetes.io/dockerconfigjson guarda o login de um registry privado. O pod usa esse Secret em imagePullSecrets para conseguir baixar a imagem.</p>
+
+<table><thead><tr><th>Tipo</th><th>Como criar</th></tr></thead><tbody><tr><td>Opaque</td><td>create secret generic</td></tr><tr><td>TLS</td><td>create secret tls</td></tr><tr><td>Registry</td><td>create secret docker-registry</td></tr></tbody></table>
+<pre><code>kubectl create secret tls loja-tls --cert=tls.crt --key=tls.key</code></pre></section>
+<section class="st"><h3><span>Passo 7 · Problema</span>Container rodando como root</h3>
+<p>Por padrão, muitas imagens rodam como root (usuário 0). Se alguém invadir o app por uma falha, já começa com o máximo de poder dentro do container.</p>
+<p>Combinado com outros erros (volume do node montado, container privilegiado), o invasor pode chegar ao próprio node.</p>
+<p class="nt warn"><b>Atenção:</b> Root no container é um degrau a menos entre uma falha no app e o controle da máquina.</p></section>
+<section class="st"><h3><span>Passo 8 · Solução</span>SecurityContext: rodar com menos poder</h3>
+<p>O securityContext define como o container roda. runAsNonRoot: true recusa iniciar como root; runAsUser: 1000 escolhe o usuário.</p>
+<p>readOnlyRootFilesystem: true impede escrever no disco do container, e allowPrivilegeEscalation: false impede ganhar mais poder depois de ligado.</p>
+<p class="nt key"><b>Ideia-chave:</b> O securityContext pode ir no pod (vale para todos os containers) ou em cada container (sobrepõe o do pod).</p></section>
+<section class="st"><h3><span>Passo 9 · Conceito</span>Capabilities: poderes avulsos</h3>
+<p>No Linux, os poderes do root são divididos em capabilities: abrir portas abaixo de 1024, mudar a rede, mudar dono de arquivos…</p>
+<p>O mais seguro é capabilities.drop: [&quot;ALL&quot;] e devolver só o necessário, como add: [&quot;NET_BIND_SERVICE&quot;] para escutar na porta 80.</p>
+<p class="nt good"><b>Bom saber:</b> privileged: true liga todas as capabilities e quase tudo do node. Evite, a não ser em agentes de sistema muito específicos.</p></section>
+<section class="st"><h3><span>Passo 10 · Conceito</span>Pod Security: o porteiro do namespace</h3>
+<p>Para não depender de cada time lembrar do securityContext, o admission controller Pod Security aplica regras por namespace.</p>
+<p>Com a label pod-security.kubernetes.io/enforce=restricted, o API server recusa pods que rodam como root, que pedem privilégios ou que não derrubam capabilities.</p>
+
+<table><thead><tr><th>Nível</th><th>O que exige</th></tr></thead><tbody><tr><td>privileged</td><td>Nada, tudo liberado</td></tr><tr><td>baseline</td><td>Bloqueia o mais perigoso</td></tr><tr><td>restricted</td><td>Boas práticas completas</td></tr></tbody></table>
+<pre><code>kubectl label ns loja pod-security.kubernetes.io/enforce=restricted</code></pre></section>
+<section class="st"><h3><span>Passo 11 · Resumo</span>Resumo: configuração e segurança do pod</h3>
+<p>A imagem é a mesma em todo lugar; o que muda vem de ConfigMaps e Secrets, e o container roda com o mínimo de poder.</p>
+
+<table><thead><tr><th>Recurso</th><th>Para quê</th></tr></thead><tbody><tr><td>ConfigMap</td><td>Configuração comum</td></tr><tr><td>Secret</td><td>Senhas, tokens, certificados</td></tr><tr><td>securityContext</td><td>Usuário, permissões, disco</td></tr><tr><td>Pod Security</td><td>Regras por namespace</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#config-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/workloads/" rel="prev">Lição anterior: Workloads: DaemonSet, StatefulSet, Job e mais</a><a href="../../licao/storage/" rel="next">Próxima lição: Storage: volumes, PV, PVC e StorageClass</a></nav>
+</main>
+</body>
+</html>

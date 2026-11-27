@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>System hardening: host, ports, AppArmor and seccomp — Kubernetes Visual</title>
+<meta name="description" content="A node is just another Linux machine. Fewer packages, fewer ports and fewer privileges, plus kernel profiles that limit what a container can do. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/sistema/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/sistema/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/sistema/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="System hardening: host, ports, AppArmor and seccomp">
+<meta property="og:description" content="A node is just another Linux machine. Fewer packages, fewer ports and fewer privileges, plus kernel profiles that limit what a container can do.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/sistema/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="System hardening: host, ports, AppArmor and seccomp">
+<meta name="twitter:description" content="A node is just another Linux machine. Fewer packages, fewer ports and fewer privileges, plus kernel profiles that limit what a container can do.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"System hardening: host, ports, AppArmor and seccomp","description":"A node is just another Linux machine. Fewer packages, fewer ports and fewer privileges, plus kernel profiles that limit what a container can do.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/sistema/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT13M","educationalLevel":"Advanced","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Advanced security (CKS) · <a href="../../../licao/sistema/" hreflang="pt-BR">Versão em português</a></p>
+<h1>System hardening: host, ports, AppArmor and seccomp</h1>
+<p class="lede">A node is just another Linux machine. Fewer packages, fewer ports and fewer privileges, plus kernel profiles that limit what a container can do.</p>
+<p class="chips"><span>13 min</span><span>Advanced</span><span>10 steps</span></p>
+<a class="cta" href="../../../?lang=en#sistema-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Cut the node’s packages, services and ports</li><li>Know which ports Kubernetes uses</li><li>Close the rest with a firewall</li><li>Apply least-privilege identity</li><li>Use AppArmor and seccomp in pods</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Context</span>What runs on the node</h3>
+<p>Besides the kubelet and containerd, node-1 runs sshd, an apache2 left over from a test and cups (printing). Every service is an open port and one more program that can have bugs.</p>
+<p>ss -tlnp lists the listening TCP ports and the process behind each one.</p>
+
+<pre><code>ss -tlnp</code></pre></section>
+<section class="st"><h3><span>Step 2 · Solution</span>Removing what isn’t needed</h3>
+<p>systemctl disable --now stops the service and removes it from boot. If the package isn’t used, remove it with apt remove (or your distribution’s package manager).</p>
+<p>Do the same with users, compilers and tools that would only help an attacker.</p>
+
+<pre><code>systemctl disable --now apache2 cups</code></pre></section>
+<section class="st"><h3><span>Step 3 · Concept</span>The ports Kubernetes uses</h3>
+<p>On the control plane: 6443 (API server), 2379-2380 (etcd), 10250 (kubelet), 10259 (scheduler) and 10257 (controller-manager). On workers: 10250 (kubelet) and the NodePort range, 30000-32767.</p>
+<p>Your CNI may need other ports; check its documentation.</p>
+
+<table><thead><tr><th>Port</th><th>Component</th></tr></thead><tbody><tr><td>6443</td><td>API server</td></tr><tr><td>2379-2380</td><td>etcd</td></tr><tr><td>10250</td><td>kubelet</td></tr><tr><td>10259</td><td>kube-scheduler</td></tr><tr><td>10257</td><td>kube-controller-manager</td></tr><tr><td>30000-32767</td><td>NodePort</td></tr></tbody></table></section>
+<section class="st"><h3><span>Step 4 · Solution</span>Closing the rest with a firewall</h3>
+<p>With ufw: ufw default deny incoming, then ufw allow 6443/tcp (and the other ports the node needs). In the cloud, do the same in the security group.</p>
+<p>etcd should only be reachable by the API server, never from outside.</p>
+<p class="nt warn"><b>Watch out:</b> Before ufw enable, allow port 22 if you are connected over SSH, or you lose access.</p>
+<pre><code>ufw default deny incoming</code></pre></section>
+<section class="st"><h3><span>Step 5 · Concept</span>Least-privilege identity and access</h3>
+<p>On the node: only the users you need, SSH with keys only, and sudo just for administrators. id ana shows a user’s groups.</p>
+<p>In the cloud: the machine’s IAM role should have only the permissions the kubelet and agents use. Inside the cluster, the same applies to RBAC.</p>
+<p class="nt key"><b>Key idea:</b> An attacker who reaches the node inherits everything the node can do, including in the cloud account.</p>
+<pre><code>id ana</code></pre></section>
+<section class="st"><h3><span>Step 6 · Concept</span>AppArmor: limiting what a process can access</h3>
+<p>AppArmor is a kernel security module. A profile says which files, capabilities and network access a program may use.</p>
+<p>The profile is loaded on the node (apparmor_parser -q file), and aa-status lists the loaded ones. Kubernetes doesn’t load profiles: that’s done on each node.</p>
+
+<pre><code>aa-status</code></pre></section>
+<section class="st"><h3><span>Step 7 · Solution</span>Applying the profile to the pod</h3>
+<p>In the pod or container securityContext: appArmorProfile with type: Localhost and localhostProfile: k8s-deny-write. There are also the RuntimeDefault and Unconfined types.</p>
+<p>With a profile that denies writes, kubectl exec web -- touch /tmp/x fails with Permission denied: the kernel blocked it.</p>
+
+<pre><code>kubectl exec web -- touch /tmp/x</code></pre></section>
+<section class="st"><h3><span>Step 8 · Trade-off</span>Trade-off: the profile must be on every node</h3>
+<p>Pod web-2 landed on worker-2, where the profile wasn’t loaded. The kubelet refuses to start the pod, and kubectl describe shows the AppArmor error.</p>
+<p>Load the profile on every node that may get the pod, or pin the pod to the right nodes with nodeSelector or affinity.</p>
+<p class="nt warn"><b>Watch out:</b> A profile loaded by hand disappears on reboot if its file isn’t in /etc/apparmor.d.</p>
+<pre><code>kubectl describe pod web-2</code></pre></section>
+<section class="st"><h3><span>Step 9 · Concept</span>seccomp: filtering calls to the kernel</h3>
+<p>seccomp limits which system calls (syscalls) a container can make. seccompProfile with type: RuntimeDefault uses the container runtime’s default profile, which blocks dangerous and rare calls.</p>
+<p>For a custom profile, use type: Localhost with localhostProfile set to a file path under /var/lib/kubelet/seccomp on the node.</p>
+<p class="nt good"><b>Good to know:</b> The restricted Pod Security Standard requires RuntimeDefault. It’s the safe choice for almost every app.</p></section>
+<section class="st"><h3><span>Step 10 · Summary</span>Summary: a node with less surface</h3>
+<p>Remove what isn’t used from the node, close the remaining ports and limit each container with AppArmor and seccomp.</p>
+
+<table><thead><tr><th>Layer</th><th>Tool</th></tr></thead><tbody><tr><td>Packages and services</td><td>systemctl, apt</td></tr><tr><td>Ports</td><td>ss -tlnp, ufw, security group</td></tr><tr><td>Identity</td><td>users, sudo, IAM, RBAC</td></tr><tr><td>Files and capabilities</td><td>AppArmor</td></tr><tr><td>Syscalls</td><td>seccomp</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#sistema-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/hardening/" rel="prev">Previous lesson: Cluster security: CIS, API, tokens, metadata and TLS</a><a href="../../../en/lesson/isolamento/" rel="next">Next lesson: Isolation and encryption: Secrets, sandboxes and mTLS</a></nav>
+</main>
+</body>
+</html>

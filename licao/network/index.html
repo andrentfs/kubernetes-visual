@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rede do cluster: CNI, Services e CoreDNS — Kubernetes Visual</title>
+<meta name="description" content="Como os pods se encontram: o modelo de rede, os tipos de Service, o DNS do cluster e a Gateway API. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/network/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/network/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/network/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Rede do cluster: CNI, Services e CoreDNS">
+<meta property="og:description" content="Como os pods se encontram: o modelo de rede, os tipos de Service, o DNS do cluster e a Gateway API.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/network/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rede do cluster: CNI, Services e CoreDNS">
+<meta name="twitter:description" content="Como os pods se encontram: o modelo de rede, os tipos de Service, o DNS do cluster e a Gateway API.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Rede do cluster: CNI, Services e CoreDNS","description":"Como os pods se encontram: o modelo de rede, os tipos de Service, o DNS do cluster e a Gateway API.","url":"https://andrentfs.github.io/kubernetes-visual/licao/network/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT14M","educationalLevel":"Intermediário","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Rodando apps · <a href="../../en/lesson/network/" hreflang="en">English version</a></p>
+<h1>Rede do cluster: CNI, Services e CoreDNS</h1>
+<p class="lede">Como os pods se encontram: o modelo de rede, os tipos de Service, o DNS do cluster e a Gateway API.</p>
+<p class="chips"><span>14 min</span><span>Intermediário</span><span>11 passos</span></p>
+<a class="cta" href="../../?lang=pt#network-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Entender o modelo de rede dos pods</li><li>Saber o papel do CNI e do kube-proxy</li><li>Diferenciar ClusterIP, NodePort e LoadBalancer</li><li>Usar Services headless e o CoreDNS</li><li>Depurar DNS</li><li>Conhecer a Gateway API</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>A regra de ouro da rede</h3>
+<p>No Kubernetes, todo pod ganha um IP próprio, e qualquer pod fala com qualquer outro pod pelo IP, em qualquer node, sem tradução de endereço (NAT).</p>
+<p>É como se todos os pods estivessem na mesma rede local, mesmo espalhados por máquinas diferentes.</p>
+<p class="nt key"><b>Ideia-chave:</b> Pod com IP, todos se alcançam, sem NAT. Por padrão, também não há bloqueio: isso é papel da NetworkPolicy.</p></section>
+<section class="st"><h3><span>Passo 2 · Conceito</span>CNI: quem monta a rede</h3>
+<p>O Kubernetes define a regra, mas não implementa a rede. Quem faz isso é um plugin CNI (Container Network Interface): Calico, Cilium, Flannel…</p>
+<p>Ele roda em cada node (um DaemonSet), dá IP para cada pod novo e cria as rotas entre os nodes.</p>
+<p class="nt good"><b>Bom saber:</b> A configuração do CNI fica em /etc/cni/net.d e os binários em /opt/cni/bin. É onde olhar se pods não ganham IP.</p></section>
+<section class="st"><h3><span>Passo 3 · Conceito</span>kube-proxy: o Service de verdade</h3>
+<p>O IP de um Service é virtual: nenhuma interface de rede tem esse endereço. Em cada node, o kube-proxy cria regras (iptables ou IPVS) que trocam o IP do Service pelo IP de um pod real.</p>
+<p>Por isso o Service funciona em qualquer node: as regras estão em todos.</p>
+<p class="nt good"><b>Bom saber:</b> Alguns CNIs, como o Cilium, podem substituir o kube-proxy usando eBPF.</p></section>
+<section class="st"><h3><span>Passo 4 · Conceito</span>ClusterIP: só dentro do cluster</h3>
+<p>O tipo padrão. O Service ganha um IP virtual (como 10.96.0.20) e um nome DNS, acessíveis só de dentro do cluster.</p>
+<p>port é a porta do Service; targetPort é a porta do container. Elas podem ser diferentes: 80 no Service, 8080 no app.</p>
+<p class="nt warn"><b>Atenção:</b> Quem está fora do cluster não alcança um ClusterIP. Para isso, NodePort, LoadBalancer, Ingress ou Gateway.</p>
+<pre><code>kubectl expose deploy api --port=80 --target-port=8080</code></pre></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>NodePort: uma porta em cada node</h3>
+<p>O NodePort abre a mesma porta (entre 30000 e 32767) em todos os nodes. Quem acessar qualquer node nessa porta chega ao Service.</p>
+<p>Ele inclui um ClusterIP por baixo. Bom para testes e laboratórios; em produção costuma ficar atrás de um balanceador.</p>
+
+<pre><code>kubectl expose deploy api --type=NodePort --port=80</code></pre></section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>LoadBalancer: o balanceador da nuvem</h3>
+<p>Em nuvens como AWS, GCP e Azure, um Service LoadBalancer pede ao provedor um balanceador externo com IP público, que manda o tráfego para os nodes.</p>
+<p>Por baixo, ele cria um NodePort e um ClusterIP. Em clusters locais, sem provedor, o IP externo fica &lt;pending&gt; até instalar algo como o MetalLB.</p>
+</section>
+<section class="st"><h3><span>Passo 7 · Conceito</span>Endpoints e Services headless</h3>
+<p>Atrás de todo Service há uma lista de endpoints (hoje em EndpointSlices) com os IPs dos pods prontos.</p>
+<p>Um Service headless (clusterIP: None) não tem IP virtual: o DNS devolve direto os IPs dos pods. É usado com StatefulSets, onde cada réplica tem nome próprio (db-0, db-1…).</p>
+</section>
+<section class="st"><h3><span>Passo 8 · Conceito</span>CoreDNS: os nomes do cluster</h3>
+<p>O CoreDNS roda em kube-system e responde os nomes do cluster. Um Service vira api.loja.svc.cluster.local.</p>
+<p>Dentro do mesmo namespace basta “api”; de outro namespace, “api.loja”. O arquivo /etc/resolv.conf de cada pod já aponta para o CoreDNS.</p>
+
+<table><thead><tr><th>De onde</th><th>Nome que funciona</th></tr></thead><tbody><tr><td>Mesmo namespace</td><td>api</td></tr><tr><td>Outro namespace</td><td>api.loja</td></tr><tr><td>Nome completo</td><td>api.loja.svc.cluster.local</td></tr></tbody></table>
+<pre><code>kubectl run t --image=busybox --rm -it -- nslookup api.loja</code></pre></section>
+<section class="st"><h3><span>Passo 9 · Problema</span>Quando o DNS falha</h3>
+<p>Pods com timeout ou NXDOMAIN ao chamar outros serviços? Teste com um pod temporário: kubectl run t --image=busybox --rm -it -- nslookup api.loja.</p>
+<p>Se nem kubernetes.default resolve, olhe os pods do CoreDNS (kubectl -n kube-system get pods -l k8s-app=kube-dns), os logs e o ConfigMap coredns.</p>
+<p class="nt warn"><b>Atenção:</b> Se o nome não resolve mas o IP do Service funciona, o problema é DNS. Se nem o IP funciona, é Service ou rede.</p>
+<pre><code>kubectl -n kube-system logs -l k8s-app=kube-dns</code></pre></section>
+<section class="st"><h3><span>Passo 10 · Conceito</span>Gateway API: o sucessor do Ingress</h3>
+<p>A Gateway API divide a entrada em papéis. A GatewayClass diz qual implementação usar; o Gateway define onde escutar (porta, domínio, certificado); as rotas, como HTTPRoute, dizem para qual Service vai cada caminho.</p>
+<p>Assim, o time de infraestrutura cuida do Gateway e cada time de app cria suas próprias rotas.</p>
+<p class="nt good"><b>Bom saber:</b> Ingress continua existindo e cai na prova também. A Gateway API é mais expressiva: pesos para canary, cabeçalhos, vários protocolos.</p></section>
+<section class="st"><h3><span>Passo 11 · Resumo</span>Resumo: como o tráfego chega ao pod</h3>
+<p>CNI dá IP aos pods, kube-proxy implementa os Services, CoreDNS dá nomes, e Ingress ou Gateway abrem a porta para fora.</p>
+
+<table><thead><tr><th>Tipo</th><th>Alcance</th></tr></thead><tbody><tr><td>ClusterIP</td><td>Só dentro do cluster</td></tr><tr><td>NodePort</td><td>Porta em cada node</td></tr><tr><td>LoadBalancer</td><td>IP público da nuvem</td></tr><tr><td>Headless</td><td>DNS direto para os pods</td></tr><tr><td>Gateway/Ingress</td><td>HTTP(S) por regras</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#network-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/service/" rel="prev">Lição anterior: Service e Ingress</a><a href="../../licao/netpol/" rel="next">Próxima lição: NetworkPolicy</a></nav>
+</main>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hardening do sistema: host, portas, AppArmor e seccomp — Kubernetes Visual</title>
+<meta name="description" content="O node é um Linux como outro qualquer. Menos pacotes, menos portas e menos privilégios, mais perfis do kernel que limitam o que um container pode fazer. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/sistema/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/sistema/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/sistema/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Hardening do sistema: host, portas, AppArmor e seccomp">
+<meta property="og:description" content="O node é um Linux como outro qualquer. Menos pacotes, menos portas e menos privilégios, mais perfis do kernel que limitam o que um container pode fazer.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/sistema/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hardening do sistema: host, portas, AppArmor e seccomp">
+<meta name="twitter:description" content="O node é um Linux como outro qualquer. Menos pacotes, menos portas e menos privilégios, mais perfis do kernel que limitam o que um container pode fazer.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Hardening do sistema: host, portas, AppArmor e seccomp","description":"O node é um Linux como outro qualquer. Menos pacotes, menos portas e menos privilégios, mais perfis do kernel que limitam o que um container pode fazer.","url":"https://andrentfs.github.io/kubernetes-visual/licao/sistema/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT13M","educationalLevel":"Avançado","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Segurança avançada (CKS) · <a href="../../en/lesson/sistema/" hreflang="en">English version</a></p>
+<h1>Hardening do sistema: host, portas, AppArmor e seccomp</h1>
+<p class="lede">O node é um Linux como outro qualquer. Menos pacotes, menos portas e menos privilégios, mais perfis do kernel que limitam o que um container pode fazer.</p>
+<p class="chips"><span>13 min</span><span>Avançado</span><span>10 passos</span></p>
+<a class="cta" href="../../?lang=pt#sistema-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Reduzir pacotes, serviços e portas do node</li><li>Saber quais portas o Kubernetes usa</li><li>Fechar o resto com firewall</li><li>Aplicar identidade com mínimo privilégio</li><li>Usar AppArmor e seccomp nos pods</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>O que roda no node</h3>
+<p>Além do kubelet e do containerd, o node-1 tem o sshd, um apache2 esquecido de um teste e o cups (impressão). Cada serviço é uma porta aberta e mais um programa que pode ter falhas.</p>
+<p>ss -tlnp lista as portas TCP em escuta e o processo de cada uma.</p>
+
+<pre><code>ss -tlnp</code></pre></section>
+<section class="st"><h3><span>Passo 2 · Solução</span>Removendo o que não precisa</h3>
+<p>systemctl disable --now para o serviço e o tira do boot. Se o pacote não é usado, remova com apt remove (ou o gerenciador da sua distribuição).</p>
+<p>Faça o mesmo com usuários, compiladores e ferramentas que só ajudariam um invasor.</p>
+
+<pre><code>systemctl disable --now apache2 cups</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Conceito</span>As portas que o Kubernetes usa</h3>
+<p>No control plane: 6443 (API server), 2379-2380 (etcd), 10250 (kubelet), 10259 (scheduler) e 10257 (controller-manager). Nos workers: 10250 (kubelet) e a faixa de NodePort, 30000-32767.</p>
+<p>O CNI pode precisar de outras portas; confira na documentação dele.</p>
+
+<table><thead><tr><th>Porta</th><th>Componente</th></tr></thead><tbody><tr><td>6443</td><td>API server</td></tr><tr><td>2379-2380</td><td>etcd</td></tr><tr><td>10250</td><td>kubelet</td></tr><tr><td>10259</td><td>kube-scheduler</td></tr><tr><td>10257</td><td>kube-controller-manager</td></tr><tr><td>30000-32767</td><td>NodePort</td></tr></tbody></table></section>
+<section class="st"><h3><span>Passo 4 · Solução</span>Fechando o resto no firewall</h3>
+<p>Com o ufw: ufw default deny incoming e depois ufw allow 6443/tcp (e as outras portas que o node precisa). Na nuvem, faça o mesmo no security group.</p>
+<p>O etcd só deve ser acessível pelo API server, nunca de fora.</p>
+<p class="nt warn"><b>Atenção:</b> Antes do ufw enable, libere a porta 22 se estiver conectado por SSH, ou você perde o acesso.</p>
+<pre><code>ufw default deny incoming</code></pre></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>Identidade e acesso com mínimo privilégio</h3>
+<p>No node: só os usuários necessários, SSH só com chave e sudo apenas para quem administra. id ana mostra os grupos de um usuário.</p>
+<p>Na nuvem: o papel (IAM role) da máquina deve ter só as permissões que o kubelet e os agentes usam. No cluster, o mesmo vale para o RBAC.</p>
+<p class="nt key"><b>Ideia-chave:</b> Um invasor que chega ao node herda tudo o que o node pode fazer, inclusive na conta da nuvem.</p>
+<pre><code>id ana</code></pre></section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>AppArmor: limitando o que o processo acessa</h3>
+<p>O AppArmor é um módulo de segurança do kernel. Um perfil diz quais arquivos, capacidades e acessos de rede um programa pode usar.</p>
+<p>O perfil é carregado no node (apparmor_parser -q arquivo), e aa-status lista os carregados. O Kubernetes não carrega perfis: isso é feito em cada node.</p>
+
+<pre><code>aa-status</code></pre></section>
+<section class="st"><h3><span>Passo 7 · Solução</span>Aplicando o perfil ao pod</h3>
+<p>No securityContext do pod ou do container: appArmorProfile com type: Localhost e localhostProfile: k8s-deny-write. Também existem os tipos RuntimeDefault e Unconfined.</p>
+<p>Com um perfil que nega escrita, kubectl exec web -- touch /tmp/x falha com Permission denied: quem bloqueou foi o kernel.</p>
+
+<pre><code>kubectl exec web -- touch /tmp/x</code></pre></section>
+<section class="st"><h3><span>Passo 8 · Trade-off</span>Trade-off: o perfil precisa estar em todo node</h3>
+<p>O pod web-2 caiu no worker-2, onde o perfil não foi carregado. O kubelet recusa iniciar o pod, e kubectl describe mostra o erro de AppArmor.</p>
+<p>Carregue o perfil em todos os nodes que podem receber o pod, ou prenda o pod aos nodes certos com nodeSelector ou afinidade.</p>
+<p class="nt warn"><b>Atenção:</b> Perfil carregado à mão some no reboot se o arquivo não estiver em /etc/apparmor.d.</p>
+<pre><code>kubectl describe pod web-2</code></pre></section>
+<section class="st"><h3><span>Passo 9 · Conceito</span>seccomp: filtrando chamadas ao kernel</h3>
+<p>O seccomp limita quais chamadas de sistema (syscalls) um container pode fazer. seccompProfile com type: RuntimeDefault usa o perfil padrão do container runtime, que bloqueia chamadas perigosas e raras.</p>
+<p>Para um perfil próprio, use type: Localhost e localhostProfile com o caminho de um arquivo dentro de /var/lib/kubelet/seccomp no node.</p>
+<p class="nt good"><b>Bom saber:</b> RuntimeDefault é exigido pelo Pod Security Standard restricted. É a escolha segura para quase todo app.</p></section>
+<section class="st"><h3><span>Passo 10 · Resumo</span>Resumo: um node com menos superfície</h3>
+<p>Tire do node o que não é usado, feche as portas que sobram e limite cada container com AppArmor e seccomp.</p>
+
+<table><thead><tr><th>Camada</th><th>Ferramenta</th></tr></thead><tbody><tr><td>Pacotes e serviços</td><td>systemctl, apt</td></tr><tr><td>Portas</td><td>ss -tlnp, ufw, security group</td></tr><tr><td>Identidade</td><td>usuários, sudo, IAM, RBAC</td></tr><tr><td>Arquivos e capacidades</td><td>AppArmor</td></tr><tr><td>Syscalls</td><td>seccomp</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#sistema-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/hardening/" rel="prev">Lição anterior: Segurança do cluster: CIS, API, tokens, metadados e TLS</a><a href="../../licao/isolamento/" rel="next">Próxima lição: Isolamento e criptografia: Secrets, sandboxes e mTLS</a></nav>
+</main>
+</body>
+</html>

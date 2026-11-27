@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Isolamento e criptografia: Secrets, sandboxes e mTLS — Kubernetes Visual</title>
+<meta name="description" content="Proteger os dados e separar quem divide o cluster: Secrets criptografados no etcd, times isolados, containers em sandbox e tráfego cifrado entre pods. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/isolamento/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/isolamento/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/isolamento/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Isolamento e criptografia: Secrets, sandboxes e mTLS">
+<meta property="og:description" content="Proteger os dados e separar quem divide o cluster: Secrets criptografados no etcd, times isolados, containers em sandbox e tráfego cifrado entre pods.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/isolamento/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Isolamento e criptografia: Secrets, sandboxes e mTLS">
+<meta name="twitter:description" content="Proteger os dados e separar quem divide o cluster: Secrets criptografados no etcd, times isolados, containers em sandbox e tráfego cifrado entre pods.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Isolamento e criptografia: Secrets, sandboxes e mTLS","description":"Proteger os dados e separar quem divide o cluster: Secrets criptografados no etcd, times isolados, containers em sandbox e tráfego cifrado entre pods.","url":"https://andrentfs.github.io/kubernetes-visual/licao/isolamento/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT14M","educationalLevel":"Avançado","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Segurança avançada (CKS) · <a href="../../en/lesson/isolamento/" hreflang="en">English version</a></p>
+<h1>Isolamento e criptografia: Secrets, sandboxes e mTLS</h1>
+<p class="lede">Proteger os dados e separar quem divide o cluster: Secrets criptografados no etcd, times isolados, containers em sandbox e tráfego cifrado entre pods.</p>
+<p class="chips"><span>14 min</span><span>Avançado</span><span>11 passos</span></p>
+<a class="cta" href="../../?lang=pt#isolamento-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Ver por que Secret não é criptografado por padrão</li><li>Ativar a criptografia em repouso</li><li>Restringir quem lê Secrets</li><li>Isolar times num cluster compartilhado</li><li>Rodar pods em sandbox com RuntimeClass</li><li>Cifrar o tráfego entre pods</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Dois times, um cluster</h3>
+<p>Os times A e B dividem o cluster, cada um no seu namespace. Os dois guardam senhas em Secrets, que o API server grava no etcd.</p>
+<p>A pergunta da CKS é: quem consegue ler essas senhas, e quanto um time consegue afetar o outro?</p>
+</section>
+<section class="st"><h3><span>Passo 2 · Problema</span>Secret é base64, não criptografia</h3>
+<p>Por padrão, o API server grava os Secrets no etcd sem criptografia. Quem tem acesso ao etcd, ou a um backup dele, lê a senha direto: etcdctl get /registry/secrets/loja/db-pass.</p>
+<p>O base64 do YAML é só codificação: base64 -d devolve o texto original.</p>
+<p class="nt warn"><b>Atenção:</b> Na prova, o etcdctl precisa dos certificados: --cacert, --cert e --key. Os caminhos estão no manifesto do etcd.</p>
+<pre><code>etcdctl get /registry/secrets/loja/db-pass</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Solução</span>Criptografia em repouso</h3>
+<p>Crie um EncryptionConfiguration com os resources (secrets) e os providers em ordem. O primeiro provider é o usado para gravar: aescbc, aesgcm, secretbox ou kms. identity (sem criptografia) vai por último, só para ler o que já existe.</p>
+<p>No kube-apiserver: --encryption-provider-config apontando para o arquivo, com volume e volumeMount. Os Secrets novos aparecem no etcd com o prefixo k8s:enc:aescbc:v1:.</p>
+<p class="nt good"><b>Bom saber:</b> Em produção, a documentação recomenda o provider kms (v2), com a chave fora do cluster.</p>
+<pre><code>grep encryption-provider-config /etc/kubernetes/manifests/kube-apiserver.yaml</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Conceito</span>Criptografando o que já existia</h3>
+<p>A configuração só vale para gravações novas. Secrets antigos continuam em texto puro até serem regravados.</p>
+<p>kubectl get secrets -A -o json | kubectl replace -f - regrava todos. Depois, confira no etcd que todos têm o prefixo k8s:enc.</p>
+
+<pre><code>kubectl get secrets -A -o json | kubectl replace -f -</code></pre></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>Quem pode ler os Secrets</h3>
+<p>Criptografar o etcd não protege contra quem tem get secrets na API. Dê get e list em secrets só a quem precisa, e num namespace só. Lembre que list também devolve o conteúdo.</p>
+<p>No pod, prefira montar o Secret como volume em vez de variáveis de ambiente: variáveis vazam mais fácil em logs, dumps e processos filhos.</p>
+<p class="nt key"><b>Ideia-chave:</b> Quem pode criar pods num namespace pode montar qualquer Secret dele. Isso também é acesso aos Secrets.</p></section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>Isolando os times</h3>
+<p>Um namespace sozinho não isola nada. Junte RBAC por namespace, NetworkPolicy de default deny entre namespaces, ResourceQuota e LimitRange para um time não esgotar o cluster, e Pod Security Standards (label enforce=restricted).</p>
+<p>Para isolamento mais forte, separe os nodes por time com taints e nodeSelector, ou use clusters diferentes.</p>
+
+<pre><code>kubectl label ns tenant-a pod-security.kubernetes.io/enforce=restricted</code></pre></section>
+<section class="st"><h3><span>Passo 7 · Problema</span>Todos dividem o mesmo kernel</h3>
+<p>Containers são processos no mesmo kernel do node. Uma falha no kernel (container escape) pode levar um pod aos outros pods do mesmo node, inclusive de outros times.</p>
+<p>Para código pouco confiável, como builds de clientes ou plugins de terceiros, esse risco é alto demais.</p>
+</section>
+<section class="st"><h3><span>Passo 8 · Solução</span>Sandbox com RuntimeClass</h3>
+<p>Runtimes como o gVisor (runsc) e o Kata Containers põem uma camada entre o container e o kernel do node: um kernel em espaço de usuário ou uma VM leve.</p>
+<p>Uma RuntimeClass com handler: runsc aponta para o runtime instalado no node. No pod, runtimeClassName: gvisor. Os outros pods continuam no runtime normal.</p>
+<p class="nt warn"><b>Atenção:</b> O handler precisa existir na configuração do containerd de cada node, senão o pod não sobe.</p>
+<pre><code>kubectl get runtimeclass</code></pre></section>
+<section class="st"><h3><span>Passo 9 · Conceito</span>Tráfego cifrado entre pods (mTLS)</h3>
+<p>Por padrão, o tráfego entre pods não é criptografado: quem captura pacotes na rede vê o conteúdo.</p>
+<p>Um service mesh como o Istio põe mTLS entre os pods (no Istio, PeerAuthentication com mode: STRICT). O Cilium pode cifrar o tráfego entre nodes com WireGuard ou IPsec, sem mudar os pods.</p>
+</section>
+<section class="st"><h3><span>Passo 10 · Trade-off</span>Trade-off: cada camada tem custo</h3>
+<p>O mesh adiciona um proxy (sidecar ou por node), latência e mais um componente para operar. O sandbox deixa algumas chamadas mais lentas, e nem todo app é compatível.</p>
+<p>Use onde o risco justifica: dados sensíveis, multi-tenancy de verdade, código de terceiros.</p>
+</section>
+<section class="st"><h3><span>Passo 11 · Resumo</span>Resumo: dados protegidos, times separados</h3>
+<p>Cada risco tem uma camada própria; combine as que fazem sentido para o seu cluster.</p>
+
+<table><thead><tr><th>Risco</th><th>Proteção</th></tr></thead><tbody><tr><td>Secret legível no etcd</td><td>EncryptionConfiguration</td></tr><tr><td>Leitura pela API</td><td>RBAC em secrets</td></tr><tr><td>Time afetando outro</td><td>namespace + RBAC + NetworkPolicy + quota</td></tr><tr><td>Escape de container</td><td>RuntimeClass (gVisor, Kata)</td></tr><tr><td>Tráfego em texto puro</td><td>mTLS (Istio, Cilium)</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#isolamento-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/sistema/" rel="prev">Lição anterior: Hardening do sistema: host, portas, AppArmor e seccomp</a><a href="../../licao/supply/" rel="next">Próxima lição: Cadeia de suprimentos: imagens, SBOM e assinaturas</a></nav>
+</main>
+</body>
+</html>

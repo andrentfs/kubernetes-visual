@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Por que Kubernetes? — Kubernetes Visual</title>
+<meta name="description" content="Da loja num servidor só até um cluster que se cuida sozinho: a história de por que o Kubernetes existe. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/intro/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/intro/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/intro/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Por que Kubernetes?">
+<meta property="og:description" content="Da loja num servidor só até um cluster que se cuida sozinho: a história de por que o Kubernetes existe.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/intro/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Por que Kubernetes?">
+<meta name="twitter:description" content="Da loja num servidor só até um cluster que se cuida sozinho: a história de por que o Kubernetes existe.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Por que Kubernetes?","description":"Da loja num servidor só até um cluster que se cuida sozinho: a história de por que o Kubernetes existe.","url":"https://andrentfs.github.io/kubernetes-visual/licao/intro/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT9M","educationalLevel":"Iniciante","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Fundamentos · <a href="../../en/lesson/intro/" hreflang="en">English version</a></p>
+<h1>Por que Kubernetes?</h1>
+<p class="lede">Da loja num servidor só até um cluster que se cuida sozinho: a história de por que o Kubernetes existe.</p>
+<p class="chips"><span>9 min</span><span>Iniciante</span><span>11 passos</span></p>
+<a class="cta" href="../../?lang=pt#intro-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Entender o que é um servidor e uma requisição</li><li>Saber o que é um container e por que ele existe</li><li>Ver por que depender de um servidor só é arriscado</li><li>Entender o que um orquestrador como o Kubernetes faz</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Tudo começa com um servidor</h3>
+<p>Você tem uma loja online. Ela roda num servidor: um computador sem tela que fica ligado 24 horas por dia num data center, esperando visitas.</p>
+<p>Cada vez que alguém abre uma página, põe um produto no carrinho ou paga, o celular da pessoa manda um pedido ao servidor e recebe uma resposta. Esse pedido se chama requisição.</p>
+<p class="nt key"><b>Ideia-chave:</b> Um servidor é só um computador dedicado a responder requisições. Quanto mais gente usa a loja, mais requisições por segundo ele precisa atender.</p></section>
+<section class="st"><h3><span>Passo 2 · Problema</span>“Mas na minha máquina funciona!”</h3>
+<p>Para colocar a loja no ar, você copia o código para o servidor e instala tudo de que ela precisa: a linguagem de programação, bibliotecas, configurações.</p>
+<p>Só que o servidor não é igual ao seu notebook. Lá tem outra versão da linguagem e outras bibliotecas instaladas por outros sistemas. A loja quebra de vez em quando, e ninguém sabe explicar por quê.</p>
+<p class="nt warn"><b>Atenção:</b> Instalar programas direto no servidor cria uma bagunça difícil de repetir: cada máquina fica um pouquinho diferente da outra.</p></section>
+<section class="st"><h3><span>Passo 3 · Solução</span>Container: a marmita da aplicação</h3>
+<p>A solução é empacotar a loja junto com tudo de que ela precisa, como uma marmita que já vem com arroz, feijão e talher. Esse pacote se chama container.</p>
+<p>Primeiro você cria uma imagem: a receita congelada da marmita (aqui, loja/app:1.0). Depois, qualquer servidor pode “esquentar” essa imagem e rodar um container idêntico ao que você testou.</p>
+<p class="nt good"><b>Bom saber:</b> O nome vem dos contêineres de navio: o porto não precisa saber o que tem dentro, só como empilhar a caixa. O servidor também não precisa saber o que tem dentro do container.</p>
+<pre><code>docker run -d -p 80:8080 loja/app:1.0</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Conceito</span>Vários containers no mesmo servidor</h3>
+<p>Com containers, você separa a loja em partes: o site (web), a API que faz as contas, o banco de dados (db) e uma fila que manda e-mails sem travar o resto.</p>
+<p>Cada container é isolado: tem seus próprios arquivos e não briga com os vizinhos. E é leve: liga em segundos, porque divide o sistema operacional com o servidor.</p>
+<p class="nt key"><b>Ideia-chave:</b> Container não é máquina virtual. Uma máquina virtual simula um computador inteiro; um container é só um programa isolado. Por isso cabem dezenas deles num servidor.</p></section>
+<section class="st"><h3><span>Passo 5 · Problema</span>Aí a loja viraliza</h3>
+<p>Um influenciador posta sobre a sua loja e as visitas saltam de 100 para 12 mil. O servidor começa a suar: a CPU, o “cérebro” que faz as contas, passa de 90%.</p>
+<p>As requisições fazem fila esperando a vez, as páginas demoram, e algumas desistem no meio do caminho.</p>
+<p class="nt warn"><b>Atenção:</b> Sobrecarga é assim: CPU perto de 100%, filas crescendo, lentidão e, por fim, erros.</p></section>
+<section class="st"><h3><span>Passo 6 · Problema</span>…e o servidor cai</h3>
+<p>Com tanta pressão, o disco enche e o servidor trava. Todos os containers caem juntos, porque moravam na mesma máquina. A loja sai do ar.</p>
+<p>Alguém precisa perceber, entrar no servidor, liberar espaço e ligar tudo de novo na ordem certa. Geralmente às 3 da manhã, com o celular tocando.</p>
+<p class="nt warn"><b>Atenção:</b> Quando uma única peça derruba o sistema inteiro, ela é um ponto único de falha. O remédio é ter mais de uma cópia de tudo.</p></section>
+<section class="st"><h3><span>Passo 7 · Solução</span>Três servidores em vez de um</h3>
+<p>Você aluga mais dois servidores e espalha cópias dos containers entre eles: dois com o site e a API, um com o banco e a fila.</p>
+<p>Agora a carga se divide (a CPU cai para cerca de 45%) e, se um servidor cair, ainda sobram outros para atender.</p>
+<p class="nt good"><b>Bom saber:</b> Crescer adicionando máquinas, em vez de trocar por uma maior, se chama escala horizontal. É assim que quase todo sistema grande cresce.</p></section>
+<section class="st"><h3><span>Passo 8 · Problema</span>Mais máquinas, mais trabalho</h3>
+<p>Numa madrugada, o servidor-1 cai. As cópias do servidor-2 seguram as pontas, mas ficam sobrecarregadas, e ninguém religa os containers perdidos em outro lugar.</p>
+<p>Surgem perguntas que você não tinha antes: em qual servidor cada container deve rodar? Quem reinicia o que caiu? Como trocar a versão em 3 máquinas sem tirar a loja do ar?</p>
+<p class="nt warn"><b>Atenção:</b> Fazer isso à mão, com scripts e anotações, até funciona com 3 servidores. Com 30, vira um emprego em tempo integral, e os erros humanos aparecem.</p></section>
+<section class="st"><h3><span>Passo 9 · Conceito</span>Um maestro para a orquestra</h3>
+<p>Numa orquestra, cada músico sabe tocar o seu instrumento, mas alguém precisa decidir quem entra quando. Esse é o maestro.</p>
+<p>Kubernetes é o maestro dos containers. Ele junta os servidores num grupo só, chamado cluster, e passa a chamar cada servidor de node. Uma parte especial, o control plane, toma as decisões por você.</p>
+<p class="nt good"><b>Bom saber:</b> O Kubernetes foi criado pelo Google em 2014, inspirado num sistema interno chamado Borg, e hoje é código aberto. Muita gente escreve k8s: o 8 são as oito letras entre o k e o s.</p></section>
+<section class="st"><h3><span>Passo 10 · Conceito</span>Você diz o quê. Ele cuida do como.</h3>
+<p>Em vez de dar ordens passo a passo (“liga isso aqui, depois aquilo ali”), você escreve um arquivo dizendo como quer que as coisas estejam: “quero 2 cópias do site, 2 da API, 1 banco”.</p>
+<p>O Kubernetes compara o tempo todo esse desejo com a realidade. Faltou uma cópia? Ele cria. Um servidor caiu? Ele liga as cópias em outro. Isso se chama estado desejado.</p>
+<p class="nt key"><b>Ideia-chave:</b> Pense num ar-condicionado: você escolhe 22 °C e ele liga e desliga sozinho para manter a temperatura. Você declara o estado; o Kubernetes persegue esse estado para sempre.</p>
+<pre><code>kubectl apply -f loja.yaml</code></pre></section>
+<section class="st"><h3><span>Passo 11 · Resumo</span>Resumo: antes e depois do Kubernetes</h3>
+<p>O Kubernetes não deixa seu código mais rápido. Ele tira de você o trabalho de vigiar, ligar, mover e atualizar containers em várias máquinas.</p>
+<p class="nt good"><b>Bom saber:</b> Kubernetes tem curva de aprendizado. Para um site pequeno, com um servidor só, ele pode ser exagero. Ele brilha quando há muitos containers e muitas máquinas.</p>
+<table><thead><tr><th></th><th>Sem orquestrador</th><th>Com Kubernetes</th></tr></thead><tbody><tr><td>Onde roda</td><td>Você escolhe</td><td>O cluster escolhe</td></tr><tr><td>Quando cai</td><td>Você religa</td><td>Religa sozinho</td></tr><tr><td>Atualizar</td><td>À mão, com pausa</td><td>Aos poucos, sem pausa</td></tr><tr><td>Crescer</td><td>Máquina por máquina</td><td>Mudar um número</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#intro-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/cluster/" rel="next">Próxima lição: Anatomia de um cluster</a></nav>
+</main>
+</body>
+</html>

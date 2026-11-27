@@ -48,7 +48,17 @@ Rules:
 
 Add the lesson id to `LESSONS` in `js/term/lessons.js`. The engine derives pods, nodes and Services from the diagram. Use `OV.quotas` for per-step adjustments (`chips`, `out`, `pods`, …) and `js/term/files.js` for example YAMLs.
 
-## 4. Check
+## 4. Static pages
+
+Every lesson also has a text page per language (`licao/<id>/`, `en/lesson/<id>/`) with its own title and Open Graph, and the sitemap lists them ([ADR-005](../adr/ADR-005-lesson-pages.md)). After adding or changing a lesson:
+
+```bash
+make pages    # or: node scripts/gen-lesson-pages.mjs
+```
+
+`make test` fails if the pages are out of date.
+
+## 5. Check
 
 ```bash
 make test     # parity, same step count in scenes and texts, all steps without errors or overlaps, terminal suggestions

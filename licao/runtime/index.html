@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Segurança em execução: Falco, ameaças e auditoria — Kubernetes Visual</title>
+<meta name="description" content="Mesmo com tudo protegido, algo pode passar. Detectar comportamento estranho, investigar o ataque, deixar o container imutável e registrar quem fez o quê. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/runtime/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/runtime/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/runtime/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Segurança em execução: Falco, ameaças e auditoria">
+<meta property="og:description" content="Mesmo com tudo protegido, algo pode passar. Detectar comportamento estranho, investigar o ataque, deixar o container imutável e registrar quem fez o quê.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/runtime/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Segurança em execução: Falco, ameaças e auditoria">
+<meta name="twitter:description" content="Mesmo com tudo protegido, algo pode passar. Detectar comportamento estranho, investigar o ataque, deixar o container imutável e registrar quem fez o quê.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Segurança em execução: Falco, ameaças e auditoria","description":"Mesmo com tudo protegido, algo pode passar. Detectar comportamento estranho, investigar o ataque, deixar o container imutável e registrar quem fez o quê.","url":"https://andrentfs.github.io/kubernetes-visual/licao/runtime/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT14M","educationalLevel":"Avançado","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Segurança avançada (CKS) · <a href="../../en/lesson/runtime/" hreflang="en">English version</a></p>
+<h1>Segurança em execução: Falco, ameaças e auditoria</h1>
+<p class="lede">Mesmo com tudo protegido, algo pode passar. Detectar comportamento estranho, investigar o ataque, deixar o container imutável e registrar quem fez o quê.</p>
+<p class="chips"><span>14 min</span><span>Avançado</span><span>10 passos</span></p>
+<a class="cta" href="../../?lang=pt#runtime-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Detectar comportamento estranho com o Falco</li><li>Reconhecer ameaças em cada camada</li><li>Investigar as fases de um ataque</li><li>Deixar containers imutáveis</li><li>Configurar e ler os audit logs</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Alguém abriu um shell no pod</h3>
+<p>Um invasor conseguiu kubectl exec no pod api e abriu um shell. Dali ele pode ler o token da ServiceAccount, baixar ferramentas e procurar outros alvos.</p>
+<p>Nenhum firewall enxerga isso: é só um processo novo dentro de um container que já estava rodando.</p>
+
+<pre><code>kubectl exec -it api -- sh</code></pre></section>
+<section class="st"><h3><span>Passo 2 · Conceito</span>Falco: olhando as chamadas ao kernel</h3>
+<p>O Falco roda em cada node (normalmente como DaemonSet) e observa as syscalls de todos os containers com eBPF.</p>
+<p>As regras são YAML: condition descreve o evento, output a mensagem e priority a gravidade. Regras próprias vão em /etc/falco/falco_rules.local.yaml (ou na pasta rules.d), sem mexer nas padrão.</p>
+</section>
+<section class="st"><h3><span>Passo 3 · Solução</span>O alerta e a resposta</h3>
+<p>A regra padrão “Terminal shell in container” dispara e mostra o container, o comando e os dados do pod. Leia o alerta nos logs do Falco: journalctl -u falco, ou kubectl logs no pod do Falco.</p>
+<p>Com o ID do container, crictl ps --id &lt;id&gt; e crictl inspect levam ao pod. Na prova costumam pedir para isolar ou remover o pod e anotar a resposta num arquivo.</p>
+<p class="nt warn"><b>Atenção:</b> Ajustar a saída de uma regra (por exemplo, incluir %k8s.pod.name) é tarefa comum. Reinicie o Falco depois de editar.</p>
+<pre><code>journalctl -u falco --since &quot;10 min ago&quot;</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Conceito</span>Ameaças em cada camada</h3>
+<p>O currículo pede detectar ameaças na infraestrutura, nos apps, na rede, nos dados, nos usuários e nas cargas. Cada uma deixa um rastro diferente.</p>
+
+<table><thead><tr><th>Onde</th><th>Sinal típico</th></tr></thead><tbody><tr><td>Carga</td><td>CPU alta sem motivo (minerador)</td></tr><tr><td>Rede</td><td>Conexão inesperada para fora</td></tr><tr><td>Dados</td><td>Leitura de /etc/shadow ou de tokens</td></tr><tr><td>Usuários</td><td>exec e get secrets fora do normal (audit log)</td></tr><tr><td>Infraestrutura</td><td>Pod privilegiado ou com hostPath /</td></tr></tbody></table></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>Investigando as fases do ataque</h3>
+<p>Ataques seguem fases: acesso inicial, execução, persistência, escalada de privilégios, movimento lateral e roubo de dados. O MITRE ATT&amp;CK e a matriz de ameaças para Kubernetes da Microsoft organizam essas fases.</p>
+<p>Para reconstruir o que aconteceu, cruze o alerta do Falco, os logs do container e o audit log do API server.</p>
+<p class="nt key"><b>Ideia-chave:</b> Guarde as evidências antes de apagar o pod: logs, describe e o alerta. Apagado o pod, o container some.</p></section>
+<section class="st"><h3><span>Passo 6 · Solução</span>Container imutável</h3>
+<p>Um container imutável não pode ser alterado depois de iniciado: readOnlyRootFilesystem: true, e emptyDir só onde o app precisa escrever (como /tmp).</p>
+<p>Junte com runAsNonRoot, allowPrivilegeEscalation: false e uma imagem sem shell. O invasor até entra, mas não grava ferramentas nem muda o app.</p>
+
+<pre><code>kubectl get pod api -o jsonpath='{.spec.containers[*].securityContext}'</code></pre></section>
+<section class="st"><h3><span>Passo 7 · Conceito</span>Audit log: quem fez o quê</h3>
+<p>O API server pode registrar cada requisição: quem pediu, o quê, quando e com qual resultado. Uma Policy de auditoria define o nível de cada caso: None, Metadata, Request ou RequestResponse.</p>
+<p>As regras são lidas em ordem e vale a primeira que combinar. Para Secrets, use Metadata: registrar o corpo gravaria a senha no log.</p>
+</section>
+<section class="st"><h3><span>Passo 8 · Solução</span>Ligando a auditoria</h3>
+<p>No kube-apiserver: --audit-policy-file=/etc/kubernetes/audit/policy.yaml e --audit-log-path=/var/log/kubernetes/audit/audit.log, mais --audit-log-maxage, --audit-log-maxbackup e --audit-log-maxsize para a rotação.</p>
+<p>O pod estático precisa enxergar esses caminhos: adicione volumes hostPath e volumeMounts para a policy e para a pasta do log.</p>
+<p class="nt warn"><b>Atenção:</b> Esqueceu o volume? O API server não sobe. Confira com crictl ps -a e com os logs em /var/log/pods.</p>
+<pre><code>grep audit /etc/kubernetes/manifests/kube-apiserver.yaml</code></pre></section>
+<section class="st"><h3><span>Passo 9 · Problema</span>Achando o responsável</h3>
+<p>Um Secret foi apagado. Cada linha do audit.log é um JSON: procure verb delete com resource secrets e leia user.username, sourceIPs e requestReceivedTimestamp.</p>
+<p>Aqui foi a ServiceAccount ci-bot, que tinha mais permissão do que precisava. A correção vai para o RBAC.</p>
+
+<pre><code>grep '&quot;resource&quot;:&quot;secrets&quot;' /var/log/kubernetes/audit/audit.log | grep '&quot;verb&quot;:&quot;delete&quot;'</code></pre></section>
+<section class="st"><h3><span>Passo 10 · Resumo</span>Resumo: detectar, conter e registrar</h3>
+<p>Prevenção nunca é total. Tenha como ver o que acontece dentro dos containers e quem mexeu na API.</p>
+
+<table><thead><tr><th>Objetivo</th><th>Ferramenta</th></tr></thead><tbody><tr><td>Comportamento</td><td>Falco (syscalls)</td></tr><tr><td>Investigação</td><td>alertas + logs + audit log</td></tr><tr><td>Imutabilidade</td><td>readOnlyRootFilesystem, imagem sem shell</td></tr><tr><td>Rastro na API</td><td>audit log (Policy + flags)</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#runtime-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/supply/" rel="prev">Lição anterior: Cadeia de suprimentos: imagens, SBOM e assinaturas</a></nav>
+</main>
+</body>
+</html>

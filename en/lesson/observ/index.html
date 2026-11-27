@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Observability and debugging — Kubernetes Visual</title>
+<meta name="description" content="Seeing what the app is doing: logs, events, metrics, commands inside the pod, and API changes. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/observ/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/observ/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/observ/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Observability and debugging">
+<meta property="og:description" content="Seeing what the app is doing: logs, events, metrics, commands inside the pod, and API changes.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/observ/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Observability and debugging">
+<meta name="twitter:description" content="Seeing what the app is doing: logs, events, metrics, commands inside the pod, and API changes.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Observability and debugging","description":"Seeing what the app is doing: logs, events, metrics, commands inside the pod, and API changes.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/observ/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT12M","educationalLevel":"Intermediate","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Operations · <a href="../../../licao/observ/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Observability and debugging</h1>
+<p class="lede">Seeing what the app is doing: logs, events, metrics, commands inside the pod, and API changes.</p>
+<p class="chips"><span>12 min</span><span>Intermediate</span><span>10 steps</span></p>
+<a class="cta" href="../../../?lang=en#observ-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Read logs, including specific containers</li><li>Know where logs live and how to centralise them</li><li>Use events and kubectl top</li><li>Debug with exec, port-forward and debug</li><li>Format output with jsonpath and custom-columns</li><li>Deal with deprecated APIs</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Context</span>kubectl logs: what the app said</h3>
+<p>Everything the container writes to standard output (stdout and stderr) becomes a log. kubectl logs api-7d9 shows it; -f follows live; --tail=50 takes just the end.</p>
+<p>For many replicas: kubectl logs -l app=api or kubectl logs deploy/api (picks a pod from the Deployment).</p>
+<p class="nt key"><b>Key idea:</b> Apps in containers should write to stdout, not to a file. That way Kubernetes captures it with no extra setup.</p>
+<pre><code>kubectl logs -f deploy/api</code></pre></section>
+<section class="st"><h3><span>Step 2 · Concept</span>Pods with more than one container</h3>
+<p>If the pod has more than one container, kubectl logs asks you to pick: -c app or -c log. --all-containers=true joins them all.</p>
+<p>Init containers have logs too. If the pod is stuck in Init, read the init container’s log by name.</p>
+
+<pre><code>kubectl logs api-7d9 -c log-shipper</code></pre></section>
+<section class="st"><h3><span>Step 3 · Concept</span>Where logs live</h3>
+<p>On the node, the runtime writes logs to /var/log/pods and the kubelet rotates them. When the pod is deleted, those logs go with it.</p>
+<p>To keep and search them, an agent like Fluent Bit runs on every node (a DaemonSet), reads that folder and ships it to a central system like Loki or Elasticsearch.</p>
+<p class="nt good"><b>Good to know:</b> kubectl logs only shows what’s still on the node. Long history depends on the central system.</p></section>
+<section class="st"><h3><span>Step 4 · Concept</span>Events: the cluster’s diary</h3>
+<p>Kubernetes records events: Scheduled, Pulling, Pulled, Started, BackOff, FailedScheduling. They show at the end of describe and in kubectl get events.</p>
+<p>Events expire after about an hour. Sort them by time with --sort-by=.lastTimestamp and filter with --field-selector.</p>
+<p class="nt warn"><b>Watch out:</b> Events are the first clue when the log is empty, as with ImagePullBackOff and Pending.</p>
+<pre><code>kubectl get events -A --sort-by=.lastTimestamp</code></pre></section>
+<section class="st"><h3><span>Step 5 · Concept</span>Metrics: kubectl top</h3>
+<p>metrics-server collects CPU and memory from each kubelet. With it installed, kubectl top nodes and kubectl top pods show current usage.</p>
+<p>Use --sort-by=cpu or memory to find the heaviest pod, and --containers to see per container. The HPA uses these same metrics.</p>
+<p class="nt good"><b>Good to know:</b> Without metrics-server, kubectl top answers “Metrics API not available”.</p>
+<pre><code>kubectl top pods -A --sort-by=memory</code></pre></section>
+<section class="st"><h3><span>Step 6 · Concept</span>Getting into the pod and opening a tunnel</h3>
+<p>kubectl exec -it api-7d9 -- sh opens a terminal inside the container. Good for checking files, variables and testing connections.</p>
+<p>kubectl port-forward svc/api 8080:80 creates a tunnel from your computer to the Service. You reach localhost:8080 without exposing anything outside.</p>
+
+<pre><code>kubectl port-forward svc/api 8080:80</code></pre></section>
+<section class="st"><h3><span>Step 7 · Concept</span>kubectl debug: when the container has no shell</h3>
+<p>Minimal images (distroless) have no sh and no tools. exec doesn’t help.</p>
+<p>kubectl debug adds an ephemeral container to the pod, with any image you like (busybox, netshoot), sharing the target container’s processes and network with --target.</p>
+<p class="nt good"><b>Good to know:</b> kubectl debug node/node-1 -it --image=busybox opens a pod with access to the node’s system, under /host.</p>
+<pre><code>kubectl debug -it api-7d9 --image=busybox --target=api</code></pre></section>
+<section class="st"><h3><span>Step 8 · Concept</span>Output made to measure</h3>
+<p>-o wide shows IP and node; -o yaml shows the whole object. -o jsonpath='{.items[*].metadata.name}' pulls out just what you want.</p>
+<p>-o custom-columns builds a table with the columns you pick, and --sort-by sorts by any field.</p>
+<p class="nt key"><b>Key idea:</b> The exam often asks “save list X to file Y”. jsonpath and custom-columns get it done fast.</p>
+<pre><code>kubectl get pods -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName</code></pre></section>
+<section class="st"><h3><span>Step 9 · Trade-off</span>Trade-off: APIs that get retired</h3>
+<p>Every object has an apiVersion. Beta versions get replaced and, after a warning period, removed. Ingress in extensions/v1beta1 stopped existing in 1.22; today it’s networking.k8s.io/v1.</p>
+<p>Old manifests stop working when the cluster is upgraded. kubectl api-resources and api-versions show what the cluster accepts.</p>
+<p class="nt warn"><b>Watch out:</b> Before an upgrade, look for removed apiVersions in your manifests and charts. kubectl warns when you use deprecated APIs.</p>
+<pre><code>kubectl api-resources | grep -i ingress</code></pre></section>
+<section class="st"><h3><span>Step 10 · Summary</span>Summary: the toolbox</h3>
+<p>Logs tell you what the app said, events what the cluster did, top how much each one uses.</p>
+
+<table><thead><tr><th>Question</th><th>Command</th></tr></thead><tbody><tr><td>What did the app say?</td><td>logs (-c, --previous, -f)</td></tr><tr><td>What happened?</td><td>get events, describe</td></tr><tr><td>How much does it use?</td><td>top pods/nodes</td></tr><tr><td>I need to get in</td><td>exec, debug</td></tr><tr><td>I need to test</td><td>port-forward</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#observ-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/helm/" rel="prev">Previous lesson: Helm and Kustomize</a><a href="../../../en/lesson/kubeadm/" rel="next">Next lesson: Installing and maintaining the cluster with kubeadm</a></nav>
+</main>
+</body>
+</html>

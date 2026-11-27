@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instalar e manter o cluster com kubeadm — Kubernetes Visual</title>
+<meta name="description" content="Do zero a um cluster funcionando: preparar as máquinas, kubeadm init e join, upgrades, backup do etcd, alta disponibilidade e certificados. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/kubeadm/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/kubeadm/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/kubeadm/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Instalar e manter o cluster com kubeadm">
+<meta property="og:description" content="Do zero a um cluster funcionando: preparar as máquinas, kubeadm init e join, upgrades, backup do etcd, alta disponibilidade e certificados.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/kubeadm/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Instalar e manter o cluster com kubeadm">
+<meta name="twitter:description" content="Do zero a um cluster funcionando: preparar as máquinas, kubeadm init e join, upgrades, backup do etcd, alta disponibilidade e certificados.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Instalar e manter o cluster com kubeadm","description":"Do zero a um cluster funcionando: preparar as máquinas, kubeadm init e join, upgrades, backup do etcd, alta disponibilidade e certificados.","url":"https://andrentfs.github.io/kubernetes-visual/licao/kubeadm/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT15M","educationalLevel":"Intermediário","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Administração do cluster · <a href="../../en/lesson/kubeadm/" hreflang="en">English version</a></p>
+<h1>Instalar e manter o cluster com kubeadm</h1>
+<p class="lede">Do zero a um cluster funcionando: preparar as máquinas, kubeadm init e join, upgrades, backup do etcd, alta disponibilidade e certificados.</p>
+<p class="chips"><span>15 min</span><span>Intermediário</span><span>13 passos</span></p>
+<a class="cta" href="../../?lang=pt#kubeadm-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Preparar os nodes para o Kubernetes</li><li>Criar o cluster com kubeadm init e join</li><li>Usar kubeconfig e contextos</li><li>Atualizar o cluster uma versão por vez</li><li>Fazer backup e restore do etcd</li><li>Entender HA e certificados</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Preparando as máquinas</h3>
+<p>Antes do Kubernetes, cada máquina precisa de um container runtime (containerd), dos pacotes kubeadm, kubelet e kubectl, e de alguns ajustes de Linux.</p>
+<p>Os ajustes clássicos: desligar o swap, carregar os módulos overlay e br_netfilter, e ligar net.ipv4.ip_forward=1. O kubelet fica rodando, mas esperando ordens.</p>
+<p class="nt warn"><b>Atenção:</b> Versões do kubeadm, do kubelet e do control plane precisam ser compatíveis. Instale a mesma versão menor nos três.</p></section>
+<section class="st"><h3><span>Passo 2 · Solução</span>kubeadm init: nasce o control plane</h3>
+<p>No primeiro node, kubeadm init cria tudo: os certificados em /etc/kubernetes/pki, os manifestos dos static pods (etcd, API server, scheduler, controller-manager) e o arquivo admin.conf.</p>
+<p>No fim ele imprime dois comandos: como copiar o admin.conf para ~/.kube/config e o kubeadm join que os workers vão usar.</p>
+<p class="nt good"><b>Bom saber:</b> --pod-network-cidr define a faixa de IPs dos pods. Precisa combinar com o plugin de rede que você vai instalar.</p>
+<pre><code>kubeadm init --pod-network-cidr=10.244.0.0/16</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Problema</span>Node NotReady e CoreDNS parado</h3>
+<p>Logo depois do init, o node aparece NotReady e os pods do CoreDNS ficam Pending. Não é erro: falta o plugin de rede (CNI).</p>
+<p>O Kubernetes não traz rede própria. Sem um CNI, os pods não ganham IP e o node não é considerado pronto.</p>
+</section>
+<section class="st"><h3><span>Passo 4 · Solução</span>Instalando o plugin de rede</h3>
+<p>Você aplica um CNI, como Calico, Cilium ou Flannel, normalmente com um único kubectl apply. Ele roda um pod em cada node.</p>
+<p>Com a rede pronta, o node fica Ready e o CoreDNS sobe.</p>
+
+<pre><code>kubectl apply -f calico.yaml</code></pre></section>
+<section class="st"><h3><span>Passo 5 · Solução</span>kubeadm join: chegam os workers</h3>
+<p>Em cada worker, o comando kubeadm join com o endereço do API server, um token e o hash do certificado faz o node entrar no cluster.</p>
+<p>O token expira em 24 horas. Para gerar outro comando completo: kubeadm token create --print-join-command.</p>
+
+<pre><code>kubeadm token create --print-join-command</code></pre></section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>kubeconfig e contextos</h3>
+<p>O arquivo ~/.kube/config tem três listas: clusters (endereços), users (credenciais) e contexts (qual usuário em qual cluster e namespace).</p>
+<p>kubectl config get-contexts lista, use-context troca, e set-context --current --namespace=app muda o namespace padrão.</p>
+<p class="nt warn"><b>Atenção:</b> No exame, cada questão começa com um comando de use-context. Pular esse passo é o erro mais comum.</p>
+<pre><code>kubectl config use-context prod</code></pre></section>
+<section class="st"><h3><span>Passo 7 · Conceito</span>Upgrade: uma versão menor por vez</h3>
+<p>Não dá para pular versões: de 1.35 vai para 1.36, depois 1.37. Primeiro o control plane, depois os workers.</p>
+<p>No control plane: atualize o pacote kubeadm, rode kubeadm upgrade plan para ver as opções e kubeadm upgrade apply v1.36.0.</p>
+
+<pre><code>kubeadm upgrade plan</code></pre></section>
+<section class="st"><h3><span>Passo 8 · Solução</span>Upgrade dos workers, um por vez</h3>
+<p>Para cada worker: kubectl drain para tirar os pods, atualizar o pacote kubeadm, rodar kubeadm upgrade node, atualizar kubelet e kubectl, systemctl daemon-reload e restart kubelet.</p>
+<p>No fim, kubectl uncordon devolve o node ao trabalho. No control plane, o mesmo vale para o kubelet: drain, atualizar, reiniciar, uncordon.</p>
+<p class="nt key"><b>Ideia-chave:</b> Ordem que cai na prova: drain → kubeadm → kubeadm upgrade → kubelet/kubectl → restart → uncordon.</p>
+<pre><code>kubeadm upgrade apply v1.36.0</code></pre></section>
+<section class="st"><h3><span>Passo 9 · Solução</span>Backup do etcd</h3>
+<p>O etcd guarda o cluster inteiro. Um snapshot salva tudo num arquivo: etcdctl snapshot save /opt/backup.db.</p>
+<p>O etcdctl precisa do endereço e dos certificados: --endpoints=https://127.0.0.1:2379, --cacert, --cert e --key, que ficam em /etc/kubernetes/pki/etcd. O manifesto do etcd mostra os caminhos.</p>
+<p class="nt warn"><b>Atenção:</b> Sem os três certificados, o etcdctl falha com erro de conexão. Copie os caminhos de /etc/kubernetes/manifests/etcd.yaml.</p>
+<pre><code>ETCDCTL_API=3 etcdctl snapshot save /opt/backup.db</code></pre></section>
+<section class="st"><h3><span>Passo 10 · Solução</span>Restore do etcd</h3>
+<p>etcdctl snapshot restore cria uma pasta de dados nova a partir do arquivo, com --data-dir /var/lib/etcd-restore.</p>
+<p>Depois, edite o manifesto do etcd para o volume hostPath apontar para a pasta nova. O kubelet religa o etcd com os dados restaurados.</p>
+<p class="nt good"><b>Bom saber:</b> Em versões recentes, o restore também pode ser feito com etcdutl. O conceito é o mesmo: nova pasta e apontar o manifesto.</p>
+<pre><code>etcdctl snapshot restore /opt/backup.db --data-dir /var/lib/etcd-restore</code></pre></section>
+<section class="st"><h3><span>Passo 11 · Conceito</span>Control plane de alta disponibilidade</h3>
+<p>Com um só control plane, perder aquela máquina deixa o cluster sem gerência. Em produção usam-se 3 (ou 5) control planes atrás de um load balancer na porta 6443.</p>
+<p>O etcd pode ficar empilhado (stacked, um em cada control plane) ou externo, em máquinas só dele. Número ímpar, por causa do consenso.</p>
+<p class="nt good"><b>Bom saber:</b> Com kubeadm: init com --control-plane-endpoint apontando para o load balancer e join --control-plane nos outros.</p></section>
+<section class="st"><h3><span>Passo 12 · Conceito</span>Certificados do cluster</h3>
+<p>O kubeadm cria certificados que valem 1 ano. kubeadm certs check-expiration mostra as datas e kubeadm certs renew all renova; um upgrade também renova.</p>
+<p>Para dar acesso a uma pessoa, ela gera uma chave e um CertificateSigningRequest; um admin aprova com kubectl certificate approve.</p>
+<p class="nt warn"><b>Atenção:</b> Certificado vencido derruba o acesso ao cluster de uma vez. Monitore as datas.</p>
+<pre><code>kubeadm certs check-expiration</code></pre></section>
+<section class="st"><h3><span>Passo 13 · Resumo</span>Resumo: o ciclo de vida do cluster</h3>
+<p>Preparar, init, CNI, join; depois manter: upgrade versão por versão, backup do etcd e certificados em dia.</p>
+
+<table><thead><tr><th>Tarefa</th><th>Comando</th></tr></thead><tbody><tr><td>Criar</td><td>kubeadm init</td></tr><tr><td>Entrar node</td><td>kubeadm join</td></tr><tr><td>Atualizar</td><td>kubeadm upgrade plan/apply/node</td></tr><tr><td>Backup</td><td>etcdctl snapshot save</td></tr><tr><td>Restore</td><td>etcdctl snapshot restore</td></tr><tr><td>Certificados</td><td>kubeadm certs check-expiration</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#kubeadm-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/observ/" rel="prev">Lição anterior: Observabilidade e debug</a><a href="../../licao/trouble/" rel="next">Próxima lição: Troubleshooting de cluster</a></nav>
+</main>
+</body>
+</html>

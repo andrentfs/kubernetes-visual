@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NetworkPolicy — Kubernetes Visual</title>
+<meta name="description" content="Por padrão todo pod fala com todo pod. NetworkPolicies são o firewall entre eles. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/netpol/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/netpol/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/netpol/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="NetworkPolicy">
+<meta property="og:description" content="Por padrão todo pod fala com todo pod. NetworkPolicies são o firewall entre eles.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/netpol/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="NetworkPolicy">
+<meta name="twitter:description" content="Por padrão todo pod fala com todo pod. NetworkPolicies são o firewall entre eles.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"NetworkPolicy","description":"Por padrão todo pod fala com todo pod. NetworkPolicies são o firewall entre eles.","url":"https://andrentfs.github.io/kubernetes-visual/licao/netpol/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT12M","educationalLevel":"Intermediário","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Rodando apps · <a href="../../en/lesson/netpol/" hreflang="en">English version</a></p>
+<h1>NetworkPolicy</h1>
+<p class="lede">Por padrão todo pod fala com todo pod. NetworkPolicies são o firewall entre eles.</p>
+<p class="chips"><span>12 min</span><span>Intermediário</span><span>10 passos</span></p>
+<a class="cta" href="../../?lang=pt#netpol-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Ver o risco do “tudo liberado”</li><li>Entender como uma política seleciona pods</li><li>Aplicar default deny e liberar só o necessário</li><li>Usar namespaceSelector e portas</li><li>Evitar a confusão entre E e OU</li><li>Não quebrar o DNS com egress</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Sem política, qualquer um chega no banco</h3>
+<p>O banco de dados está no namespace dados. O site, em loja. E um pod de testes esquecido, em teste.</p>
+<p>Sem NetworkPolicy, todos conseguem conectar no banco, inclusive o pod de testes. Se ele for invadido, o invasor está a um passo dos dados.</p>
+<p class="nt warn"><b>Atenção:</b> O modelo de rede do Kubernetes é “tudo fala com tudo”. Isolar é responsabilidade sua.</p></section>
+<section class="st"><h3><span>Passo 2 · Conceito</span>O que uma NetworkPolicy faz</h3>
+<p>Uma NetworkPolicy escolhe pods com podSelector e diz qual tráfego eles podem receber (ingress) ou enviar (egress).</p>
+<p>Assim que um pod é escolhido por alguma política de ingress, todo tráfego de entrada que não estiver liberado é bloqueado. Pods não escolhidos continuam abertos.</p>
+<p class="nt warn"><b>Atenção:</b> Quem aplica as regras é o CNI. Com um CNI sem suporte (como o Flannel puro), a política é aceita e simplesmente ignorada.</p></section>
+<section class="st"><h3><span>Passo 3 · Solução</span>Default deny: fechar tudo</h3>
+<p>A primeira política costuma ser a mais simples: podSelector: {} (todos os pods do namespace) com policyTypes: [Ingress] e nenhuma regra.</p>
+<p>Resultado: ninguém entra em nenhum pod do namespace dados. Nem o site. Agora você libera só o necessário.</p>
+
+<pre><code>kubectl apply -f deny-all.yaml</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Solução</span>Liberando só quem precisa</h3>
+<p>Uma segunda política escolhe o banco (podSelector: app=db) e, em ingress.from, permite pods com app=web.</p>
+<p>As políticas somam: o que qualquer uma liberar, passa. O site volta a falar com o banco; o pod de testes continua bloqueado.</p>
+<p class="nt key"><b>Ideia-chave:</b> Políticas só liberam, nunca negam. O bloqueio vem de o pod estar selecionado; as regras abrem exceções.</p></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>Liberando por namespace</h3>
+<p>Um podSelector sozinho no from só olha o mesmo namespace da política. Como o site está em loja, é preciso namespaceSelector.</p>
+<p>Namespaces têm a label kubernetes.io/metadata.name automática. namespaceSelector com kubernetes.io/metadata.name: loja libera pods daquele namespace.</p>
+</section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>Liberando só a porta certa</h3>
+<p>Em ports, você restringe protocolo e porta: TCP 5432 para o PostgreSQL. Outras portas do pod continuam fechadas, mesmo para quem foi liberado.</p>
+<p>Isso reduz o estrago se o site for invadido: o invasor só consegue falar com o banco pela porta do banco.</p>
+</section>
+<section class="st"><h3><span>Passo 7 · Trade-off</span>Trade-off: a pegadinha do E e do OU</h3>
+<p>Dentro de um mesmo item do from, namespaceSelector e podSelector juntos significam E: pods com app=web dentro do namespace loja.</p>
+<p>Em dois itens separados (com dois hífens), significam OU: qualquer pod do namespace loja, ou qualquer pod com app=web de qualquer namespace. Aí o pod web do namespace teste entra.</p>
+<p class="nt warn"><b>Atenção:</b> Um hífen a mais no YAML muda totalmente a regra. Confira com kubectl describe networkpolicy.</p></section>
+<section class="st"><h3><span>Passo 8 · Problema</span>Egress: não esqueça do DNS</h3>
+<p>Uma política de egress default deny no namespace loja bloqueia tudo que sai dos pods, inclusive as consultas ao CoreDNS.</p>
+<p>O site não consegue nem descobrir o IP do banco. Os erros parecem de nome (“could not resolve”), não de firewall.</p>
+<p class="nt warn"><b>Atenção:</b> Toda política de egress restritiva precisa liberar UDP e TCP na porta 53 para o kube-system.</p></section>
+<section class="st"><h3><span>Passo 9 · Solução</span>Testando a política</h3>
+<p>Libere o DNS (porta 53) e o banco (5432) no egress do site, e teste de dentro do pod: kubectl exec web -- nc -zv -w 2 db.dados 5432.</p>
+<p>Conexão bloqueada por NetworkPolicy normalmente não dá erro na hora: ela dá timeout. Por isso use sempre um timeout curto nos testes.</p>
+
+<pre><code>kubectl exec web -- nc -zv -w 2 db.dados 5432</code></pre></section>
+<section class="st"><h3><span>Passo 10 · Resumo</span>Resumo: montando um firewall de pods</h3>
+<p>Feche tudo com default deny, depois abra exatamente o necessário, nos dois sentidos.</p>
+
+<table><thead><tr><th>Campo</th><th>Para quê</th></tr></thead><tbody><tr><td>podSelector</td><td>Quais pods a regra protege</td></tr><tr><td>policyTypes</td><td>Ingress, Egress ou ambos</td></tr><tr><td>from / to</td><td>Quem pode falar</td></tr><tr><td>namespaceSelector</td><td>Filtra por namespace</td></tr><tr><td>ports</td><td>Protocolo e porta</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#netpol-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/network/" rel="prev">Lição anterior: Rede do cluster: CNI, Services e CoreDNS</a><a href="../../licao/escala/" rel="next">Próxima lição: Escala automática</a></nav>
+</main>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Helm and Kustomize — Kubernetes Visual</title>
+<meta name="description" content="Installing and reusing whole applications without copying YAML for every environment. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/helm/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/helm/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/helm/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Helm and Kustomize">
+<meta property="og:description" content="Installing and reusing whole applications without copying YAML for every environment.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/helm/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Helm and Kustomize">
+<meta name="twitter:description" content="Installing and reusing whole applications without copying YAML for every environment.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Helm and Kustomize","description":"Installing and reusing whole applications without copying YAML for every environment.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/helm/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT13M","educationalLevel":"Intermediate","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Operations · <a href="../../../licao/helm/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Helm and Kustomize</h1>
+<p class="lede">Installing and reusing whole applications without copying YAML for every environment.</p>
+<p class="chips"><span>13 min</span><span>Intermediate</span><span>10 steps</span></p>
+<a class="cta" href="../../../?lang=en#helm-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Understand the problem with copying YAML</li><li>Install a chart with Helm</li><li>Customise with values</li><li>Upgrade and roll back with Helm</li><li>Build a base and overlays with Kustomize</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Problem</span>One YAML per environment</h3>
+<p>The store has dev, staging and production. The team keeps three copies of the manifests, changing replica counts, image and domain by hand.</p>
+<p>A fix made in production and forgotten in dev is just a matter of time. And installing something ready-made, like a full NGINX, would mean writing dozens of files.</p>
+<p class="nt warn"><b>Watch out:</b> Copied YAML is debt: every change has to be repeated everywhere.</p></section>
+<section class="st"><h3><span>Step 2 · Concept</span>Helm: the package manager</h3>
+<p>Helm packages an application into a chart: YAML templates (templates/) with variables, and a values.yaml file with the default values.</p>
+<p>Charts live in repositories, like an operating system’s packages. helm repo add registers a repository and helm search repo finds charts.</p>
+<p class="nt key"><b>Key idea:</b> The chart is the recipe; a release is each installation of it in the cluster, with its own name.</p></section>
+<section class="st"><h3><span>Step 3 · Solution</span>helm install</h3>
+<p>helm install loja bitnami/nginx -n loja installs the chart with the release name “loja”. Helm renders the YAML, applies it to the cluster and stores revision 1.</p>
+<p>helm list -A shows every release in every namespace, with chart version and status.</p>
+
+<pre><code>helm install loja bitnami/nginx -n loja --create-namespace</code></pre></section>
+<section class="st"><h3><span>Step 4 · Concept</span>Customising with values</h3>
+<p>You change the default values without touching the chart: --set replicaCount=3 on the command line, or -f values-prod.yaml with several values together.</p>
+<p>helm show values bitnami/nginx lists every value the chart accepts.</p>
+<p class="nt good"><b>Good to know:</b> One values file per environment replaces the three YAML copies: the chart stays the same.</p>
+<pre><code>helm upgrade loja bitnami/nginx --set replicaCount=3 -f values-prod.yaml</code></pre></section>
+<section class="st"><h3><span>Step 5 · Concept</span>helm upgrade and rollback</h3>
+<p>helm upgrade applies new values or a new chart version and creates a new revision. helm history shows every revision.</p>
+<p>Went wrong? helm rollback loja 1 goes back to revision 1. Helm reapplies what was there in that revision.</p>
+
+<pre><code>helm history loja &amp;&amp; helm rollback loja 1</code></pre></section>
+<section class="st"><h3><span>Step 6 · Concept</span>Look before you apply</h3>
+<p>helm template renders the YAML without installing anything. Great for reviewing or saving to a file.</p>
+<p>helm uninstall loja removes everything the release created. --dry-run shows what install or upgrade would do.</p>
+
+<pre><code>helm template loja bitnami/nginx &gt; out.yaml</code></pre></section>
+<section class="st"><h3><span>Step 7 · Concept</span>Kustomize: base and overlays</h3>
+<p>Kustomize takes another route: no templates. You write normal YAML in a base/ folder and create overlays/ for each environment, describing only the differences.</p>
+<p>It’s already built into kubectl: nothing to install.</p>
+<p class="nt key"><b>Key idea:</b> Helm uses variables in templates. Kustomize applies tweaks on top of plain YAML.</p></section>
+<section class="st"><h3><span>Step 8 · Concept</span>The kustomization.yaml file</h3>
+<p>Each folder has a kustomization.yaml. In the base, it lists the files (resources). In the overlay, it points to the base and adds tweaks.</p>
+<p>Common tweaks: namePrefix (prod-), namespace, images (swap the image tag), replicas and patches (bits of YAML that override fields).</p>
+</section>
+<section class="st"><h3><span>Step 9 · Solution</span>kubectl apply -k</h3>
+<p>kubectl apply -k overlays/prod merges the base with the overlay’s tweaks and applies it to the cluster. kubectl kustomize overlays/prod just shows the result.</p>
+<p>The production pods get the prod- prefix and the image and replica count set in the overlay.</p>
+
+<pre><code>kubectl apply -k overlays/prod</code></pre></section>
+<section class="st"><h3><span>Step 10 · Summary</span>Summary: Helm or Kustomize?</h3>
+<p>Use Helm to install third-party software and packages with many options. Use Kustomize to vary your own manifests per environment.</p>
+
+<table><thead><tr><th></th><th>Helm</th><th>Kustomize</th></tr></thead><tbody><tr><td>Approach</td><td>Templates + values</td><td>Base + patches</td></tr><tr><td>Install</td><td>helm install</td><td>kubectl apply -k</td></tr><tr><td>History</td><td>Revisions and rollback</td><td>Your Git’s</td></tr><tr><td>Built into kubectl</td><td>No</td><td>Yes</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#helm-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/nodefail/" rel="prev">Previous lesson: When a node goes down</a><a href="../../../en/lesson/observ/" rel="next">Next lesson: Observability and debugging</a></nav>
+</main>
+</body>
+</html>

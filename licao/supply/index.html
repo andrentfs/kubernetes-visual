@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cadeia de suprimentos: imagens, SBOM e assinaturas — Kubernetes Visual</title>
+<meta name="description" content="Do código ao pod, cada etapa pode ser atacada. Imagens mínimas, scan de vulnerabilidades, SBOM, análise estática, assinatura e só registries permitidos. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/supply/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/supply/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/supply/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Cadeia de suprimentos: imagens, SBOM e assinaturas">
+<meta property="og:description" content="Do código ao pod, cada etapa pode ser atacada. Imagens mínimas, scan de vulnerabilidades, SBOM, análise estática, assinatura e só registries permitidos.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/supply/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cadeia de suprimentos: imagens, SBOM e assinaturas">
+<meta name="twitter:description" content="Do código ao pod, cada etapa pode ser atacada. Imagens mínimas, scan de vulnerabilidades, SBOM, análise estática, assinatura e só registries permitidos.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Cadeia de suprimentos: imagens, SBOM e assinaturas","description":"Do código ao pod, cada etapa pode ser atacada. Imagens mínimas, scan de vulnerabilidades, SBOM, análise estática, assinatura e só registries permitidos.","url":"https://andrentfs.github.io/kubernetes-visual/licao/supply/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT14M","educationalLevel":"Avançado","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Segurança avançada (CKS) · <a href="../../en/lesson/supply/" hreflang="en">English version</a></p>
+<h1>Cadeia de suprimentos: imagens, SBOM e assinaturas</h1>
+<p class="lede">Do código ao pod, cada etapa pode ser atacada. Imagens mínimas, scan de vulnerabilidades, SBOM, análise estática, assinatura e só registries permitidos.</p>
+<p class="chips"><span>14 min</span><span>Avançado</span><span>10 passos</span></p>
+<a class="cta" href="../../?lang=pt#supply-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Ver os elos da cadeia de suprimentos</li><li>Montar imagens mínimas</li><li>Escanear imagens com o Trivy</li><li>Gerar um SBOM</li><li>Analisar manifestos com Kubesec e KubeLinter</li><li>Assinar imagens e aceitar só registries permitidos</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Do git ao pod</h3>
+<p>O código vai para o git, o CI constrói a imagem, a imagem vai para o registry e o cluster a baixa. Um invasor pode entrar em qualquer elo: uma dependência maliciosa, um CI comprometido, uma imagem trocada no registry.</p>
+<p>Supply Chain Security vale 20% da CKS.</p>
+</section>
+<section class="st"><h3><span>Passo 2 · Conceito</span>Imagem base mínima</h3>
+<p>Quanto menos coisa na imagem, menos vulnerabilidades e menos ferramentas para um invasor. Use build multi-stage: compile numa imagem completa e copie só o resultado para uma base distroless ou alpine.</p>
+<p>No Dockerfile, use USER com um usuário sem privilégios e fixe a versão da base, nunca latest.</p>
+<p class="nt good"><b>Bom saber:</b> Imagens distroless não têm shell nem gerenciador de pacotes. Quem entra no container fica sem ferramentas.</p>
+<pre><code>podman build -t loja/api:v2 .</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Problema</span>Escaneando vulnerabilidades</h3>
+<p>O Trivy compara os pacotes da imagem com bancos de vulnerabilidades conhecidas (CVEs). trivy image --severity HIGH,CRITICAL loja/api:v2 mostra só as graves.</p>
+<p>A saída lista o pacote, a CVE, a versão instalada e a versão que corrige.</p>
+
+<pre><code>trivy image --severity HIGH,CRITICAL loja/api:v2</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Solução</span>Corrigindo e escaneando de novo</h3>
+<p>Atualize a imagem base ou o pacote para a versão corrigida, reconstrua e escaneie de novo. Só então faça o deploy.</p>
+<p>No CI, o Trivy pode falhar o build quando acha algo grave: --exit-code 1 junto com --severity CRITICAL.</p>
+
+<pre><code>trivy image --severity HIGH,CRITICAL loja/api:v3</code></pre></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>SBOM: a lista de ingredientes</h3>
+<p>Um SBOM (Software Bill of Materials) lista todos os componentes de uma imagem: pacotes, bibliotecas e versões. Os formatos mais comuns são CycloneDX e SPDX.</p>
+<p>trivy image --format cyclonedx --output sbom.json loja/api:v3 gera o SBOM. Quando sai uma CVE nova, trivy sbom sbom.json diz se a imagem é afetada, sem baixá-la de novo.</p>
+
+<pre><code>trivy image --format cyclonedx --output sbom.json loja/api:v3</code></pre></section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>Análise estática dos manifestos</h3>
+<p>Antes do apply, ferramentas leem o YAML e apontam riscos: privileged, rodar como root, sem limites, hostPath.</p>
+<p>kubesec scan pod.yaml devolve uma nota e sugestões. kube-linter lint pod.yaml lista os problemas por regra. As duas cabem no CI.</p>
+
+<pre><code>kubesec scan pod.yaml</code></pre></section>
+<section class="st"><h3><span>Passo 7 · Solução</span>Assinando e verificando imagens</h3>
+<p>Com o cosign, o CI assina a imagem depois do build: cosign sign --key cosign.key registry.loja.com/api@sha256:&lt;digest&gt;. A assinatura fica no próprio registry.</p>
+<p>Antes do deploy: cosign verify --key cosign.pub registry.loja.com/api:v3. Imagem trocada ou sem assinatura falha na verificação.</p>
+
+<pre><code>cosign verify --key cosign.pub registry.loja.com/api:v3</code></pre></section>
+<section class="st"><h3><span>Passo 8 · Solução</span>Só registries permitidos</h3>
+<p>Um admission controller recusa pods com imagens de fora. Com uma ValidatingAdmissionPolicy (mais o seu binding), a regra em CEL pode ser object.spec.containers.all(c, c.image.startsWith('registry.loja.com/')).</p>
+<p>Outra opção, comum na prova, é o ImagePolicyWebhook: o kube-apiserver consulta um serviço externo antes de aceitar cada imagem, configurado por --admission-control-config-file.</p>
+<p class="nt warn"><b>Atenção:</b> No ImagePolicyWebhook, defaultAllow: false recusa tudo quando o serviço externo não responde. Confira o que a tarefa pede.</p>
+<pre><code>kubectl run x --image=docker.io/evil/miner</code></pre></section>
+<section class="st"><h3><span>Passo 9 · Trade-off</span>Trade-off: tag ou digest</h3>
+<p>Uma tag (api:v3) pode ser movida para outra imagem no registry. O digest (api@sha256:…) identifica exatamente um conteúdo e não muda.</p>
+<p>Fixar o digest garante que roda o que foi escaneado e assinado, mas cada atualização exige trocar o digest no manifesto, de preferência pelo CI.</p>
+
+<pre><code>kubectl set image deploy/api api=registry.loja.com/api@sha256:&lt;digest&gt;</code></pre></section>
+<section class="st"><h3><span>Passo 10 · Resumo</span>Resumo: confiar em cada elo</h3>
+<p>Controle cada etapa: o que entra na imagem, o que ela contém, quem a assinou e de onde ela vem.</p>
+
+<table><thead><tr><th>Elo</th><th>Controle</th></tr></thead><tbody><tr><td>Base</td><td>distroless ou alpine, USER sem privilégio</td></tr><tr><td>Vulnerabilidades</td><td>trivy image</td></tr><tr><td>Inventário</td><td>SBOM (CycloneDX, SPDX)</td></tr><tr><td>Manifestos</td><td>kubesec, kube-linter</td></tr><tr><td>Integridade</td><td>cosign sign / verify</td></tr><tr><td>Origem</td><td>ValidatingAdmissionPolicy ou ImagePolicyWebhook</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#supply-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/isolamento/" rel="prev">Lição anterior: Isolamento e criptografia: Secrets, sandboxes e mTLS</a><a href="../../licao/runtime/" rel="next">Próxima lição: Segurança em execução: Falco, ameaças e auditoria</a></nav>
+</main>
+</body>
+</html>

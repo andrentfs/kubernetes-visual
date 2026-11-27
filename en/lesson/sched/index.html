@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scheduling: resources, affinity and taints — Kubernetes Visual</title>
+<meta name="description" content="How to decide where each pod runs: CPU and memory bookings, quotas, labels, affinities, taints and node maintenance. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/sched/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/sched/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/sched/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Scheduling: resources, affinity and taints">
+<meta property="og:description" content="How to decide where each pod runs: CPU and memory bookings, quotas, labels, affinities, taints and node maintenance.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/sched/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Scheduling: resources, affinity and taints">
+<meta name="twitter:description" content="How to decide where each pod runs: CPU and memory bookings, quotas, labels, affinities, taints and node maintenance.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Scheduling: resources, affinity and taints","description":"How to decide where each pod runs: CPU and memory bookings, quotas, labels, affinities, taints and node maintenance.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/sched/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT13M","educationalLevel":"Intermediate","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Operations · <a href="../../../licao/sched/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Scheduling: resources, affinity and taints</h1>
+<p class="lede">How to decide where each pod runs: CPU and memory bookings, quotas, labels, affinities, taints and node maintenance.</p>
+<p class="chips"><span>13 min</span><span>Intermediate</span><span>12 steps</span></p>
+<a class="cta" href="../../../?lang=en#sched-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Understand requests, limits and QoS classes</li><li>Limit namespaces with LimitRange and ResourceQuota</li><li>Pick nodes with nodeSelector and affinity</li><li>Use taints and tolerations</li><li>Do maintenance with cordon and drain</li><li>Understand static pods and nodeName</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Context</span>Recap: who picks the node</h3>
+<p>Every new pod without a node goes through the scheduler. It rules out nodes that won’t do and scores the rest.</p>
+<p>In this lesson you’ll learn to influence that choice: say how much the pod needs, where it may run and where it may not.</p>
+</section>
+<section class="st"><h3><span>Step 2 · Concept</span>Requests, limits and QoS</h3>
+<p>A request is the booking: the scheduler only places the pod on a node with that much free. A limit is the ceiling: going over the CPU limit slows the container down (throttling); going over the memory limit kills it (OOMKilled).</p>
+<p>From the combination, the pod gets a QoS class: Guaranteed (request equals limit), Burstable (some values set) or BestEffort (nothing set).</p>
+<p class="nt key"><b>Key idea:</b> When a node runs short of memory, the kubelet evicts BestEffort pods first, then Burstable. Guaranteed go last.</p></section>
+<section class="st"><h3><span>Step 3 · Problem</span>Pods without limits hurt their neighbours</h3>
+<p>A reporting job was created with no requests or limits. The scheduler thought it needed nothing and put it on node-2, which was already full.</p>
+<p>The job ate all the memory. The kubelet started evicting pods to save the node.</p>
+<p class="nt warn"><b>Watch out:</b> Without requests, the scheduler works blind. Without limits, one pod can eat the whole node.</p></section>
+<section class="st"><h3><span>Step 4 · Solution</span>LimitRange and ResourceQuota</h3>
+<p>A LimitRange sets default and maximum values per container in a namespace. Pods without requests get the defaults automatically.</p>
+<p>A ResourceQuota sets the namespace’s total: for example, at most 4 booked CPUs and 10 pods. Requests above that are refused with “exceeded quota”.</p>
+<p class="nt good"><b>Good to know:</b> With a CPU or memory quota in place, every pod in the namespace must declare requests, or it’s refused. A LimitRange with defaults avoids that.</p>
+<pre><code>kubectl create quota loja --hard=requests.cpu=4,pods=10 -n loja</code></pre></section>
+<section class="st"><h3><span>Step 5 · Concept</span>nodeSelector: choosing by label</h3>
+<p>Nodes have labels too. You tag node-2 with disktype=ssd and, in the pod, write nodeSelector: disktype: ssd.</p>
+<p>The scheduler only considers nodes with that label. If none have it, the pod stays Pending.</p>
+
+<pre><code>kubectl label node node-2 disktype=ssd</code></pre></section>
+<section class="st"><h3><span>Step 6 · Concept</span>Node affinity: richer rules</h3>
+<p>Node affinity does what nodeSelector does, with more options: operators like In, NotIn and Exists, and two levels.</p>
+<p>requiredDuringSchedulingIgnoredDuringExecution is mandatory. preferredDuringSchedulingIgnoredDuringExecution is a weighted preference: the scheduler tries, but uses another node if it has to.</p>
+<p class="nt good"><b>Good to know:</b> “IgnoredDuringExecution” means that if the node’s label changes later, the pod already running isn’t removed.</p></section>
+<section class="st"><h3><span>Step 7 · Concept</span>Affinity between pods</h3>
+<p>You can also decide relative to other pods. podAntiAffinity with topologyKey: kubernetes.io/hostname says: “don’t put two replicas on the same node”.</p>
+<p>podAffinity does the opposite: it brings together pods that talk a lot, like the app and its cache.</p>
+<p class="nt key"><b>Key idea:</b> Anti-affinity spreads replicas: if a node goes down, only one copy goes with it.</p></section>
+<section class="st"><h3><span>Step 8 · Concept</span>Taints and tolerations: the “keep out” sign</h3>
+<p>A taint is a mark on a node that repels pods. kubectl taint nodes node-3 gpu=true:NoSchedule makes the scheduler avoid node-3.</p>
+<p>Only pods with a matching toleration get in. That’s how expensive nodes, like GPU ones, stay reserved.</p>
+
+<table><thead><tr><th>Effect</th><th>What it does</th></tr></thead><tbody><tr><td>NoSchedule</td><td>Doesn’t schedule new pods</td></tr><tr><td>PreferNoSchedule</td><td>Avoids it if possible</td></tr><tr><td>NoExecute</td><td>Also evicts pods already there</td></tr></tbody></table>
+<pre><code>kubectl taint nodes node-3 gpu=true:NoSchedule</code></pre></section>
+<section class="st"><h3><span>Step 9 · Trade-off</span>Trade-off: tolerating isn’t being attracted</h3>
+<p>The machine-learning pod has the toleration, but the scheduler put it on node-2. A toleration only allows entry to the tainted node; it doesn’t force it.</p>
+<p>To make sure it lands on the GPU node, combine the toleration with node affinity (or nodeSelector) pointing at that node.</p>
+<p class="nt warn"><b>Watch out:</b> Taints keep others out. Affinity pulls the right one in. To reserve a node, use both.</p></section>
+<section class="st"><h3><span>Step 10 · Concept</span>Maintenance: cordon and drain</h3>
+<p>kubectl cordon node-2 marks the node SchedulingDisabled: nothing new gets in, and what’s there keeps running.</p>
+<p>kubectl drain node-2 cordons it and also moves the pods out safely, so they’re recreated on other nodes. After maintenance, kubectl uncordon opens it up again.</p>
+<p class="nt warn"><b>Watch out:</b> Drain stops on DaemonSet pods and pods with emptyDir. Use --ignore-daemonsets and --delete-emptydir-data, knowing what each one does.</p>
+<pre><code>kubectl drain node-2 --ignore-daemonsets --delete-emptydir-data</code></pre></section>
+<section class="st"><h3><span>Step 11 · Concept</span>Static pods and nodeName</h3>
+<p>The control plane components (etcd, API server, scheduler) are static pods: YAML files in /etc/kubernetes/manifests that the kubelet starts on its own, without the scheduler.</p>
+<p>And nodeName on a pod skips the scheduler: the pod goes straight to the given node. Useful when the scheduler is down.</p>
+<p class="nt key"><b>Key idea:</b> A static pod shows up in kubectl with the node name at the end (like etcd-controlplane). To change it, edit the file; deleting it with kubectl doesn’t help.</p></section>
+<section class="st"><h3><span>Step 12 · Summary</span>Summary: how to influence the scheduler</h3>
+<p>Resources say how much, labels and affinities say where, taints say where not.</p>
+
+<table><thead><tr><th>Feature</th><th>Effect</th></tr></thead><tbody><tr><td>requests/limits</td><td>Booking and ceiling per container</td></tr><tr><td>LimitRange/Quota</td><td>Defaults and totals per namespace</td></tr><tr><td>nodeSelector/affinity</td><td>Pulls to certain nodes</td></tr><tr><td>taint/toleration</td><td>Keeps away from certain nodes</td></tr><tr><td>cordon/drain</td><td>Takes a node out of use</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#sched-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/escala/" rel="prev">Previous lesson: Autoscaling</a><a href="../../../en/lesson/rollout/" rel="next">Next lesson: Updating without downtime</a></nav>
+</main>
+</body>
+</html>

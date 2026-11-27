@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Storage: volumes, PV, PVC and StorageClass — Kubernetes Visual</title>
+<meta name="description" content="Containers forget everything when they restart. How to keep data that survives pods, restarts and machine changes. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/storage/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/storage/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/storage/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Storage: volumes, PV, PVC and StorageClass">
+<meta property="og:description" content="Containers forget everything when they restart. How to keep data that survives pods, restarts and machine changes.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/storage/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Storage: volumes, PV, PVC and StorageClass">
+<meta name="twitter:description" content="Containers forget everything when they restart. How to keep data that survives pods, restarts and machine changes.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Storage: volumes, PV, PVC and StorageClass","description":"Containers forget everything when they restart. How to keep data that survives pods, restarts and machine changes.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/storage/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT13M","educationalLevel":"Intermediate","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Running apps · <a href="../../../licao/storage/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Storage: volumes, PV, PVC and StorageClass</h1>
+<p class="lede">Containers forget everything when they restart. How to keep data that survives pods, restarts and machine changes.</p>
+<p class="chips"><span>13 min</span><span>Intermediate</span><span>12 steps</span></p>
+<a class="cta" href="../../../?lang=en#storage-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Understand why the container’s disk is temporary</li><li>Meet emptyDir and hostPath</li><li>Tell a PersistentVolume from a PersistentVolumeClaim</li><li>Know the access modes</li><li>Use a StorageClass to create disks automatically</li><li>Mind the reclaim policy</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Problem</span>The database lost everything</h3>
+<p>The database pod kept its data inside its own container. The pod died, a new one was born, and the database started empty.</p>
+<p>A container’s file system only lasts as long as the container. It’s like writing on a whiteboard that gets wiped at every restart.</p>
+<p class="nt warn"><b>Watch out:</b> Never keep important data on the container’s disk. It’s disposable, just like the pod.</p></section>
+<section class="st"><h3><span>Step 2 · Concept</span>emptyDir and hostPath: the simple volumes</h3>
+<p>An emptyDir volume is born empty with the pod and lasts as long as the pod. It’s for caches, or for two containers in the same pod to share files. It survives container restarts, but not the pod dying.</p>
+<p>A hostPath volume uses a folder on the node itself, like /data. The data stays on the machine even if the pod dies.</p>
+<p class="nt good"><b>Good to know:</b> emptyDir can even live in memory (medium: Memory), useful for fast temporary files.</p></section>
+<section class="st"><h3><span>Step 3 · Problem</span>The trouble with hostPath</h3>
+<p>The database pod was rescheduled onto node-2. The data is still in node-1’s /data folder, and the new pod starts empty again.</p>
+<p>On top of that, accessing node folders is a security risk. hostPath is for system cases (log agents, for example), not for application data.</p>
+<p class="nt warn"><b>Watch out:</b> Application data needs a disk that follows the pod wherever it goes.</p></section>
+<section class="st"><h3><span>Step 4 · Concept</span>PersistentVolume: a disk for the cluster</h3>
+<p>A PersistentVolume (PV) represents a real piece of storage: a cloud disk, an NFS folder, a storage volume. It exists on its own, outside any pod.</p>
+<p>A PV belongs to no namespace. It has a size (like 10Gi), access modes and a reclaim policy.</p>
+<p class="nt key"><b>Key idea:</b> The PV is the cluster admin’s side: “this disk exists and is available”.</p>
+<pre><code>kubectl get pv</code></pre></section>
+<section class="st"><h3><span>Step 5 · Concept</span>PersistentVolumeClaim: the app’s request</h3>
+<p>The app doesn’t pick a specific disk. It makes a request, the PersistentVolumeClaim (PVC): “I want 5Gi, for one node at a time”.</p>
+<p>Kubernetes looks for a free PV that meets the request and binds the two. From then on, both have status Bound: that PV belongs only to that PVC.</p>
+<p class="nt good"><b>Good to know:</b> The PVC lives in a namespace, alongside the app. The PV lives in the cluster. Splitting them lets the app team ask for disk without knowing infrastructure details.</p>
+<pre><code>kubectl get pvc</code></pre></section>
+<section class="st"><h3><span>Step 6 · Solution</span>The pod uses the PVC</h3>
+<p>In the pod, the volume points to the PVC: persistentVolumeClaim.claimName: dados, mounted at /var/lib/postgresql/data.</p>
+<p>If the pod dies and another is born, even on another node, it mounts the same PVC and finds the data there.</p>
+<p class="nt key"><b>Key idea:</b> Pod → PVC → PV → real disk. The pod only knows about the PVC.</p></section>
+<section class="st"><h3><span>Step 7 · Concept</span>Access modes</h3>
+<p>An ordinary cloud disk can only be mounted by one node at a time: ReadWriteOnce (RWO). If a second pod on another node tries to use it, it waits.</p>
+<p>For many nodes at once you need network storage that supports it, like NFS, with ReadWriteMany (RWX).</p>
+
+<table><thead><tr><th>Mode</th><th>Short</th><th>Who mounts</th></tr></thead><tbody><tr><td>ReadWriteOnce</td><td>RWO</td><td>1 node, read and write</td></tr><tr><td>ReadOnlyMany</td><td>ROX</td><td>Many nodes, read only</td></tr><tr><td>ReadWriteMany</td><td>RWX</td><td>Many nodes, read and write</td></tr><tr><td>ReadWriteOncePod</td><td>RWOP</td><td>1 pod only</td></tr></tbody></table></section>
+<section class="st"><h3><span>Step 8 · Concept</span>StorageClass: disks on demand</h3>
+<p>Creating PVs by hand doesn’t scale. A StorageClass describes a kind of disk (for example, cloud SSD) and which provisioner, usually a CSI driver, knows how to create it.</p>
+<p>When a PVC asks for storageClassName: rapido, the provisioner creates the disk and the PV automatically. That’s dynamic provisioning.</p>
+<p class="nt good"><b>Good to know:</b> One StorageClass can be the cluster default. PVCs without a storageClassName use the default.</p>
+<pre><code>kubectl get storageclass</code></pre></section>
+<section class="st"><h3><span>Step 9 · Concept</span>WaitForFirstConsumer: creating the disk in the right place</h3>
+<p>Cloud disks live in one zone. If the disk is born in zone A and the pod goes to zone B, the pod can’t mount it.</p>
+<p>With volumeBindingMode: WaitForFirstConsumer, the PVC stays Pending until a pod uses it. Then the scheduler picks the node first and the disk is created in that node’s zone.</p>
+<p class="nt warn"><b>Watch out:</b> A Pending PVC with this setting is normal until a pod exists. Don’t mistake it for an error.</p></section>
+<section class="st"><h3><span>Step 10 · Trade-off</span>Trade-off: deleted the PVC, deleted the data?</h3>
+<p>The PV’s reclaim policy decides. With Delete, the default for dynamic provisioning, deleting the PVC deletes the PV and the real disk. The data is gone.</p>
+<p>With Retain, the PV goes to status Released and the disk stays. An admin recovers the data or cleans up by hand before reusing it.</p>
+<p class="nt warn"><b>Watch out:</b> For important data, use Retain on the StorageClass, or change the existing PV with kubectl patch before any clean-up.</p>
+<pre><code>kubectl patch pv pv-dados -p '{&quot;spec&quot;:{&quot;persistentVolumeReclaimPolicy&quot;:&quot;Retain&quot;}}'</code></pre></section>
+<section class="st"><h3><span>Step 11 · Concept</span>Growing a volume</h3>
+<p>The database grew. If the StorageClass has allowVolumeExpansion: true, just edit the PVC and change 10Gi to 20Gi.</p>
+<p>The driver grows the disk. Shrinking isn’t possible: it can only grow.</p>
+
+<pre><code>kubectl edit pvc dados</code></pre></section>
+<section class="st"><h3><span>Step 12 · Summary</span>Summary: the data’s path</h3>
+<p>The pod asks the PVC, the PVC binds to a PV, and the PV points to the real disk, created by hand or by a StorageClass.</p>
+
+<table><thead><tr><th>Piece</th><th>Who creates it</th><th>Scope</th></tr></thead><tbody><tr><td>PV</td><td>Admin or provisioner</td><td>Cluster</td></tr><tr><td>PVC</td><td>App team</td><td>Namespace</td></tr><tr><td>StorageClass</td><td>Admin</td><td>Cluster</td></tr><tr><td>emptyDir</td><td>With the pod</td><td>Pod</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#storage-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/config/" rel="prev">Previous lesson: ConfigMaps, Secrets and SecurityContext</a><a href="../../../en/lesson/service/" rel="next">Next lesson: Service and Ingress</a></nav>
+</main>
+</body>
+</html>

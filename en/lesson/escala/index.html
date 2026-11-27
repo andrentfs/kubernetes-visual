@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Autoscaling — Kubernetes Visual</title>
+<meta name="description" content="Black Friday is here. How the cluster grows on its own at peak time and shrinks overnight. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/escala/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/escala/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/escala/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Autoscaling">
+<meta property="og:description" content="Black Friday is here. How the cluster grows on its own at peak time and shrinks overnight.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/escala/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Autoscaling">
+<meta name="twitter:description" content="Black Friday is here. How the cluster grows on its own at peak time and shrinks overnight.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Autoscaling","description":"Black Friday is here. How the cluster grows on its own at peak time and shrinks overnight.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/escala/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT12M","educationalLevel":"Intermediate","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Operations · <a href="../../../licao/escala/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Autoscaling</h1>
+<p class="lede">Black Friday is here. How the cluster grows on its own at peak time and shrinks overnight.</p>
+<p class="chips"><span>12 min</span><span>Intermediate</span><span>11 steps</span></p>
+<a class="cta" href="../../../?lang=en#escala-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Tell vertical from horizontal scaling</li><li>Understand CPU and memory requests</li><li>Scale pods automatically with the HPA</li><li>Scale machines with the Cluster Autoscaler</li><li>Know the limits of autoscaling</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Context</span>A quiet Tuesday</h3>
+<p>A thousand people are browsing the store. Two API pods cope easily, with CPU around 30%: plenty of headroom.</p>
+<p>Notice the HPA on the left. It will be the hero of this lesson.</p>
+</section>
+<section class="st"><h3><span>Step 2 · Problem</span>Black Friday arrives</h3>
+<p>Traffic grows fivefold. Worse: lots of people are checking out, and every checkout is a heavy request (the little squares in the diagram).</p>
+<p>CPU on both pods goes past 90%, pages get slow and some requests start to fail.</p>
+<p class="nt warn"><b>Watch out:</b> A pod at 95% CPU doesn’t fall over all at once. First it gets slower, then come the timeout errors.</p></section>
+<section class="st"><h3><span>Step 3 · Trade-off</span>Option 1: bigger pods</h3>
+<p>You can give each pod more CPU, from 2 to 4. That’s vertical scaling: making each piece bigger.</p>
+<p>But to change its size, the pod has to be recreated. During the swap one pod fewer is serving, and the other sinks even deeper. And there’s a ceiling: a pod can never be bigger than the node it lives on.</p>
+<p class="nt warn"><b>Watch out:</b> Vertical scaling has a limit and causes interruptions. It’s for tuning, not for peaks.</p></section>
+<section class="st"><h3><span>Step 4 · Solution</span>Option 2: more pods</h3>
+<p>Instead of bigger pods, more pods of the same size. You change the number of replicas from 2 to 4, and the Service shares traffic among them all.</p>
+<p>CPU drops to about 50%. That’s horizontal scaling, and it has no hard ceiling: you can keep adding.</p>
+<p class="nt key"><b>Key idea:</b> Scaling out works because the API pods are identical and don’t keep their own data. Any of them can serve any customer.</p>
+<pre><code>kubectl scale deployment api --replicas=4</code></pre></section>
+<section class="st"><h3><span>Step 5 · Concept</span>Requests: booking a table</h3>
+<p>Each pod declares how much it needs to work, for example half a CPU and 256 MB of memory. That’s called a request.</p>
+<p>The scheduler uses that number like a restaurant booking: it only puts a pod on a node that still has room to book. Without requests, it would overfill a node without noticing.</p>
+<p class="nt good"><b>Good to know:</b> There are also limits: the most a pod may use. Go over the memory limit and the pod is killed (that OOMKilled from the pods lesson).</p></section>
+<section class="st"><h3><span>Step 6 · Solution</span>HPA: the autopilot</h3>
+<p>Changing the number of replicas by hand works, but nobody stays up watching graphs. The Horizontal Pod Autoscaler (HPA) does it for you.</p>
+<p>Every 15 seconds it checks average CPU and compares it with the target, 70% here. Above target, it adds replicas; well below, it removes them.</p>
+<p class="nt key"><b>Key idea:</b> The maths is simple: replicas = current × usage ÷ target. With 4 pods at 95% and a 70% target: 4 × 95 ÷ 70 = 5.4, rounded up to 6 pods.</p>
+<pre><code>kubectl autoscale deployment api --cpu-percent=70 --min=2 --max=10</code></pre></section>
+<section class="st"><h3><span>Step 7 · Problem</span>No room left</h3>
+<p>Traffic climbed again and the HPA asked for a seventh pod. But both nodes are full: the bookings (requests) already take up all the space, including those of other apps, in grey.</p>
+<p>The new pod is Pending: it exists in the notebook, but the scheduler can’t find a place for it.</p>
+<p class="nt warn"><b>Watch out:</b> A Pending pod is a sign that machines are missing, not that the app is broken.</p>
+<pre><code>kubectl get pods --field-selector=status.phase=Pending</code></pre></section>
+<section class="st"><h3><span>Step 8 · Solution</span>The cluster gets a new machine</h3>
+<p>The Cluster Autoscaler spots the Pending pod and asks the cloud provider for a new machine (on AWS, Karpenter plays the same role).</p>
+<p>A minute or two later, node-3 joins the cluster and the pending pod finally runs on it.</p>
+<p class="nt key"><b>Key idea:</b> The HPA creates pods; the Cluster Autoscaler creates machines. Each needs the other for the peak to fit.</p></section>
+<section class="st"><h3><span>Step 9 · Concept</span>Night time: time to shrink</h3>
+<p>At 4 a.m. hardly anyone is shopping. With CPU low, the HPA slowly removes replicas, down to the minimum of 2. It waits about 5 minutes before shrinking, to avoid going up and down.</p>
+<p>node-3 is left empty and the Cluster Autoscaler gives it back to the cloud. You only pay for the peak while it lasts.</p>
+</section>
+<section class="st"><h3><span>Step 10 · Trade-off</span>Trade-off: scaling isn’t instant</h3>
+<p>A flash sale starts at exactly 8 p.m. The HPA reacts in seconds and asks for pods, but they don’t fit; a new node takes 1 to 2 minutes to boot and still has to pull the image.</p>
+<p>In the meantime the existing pods struggle, and some customers see errors.</p>
+<p class="nt warn"><b>Watch out:</b> If you know a peak is coming (a launch, a TV campaign), raise the minimum replicas beforehand. Autoscaling reacts; it doesn’t predict.</p></section>
+<section class="st"><h3><span>Step 11 · Summary</span>Summary: three ways to scale</h3>
+<p>The most common pair is HPA plus Cluster Autoscaler: pods grow first, and machines follow.</p>
+<p class="nt good"><b>Good to know:</b> Rule of thumb: set realistic requests, a minimum of 2 replicas and a CPU target between 60% and 70%.</p>
+<table><thead><tr><th>Tool</th><th>Changes what</th><th>When to use</th></tr></thead><tbody><tr><td>HPA</td><td>Number of pods</td><td>Traffic that rises and falls</td></tr><tr><td>Cluster Autoscaler</td><td>Number of nodes</td><td>Pods with no room (Pending)</td></tr><tr><td>VPA</td><td>Size of each pod</td><td>Tuning requests and limits</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#escala-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/netpol/" rel="prev">Previous lesson: NetworkPolicy</a><a href="../../../en/lesson/sched/" rel="next">Next lesson: Scheduling: resources, affinity and taints</a></nav>
+</main>
+</body>
+</html>

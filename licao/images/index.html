@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Imagens de container — Kubernetes Visual</title>
+<meta name="description" content="Como uma imagem é montada em camadas, construída, publicada e mantida pequena e segura. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/images/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/images/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/images/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Imagens de container">
+<meta property="og:description" content="Como uma imagem é montada em camadas, construída, publicada e mantida pequena e segura.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/images/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Imagens de container">
+<meta name="twitter:description" content="Como uma imagem é montada em camadas, construída, publicada e mantida pequena e segura.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Imagens de container","description":"Como uma imagem é montada em camadas, construída, publicada e mantida pequena e segura.","url":"https://andrentfs.github.io/kubernetes-visual/licao/images/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT10M","educationalLevel":"Iniciante","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Fundamentos · <a href="../../en/lesson/images/" hreflang="en">English version</a></p>
+<h1>Imagens de container</h1>
+<p class="lede">Como uma imagem é montada em camadas, construída, publicada e mantida pequena e segura.</p>
+<p class="chips"><span>10 min</span><span>Iniciante</span><span>9 passos</span></p>
+<a class="cta" href="../../?lang=pt#images-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Ler um Dockerfile</li><li>Entender camadas e cache</li><li>Publicar uma imagem num registry</li><li>Fazer builds multi-stage</li><li>Usar tags com responsabilidade</li><li>Deixar a imagem mais segura</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Uma imagem é uma pilha de camadas</h3>
+<p>Uma imagem não é um arquivo único: é uma pilha de camadas, uma em cima da outra. Cada instrução do Dockerfile cria uma camada.</p>
+<p>A primeira é a base (como node:22, que já traz o Node.js); depois vêm seus arquivos e comandos.</p>
+</section>
+<section class="st"><h3><span>Passo 2 · Conceito</span>O Dockerfile, linha por linha</h3>
+<p>FROM escolhe a imagem base. WORKDIR define a pasta de trabalho. COPY traz arquivos do seu computador. RUN executa um comando durante o build, como instalar dependências.</p>
+<p>CMD (ou ENTRYPOINT) diz o que rodar quando o container ligar. docker build -t loja/api:1.0 . junta tudo numa imagem com nome e tag.</p>
+<p class="nt good"><b>Bom saber:</b> Ferramentas como podman e buildah usam o mesmo Dockerfile, sem precisar do Docker.</p>
+<pre><code>docker build -t loja/api:1.0 .</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Conceito</span>Cache: só refaz o que mudou</h3>
+<p>Ao reconstruir, as camadas que não mudaram vêm do cache. Se só o código mudou, só a última camada (COPY . .) é refeita: o build leva segundos.</p>
+<p>Por isso a ordem importa: o que muda pouco (dependências) vai em cima; o que muda sempre (código), por último.</p>
+</section>
+<section class="st"><h3><span>Passo 4 · Problema</span>Ordem errada, build lento</h3>
+<p>Se COPY . . vier antes do RUN npm ci, qualquer mudança de código invalida o cache dali para baixo. As dependências são baixadas de novo a cada build.</p>
+<p>Copie primeiro só o package.json, instale, e depois copie o resto.</p>
+<p class="nt warn"><b>Atenção:</b> Uma camada alterada invalida todas as que vêm depois dela.</p></section>
+<section class="st"><h3><span>Passo 5 · Solução</span>Publicar no registry</h3>
+<p>docker push envia a imagem para um registry (Docker Hub, GHCR, ECR, Harbor). Os nodes do cluster baixam de lá quando um pod precisa.</p>
+<p>O nome completo inclui o registry: registry.loja.com/api:1.0. Sem o endereço, o padrão é o Docker Hub.</p>
+
+<pre><code>docker push registry.loja.com/api:1.0</code></pre></section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>Multi-stage: construir grande, entregar pequeno</h3>
+<p>Compilar precisa de ferramentas pesadas; rodar, não. Um Dockerfile multi-stage tem vários FROM: o primeiro estágio compila, o último copia só o resultado (COPY --from=build).</p>
+<p>A imagem final fica com dezenas de MB em vez de centenas: baixa mais rápido e tem menos coisas para um invasor usar.</p>
+</section>
+<section class="st"><h3><span>Passo 7 · Trade-off</span>Trade-off: o perigo do latest</h3>
+<p>latest é só um nome, não quer dizer “a mais nova”, e pode apontar para coisas diferentes em momentos diferentes. Dois nodes podem rodar versões diferentes com a mesma tag.</p>
+<p>Use tags com versão (api:1.4.2) ou, para garantir, o digest (api@sha256:…), que identifica o conteúdo exato.</p>
+<p class="nt warn"><b>Atenção:</b> imagePullPolicy Always baixa toda vez; IfNotPresent usa o que já estiver no node. Com latest, o padrão é Always.</p></section>
+<section class="st"><h3><span>Passo 8 · Conceito</span>Imagens mais seguras</h3>
+<p>Comece de uma base mínima (alpine, distroless). Adicione USER com um usuário sem privilégios, para o container não rodar como root.</p>
+<p>Escaneie a imagem com ferramentas como Trivy antes de publicar, e reconstrua quando a base receber correções.</p>
+</section>
+<section class="st"><h3><span>Passo 9 · Resumo</span>Resumo: boas imagens</h3>
+<p>Pequenas, com versão fixa, sem root e com camadas na ordem certa.</p>
+
+<table><thead><tr><th>Prática</th><th>Por quê</th></tr></thead><tbody><tr><td>Multi-stage</td><td>Imagem final pequena</td></tr><tr><td>Ordem das camadas</td><td>Cache rápido</td></tr><tr><td>Tag com versão</td><td>Deploy previsível</td></tr><tr><td>USER não-root</td><td>Menos risco</td></tr><tr><td>Base mínima</td><td>Menos falhas conhecidas</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#images-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/cluster/" rel="prev">Lição anterior: Anatomia de um cluster</a><a href="../../licao/pods/" rel="next">Próxima lição: Pods e Deployments</a></nav>
+</main>
+</body>
+</html>

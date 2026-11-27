@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Segurança do cluster: CIS, API, tokens, metadados e TLS — Kubernetes Visual</title>
+<meta name="description" content="Fechar as portas que uma instalação padrão deixa abertas: benchmark CIS, acesso à API, tokens, metadados da nuvem, TLS e binários. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/hardening/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/hardening/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/hardening/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Segurança do cluster: CIS, API, tokens, metadados e TLS">
+<meta property="og:description" content="Fechar as portas que uma instalação padrão deixa abertas: benchmark CIS, acesso à API, tokens, metadados da nuvem, TLS e binários.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/hardening/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Segurança do cluster: CIS, API, tokens, metadados e TLS">
+<meta name="twitter:description" content="Fechar as portas que uma instalação padrão deixa abertas: benchmark CIS, acesso à API, tokens, metadados da nuvem, TLS e binários.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Segurança do cluster: CIS, API, tokens, metadados e TLS","description":"Fechar as portas que uma instalação padrão deixa abertas: benchmark CIS, acesso à API, tokens, metadados da nuvem, TLS e binários.","url":"https://andrentfs.github.io/kubernetes-visual/licao/hardening/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT14M","educationalLevel":"Avançado","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Segurança avançada (CKS) · <a href="../../en/lesson/hardening/" hreflang="en">English version</a></p>
+<h1>Segurança do cluster: CIS, API, tokens, metadados e TLS</h1>
+<p class="lede">Fechar as portas que uma instalação padrão deixa abertas: benchmark CIS, acesso à API, tokens, metadados da nuvem, TLS e binários.</p>
+<p class="chips"><span>14 min</span><span>Avançado</span><span>11 passos</span></p>
+<a class="cta" href="../../?lang=pt#hardening-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Enxergar a superfície de ataque do cluster</li><li>Rodar o kube-bench e corrigir uma falha</li><li>Editar o kube-apiserver sem perder o cluster</li><li>Restringir o acesso à API e aos tokens</li><li>Bloquear os metadados da nuvem</li><li>Configurar TLS no Ingress e verificar binários</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Onde um cluster pode ser atacado</h3>
+<p>Um cluster recém-instalado tem várias portas de entrada: o API server (6443), o etcd (2379), o kubelet de cada node (10250) e, na nuvem, o serviço de metadados da máquina (169.254.169.254).</p>
+<p>A CKS cobra exatamente isto: revisar cada uma dessas entradas e deixar aberto só o necessário, sempre com autenticação.</p>
+<p class="nt key"><b>Ideia-chave:</b> Segurança no Kubernetes é em camadas: control plane, nodes, rede, imagens e o que roda dentro dos containers.</p></section>
+<section class="st"><h3><span>Passo 2 · Conceito</span>kube-bench: o CIS Benchmark automatizado</h3>
+<p>O CIS Benchmark do Kubernetes é uma lista de recomendações para o control plane, o etcd, os nodes e as políticas. O kube-bench roda essas verificações e marca cada item como PASS, FAIL, WARN ou INFO.</p>
+<p>kube-bench run --targets master confere o control plane; --targets node confere os nodes. Para cada FAIL, ele mostra a correção sugerida (remediation).</p>
+<p class="nt warn"><b>Atenção:</b> A numeração dos itens muda entre versões do benchmark. Na prova, procure o item citado na tarefa e siga a correção que o próprio kube-bench mostra.</p>
+<pre><code>kube-bench run --targets master</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Solução</span>Corrigindo um item que falhou</h3>
+<p>Quase toda correção é uma flag no manifesto de um pod estático, em /etc/kubernetes/manifests, ou um campo no config do kubelet (/var/lib/kubelet/config.yaml, seguido de systemctl restart kubelet).</p>
+<p>Exemplo comum: --profiling=false no kube-apiserver. Ao salvar o manifesto, o kubelet recria o pod sozinho. Rode o kube-bench de novo para ver o PASS.</p>
+
+<pre><code>vi /etc/kubernetes/manifests/kube-apiserver.yaml</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Problema</span>Quando a edição derruba a API</h3>
+<p>Um erro de digitação no manifesto e o kube-apiserver não sobe: o kubectl para de responder com connection refused.</p>
+<p>Sem API, investigue direto no node: crictl ps -a mostra o container que saiu, e os logs ficam em /var/log/pods ou em crictl logs &lt;id&gt;.</p>
+<p class="nt warn"><b>Atenção:</b> Antes de editar, copie o manifesto para fora da pasta (por exemplo, /root). O kubelet lê os arquivos dessa pasta, e um backup lá dentro pode virar um segundo pod.</p>
+<pre><code>crictl ps -a | grep kube-apiserver</code></pre></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>Quem pode falar com o API server</h3>
+<p>Requisições sem credencial viram o usuário system:anonymous. Confira se nenhum RoleBinding ou ClusterRoleBinding dá permissões a system:anonymous ou ao grupo system:unauthenticated.</p>
+<p>No kube-apiserver, --authorization-mode=Node,RBAC e o admission plugin NodeRestriction fazem cada kubelet só mexer no próprio Node e nos pods dele.</p>
+<p class="nt key"><b>Ideia-chave:</b> O kubelet também tem uma API (porta 10250). No config dele: authentication.anonymous.enabled: false e authorization.mode: Webhook.</p></section>
+<section class="st"><h3><span>Passo 6 · Solução</span>ServiceAccounts sem token desnecessário</h3>
+<p>Por padrão, todo pod recebe o token da sua ServiceAccount montado em /var/run/secrets/kubernetes.io/serviceaccount. Se o app não fala com a API, esse token só serve a um invasor.</p>
+<p>Desligue com automountServiceAccountToken: false na ServiceAccount ou no pod. E crie uma ServiceAccount por app, com só as permissões que ele usa.</p>
+
+<pre><code>kubectl patch sa default -n loja -p '{&quot;automountServiceAccountToken&quot;:false}'</code></pre></section>
+<section class="st"><h3><span>Passo 7 · Problema</span>O endpoint de metadados da nuvem</h3>
+<p>Em AWS, GCP e Azure, qualquer processo da máquina pode consultar 169.254.169.254 e receber dados da instância, às vezes até credenciais temporárias da nuvem.</p>
+<p>Um pod invadido também alcança esse endereço, porque o tráfego dele sai pelo node.</p>
+<p class="nt warn"><b>Atenção:</b> Com essas credenciais, o invasor sai do cluster e passa a agir na conta da nuvem.</p>
+<pre><code>kubectl exec app -- curl -s 169.254.169.254</code></pre></section>
+<section class="st"><h3><span>Passo 8 · Solução</span>Bloqueando os metadados com NetworkPolicy</h3>
+<p>Uma NetworkPolicy de egress libera ipBlock 0.0.0.0/0 com except: 169.254.169.254/32. O resto continua acessível; só o endpoint de metadados fica de fora.</p>
+<p>Deixe fora dessa política só os pods que realmente precisam dos metadados, como agentes da própria nuvem.</p>
+
+<pre><code>kubectl apply -f deny-metadata.yaml</code></pre></section>
+<section class="st"><h3><span>Passo 9 · Solução</span>Ingress com TLS</h3>
+<p>O certificado e a chave ficam num Secret do tipo kubernetes.io/tls: kubectl create secret tls loja-tls --cert=tls.crt --key=tls.key.</p>
+<p>No Ingress, spec.tls lista os hosts e o secretName. O controller passa a servir HTTPS com esse certificado.</p>
+<p class="nt warn"><b>Atenção:</b> O host em spec.tls precisa bater com o das regras e com o do certificado. Se não bater, muitos controllers servem um certificado padrão.</p>
+<pre><code>kubectl create secret tls loja-tls --cert=tls.crt --key=tls.key</code></pre></section>
+<section class="st"><h3><span>Passo 10 · Conceito</span>Verificando os binários da plataforma</h3>
+<p>Antes de instalar ou atualizar, confira se kubelet, kubeadm e kubectl são os oficiais. O projeto publica os hashes: o CHANGELOG de cada versão traz o SHA512 dos pacotes, e dl.k8s.io tem o arquivo de hash ao lado de cada binário.</p>
+<p>Calcule com sha512sum (ou sha256sum) e compare com o publicado para a sua versão e arquitetura. Valor diferente: não use.</p>
+
+<pre><code>sha512sum /usr/bin/kubelet</code></pre></section>
+<section class="st"><h3><span>Passo 11 · Resumo</span>Resumo: fechando as entradas do cluster</h3>
+<p>Revise o cluster com o kube-bench e corrija camada por camada, sempre com backup do que for editar.</p>
+
+<table><thead><tr><th>Camada</th><th>O que fazer</th></tr></thead><tbody><tr><td>Control plane</td><td>kube-bench e correções nos manifestos</td></tr><tr><td>API</td><td>Node,RBAC, NodeRestriction, nada para anonymous</td></tr><tr><td>Tokens</td><td>automountServiceAccountToken: false</td></tr><tr><td>Metadados</td><td>egress com except 169.254.169.254/32</td></tr><tr><td>Ingress</td><td>Secret tls + spec.tls</td></tr><tr><td>Binários</td><td>Conferir o hash publicado</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#hardening-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/tudo/" rel="prev">Lição anterior: Juntando tudo</a><a href="../../licao/sistema/" rel="next">Próxima lição: Hardening do sistema: host, portas, AppArmor e seccomp</a></nav>
+</main>
+</body>
+</html>

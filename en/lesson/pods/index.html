@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pods and Deployments — Kubernetes Visual</title>
+<meta name="description" content="The smallest piece of Kubernetes, why it’s disposable, and how the cluster keeps copies alive. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/pods/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/pods/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/pods/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Pods and Deployments">
+<meta property="og:description" content="The smallest piece of Kubernetes, why it’s disposable, and how the cluster keeps copies alive.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/pods/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pods and Deployments">
+<meta name="twitter:description" content="The smallest piece of Kubernetes, why it’s disposable, and how the cluster keeps copies alive.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Pods and Deployments","description":"The smallest piece of Kubernetes, why it’s disposable, and how the cluster keeps copies alive.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/pods/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT11M","educationalLevel":"Beginner","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Running apps · <a href="../../../licao/pods/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Pods and Deployments</h1>
+<p class="lede">The smallest piece of Kubernetes, why it’s disposable, and how the cluster keeps copies alive.</p>
+<p class="chips"><span>11 min</span><span>Beginner</span><span>12 steps</span></p>
+<a class="cta" href="../../../?lang=en#pods-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Know what a pod is</li><li>Know when to put containers in the same pod</li><li>Understand why pods are disposable</li><li>Use a Deployment to keep copies alive</li><li>Watch the cluster recover from a lost machine</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Concept</span>The pod: Kubernetes’ smallest piece</h3>
+<p>Kubernetes doesn’t run bare containers. It wraps the container in a pod, which gets its own IP address and is the unit the cluster starts, moves and stops.</p>
+<p>A pod is like a pea pod: a little shell with one or more peas inside. Most of the time a pod holds a single container.</p>
+<p class="nt key"><b>Key idea:</b> The container is the packaged program. The pod is the apartment it lives in inside the cluster, with its own address and resources.</p>
+<pre><code>kubectl run api --image=loja/api:1.0</code></pre></section>
+<section class="st"><h3><span>Step 2 · Concept</span>Two containers, one pod</h3>
+<p>Sometimes two containers need to live side by side. Example: the API writes logs to a file, and a second container reads that file and ships the logs to a monitoring system.</p>
+<p>Containers in the same pod share an address (they talk over localhost) and can share a folder, called a volume. The helper is called a sidecar, like the little car attached to a motorbike.</p>
+</section>
+<section class="st"><h3><span>Step 3 · Concept</span>When to group and when to split</h3>
+<p>Rule of thumb: only put two containers in the same pod if they need to be born, grow and die together.</p>
+<p>The website and the database aren’t like that. The website needs 3 copies at peak time; the database needs just one. If they shared a pod, every website copy would drag a database along. So they live in separate pods.</p>
+<p class="nt good"><b>Good to know:</b> When in doubt, split. Separate pods grow, update and fail independently.</p></section>
+<section class="st"><h3><span>Step 4 · Problem</span>Pods are disposable</h3>
+<p>The node rebooted for a system update and the API pod died with it. It doesn’t come back on its own: a hand-made pod has nobody looking after it.</p>
+<p>Kubernetes doesn’t try to repair a dead pod. It prefers to throw it away and create a new one.</p>
+<p class="nt warn"><b>Watch out:</b> Never keep important data only inside a pod. When the pod goes, everything inside goes with it.</p>
+<pre><code>kubectl get pods</code></pre></section>
+<section class="st"><h3><span>Step 5 · Concept</span>Cattle, not pets</h3>
+<p>If your cat gets sick, you take it to the vet: it’s one of a kind. In a herd of a thousand, every animal is treated as replaceable. Kubernetes treats pods like a herd.</p>
+<p>A replacement pod is born with a different name and a different IP address (from 10.1.0.12 to 10.1.0.47). So nothing should depend on the address of one particular pod.</p>
+<p class="nt key"><b>Key idea:</b> Pods come and go. What stays stable is the description of what you want, not the pod itself.</p></section>
+<section class="st"><h3><span>Step 6 · Solution</span>Deployment: the written order</h3>
+<p>Instead of creating pods by hand, you write a Deployment: a YAML file (a simple text format) that says “I want 3 copies of the loja/api:1.0 image”.</p>
+<p>You send the file with kubectl apply. The API server checks it and writes the order into etcd. No pod exists yet, but the wish is on record.</p>
+<p class="nt key"><b>Key idea:</b> The Deployment is the recipe with a quantity. It isn’t a pod: it makes sure the pods exist.</p>
+<pre><code>kubectl apply -f deployment.yaml</code></pre></section>
+<section class="st"><h3><span>Step 7 · Concept</span>The copies spread out</h3>
+<p>The Deployment creates a ReplicaSet, a counter whose only job is to keep the right number of copies. The ReplicaSet creates 3 pods, and the scheduler puts each one on a different node.</p>
+<p>Spreading out is on purpose: if one machine goes down, the other copies keep serving.</p>
+<p class="nt good"><b>Good to know:</b> Copies of a pod are called replicas. For anything important, use at least 2; 3 is the most common.</p></section>
+<section class="st"><h3><span>Step 8 · Problem</span>A pod fails</h3>
+<p>A bug made the API use too much memory. The node kills the container to protect its neighbours; on the dashboard this shows up as OOMKilled, “killed for running out of memory”.</p>
+<p>The ReplicaSet controller notices right away: desired is 3, actual is now 2.</p>
+
+<pre><code>kubectl get deploy api</code></pre></section>
+<section class="st"><h3><span>Step 9 · Solution</span>A replacement appears on its own</h3>
+<p>The ReplicaSet creates a new pod, the scheduler picks a node and, within seconds, the count is back to 3.</p>
+<p>Nobody was woken up, no script ran. This is called self-healing.</p>
+<p class="nt key"><b>Key idea:</b> You never say “restart that pod”. You say “I want 3”, and the system chases that number.</p></section>
+<section class="st"><h3><span>Step 10 · Problem</span>What if a whole machine dies?</h3>
+<p>node-3 had a hardware fault and stopped answering. Its kubelet sends no more news, and the control plane marks the node NotReady.</p>
+<p>Kubernetes waits a little, about 5 minutes by default, because it might just be a brief network blip. After that, it gives up on that node’s pods.</p>
+<p class="nt warn"><b>Watch out:</b> During that wait the app runs one copy short. That’s why extra replicas matter.</p></section>
+<section class="st"><h3><span>Step 11 · Solution</span>The pods move house</h3>
+<p>The ReplicaSet creates a replacement and the scheduler puts it on a healthy node, node-1. Actual matches desired again.</p>
+<p>When node-3 comes back, it simply gets new pods in the future. Nothing has to be “moved back”.</p>
+
+<pre><code>kubectl get pods -o wide</code></pre></section>
+<section class="st"><h3><span>Step 12 · Summary</span>Summary: Pod, ReplicaSet and Deployment</h3>
+<p>Day to day you only write Deployments. ReplicaSets and pods are created from them.</p>
+<p class="nt good"><b>Good to know:</b> Databases and other apps that store data use a cousin of the Deployment, the StatefulSet, which gives each copy a fixed name and disk.</p>
+<table><thead><tr><th>Object</th><th>What it is</th><th>If it vanishes…</th></tr></thead><tbody><tr><td>Pod</td><td>Home for 1+ containers, with an IP</td><td>Doesn’t come back</td></tr><tr><td>ReplicaSet</td><td>Copy counter</td><td>The Deployment recreates it</td></tr><tr><td>Deployment</td><td>Order: image + quantity</td><td>Stays saved in etcd</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#pods-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/images/" rel="prev">Previous lesson: Container images</a><a href="../../../en/lesson/workloads/" rel="next">Next lesson: Workloads: DaemonSet, StatefulSet, Job and more</a></nav>
+</main>
+</body>
+</html>

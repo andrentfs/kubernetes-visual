@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anatomia de um cluster — Kubernetes Visual</title>
+<meta name="description" content="Quem decide onde cada coisa roda? Uma visita guiada pela gerência e pela cozinha do cluster. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/cluster/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/cluster/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/cluster/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Anatomia de um cluster">
+<meta property="og:description" content="Quem decide onde cada coisa roda? Uma visita guiada pela gerência e pela cozinha do cluster.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/cluster/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Anatomia de um cluster">
+<meta name="twitter:description" content="Quem decide onde cada coisa roda? Uma visita guiada pela gerência e pela cozinha do cluster.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Anatomia de um cluster","description":"Quem decide onde cada coisa roda? Uma visita guiada pela gerência e pela cozinha do cluster.","url":"https://andrentfs.github.io/kubernetes-visual/licao/cluster/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT10M","educationalLevel":"Iniciante","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Fundamentos · <a href="../../en/lesson/cluster/" hreflang="en">English version</a></p>
+<h1>Anatomia de um cluster</h1>
+<p class="lede">Quem decide onde cada coisa roda? Uma visita guiada pela gerência e pela cozinha do cluster.</p>
+<p class="chips"><span>10 min</span><span>Iniciante</span><span>11 passos</span></p>
+<a class="cta" href="../../?lang=pt#cluster-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Saber o que é um cluster e um node</li><li>Separar o control plane dos nodes</li><li>Conhecer API server, etcd, scheduler e controllers</li><li>Saber o que roda dentro de cada node</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Conceito</span>Um cluster é um time de máquinas</h3>
+<p>Um cluster é um grupo de computadores que trabalham como se fossem um só. Cada computador do grupo é um node (nó, em português).</p>
+<p>Seus containers rodam dentro de pods (a próxima lição explica em detalhe), e os pods ficam espalhados pelos nodes. Para você, tanto faz em qual máquina cada um está: o cluster cuida disso.</p>
+<p class="nt key"><b>Ideia-chave:</b> Você não fala mais com servidores um por um. Você fala com o cluster, e ele distribui o trabalho.</p>
+<pre><code>kubectl get nodes</code></pre></section>
+<section class="st"><h3><span>Passo 2 · Conceito</span>Gerência e cozinha</h3>
+<p>Pense num restaurante. Na cozinha, os cozinheiros preparam os pratos. Na gerência, alguém recebe os pedidos, anota tudo e decide quem faz o quê.</p>
+<p>No cluster é igual: os nodes são a cozinha, onde as aplicações rodam de verdade. O control plane é a gerência: não cozinha nada, só toma decisões.</p>
+<p class="nt good"><b>Bom saber:</b> Em serviços de nuvem como EKS (Amazon), GKE (Google) e AKS (Microsoft), o provedor cuida da gerência para você. Você só vê, e paga, os nodes.</p></section>
+<section class="st"><h3><span>Passo 3 · Conceito</span>API server: o balcão de pedidos</h3>
+<p>Todo pedido ao cluster passa por um único balcão: o API server. Quando você digita um comando no kubectl, o programa de linha de comando do Kubernetes, ele manda uma requisição para esse balcão.</p>
+<p>Os outros componentes também não conversam entre si diretamente: todos leem e escrevem pelo balcão. Assim existe um só ponto de verdade e de controle de acesso.</p>
+<p class="nt key"><b>Ideia-chave:</b> O kubectl é o cardápio que você usa; o API server é o balcão que recebe o pedido, confere se você tem permissão e anota.</p>
+<pre><code>kubectl get pods</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Conceito</span>etcd: o caderno da gerência</h3>
+<p>Tudo que o balcão aceita é anotado num caderno chamado etcd: quais apps existem, quantas cópias de cada uma, quais configurações. É a memória do cluster.</p>
+<p>Para não perder anotações, o etcd guarda cópias em 3 ou 5 máquinas e só confirma uma escrita quando a maioria concorda. Isso se chama consenso.</p>
+<p class="nt warn"><b>Atenção:</b> Se o etcd se perde sem backup, o cluster esquece tudo o que deveria estar rodando. Fazer backup dele é obrigação de quem cuida do próprio control plane.</p></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>Scheduler: quem escala a equipe</h3>
+<p>Chegou um pod novo e ninguém disse onde ele deve rodar. Quem decide é o scheduler (agendador).</p>
+<p>Ele faz duas rodadas. Primeiro elimina os nodes que não servem: sem memória livre, sem o hardware necessário, proibidos por alguma regra. Depois dá nota aos que sobraram e escolhe o melhor, como um gerente que escala o cozinheiro mais folgado.</p>
+<p class="nt good"><b>Bom saber:</b> O scheduler só decide e anota a decisão. Quem realmente liga o pod é o node escolhido.</p>
+<pre><code>kubectl get pods -o wide</code></pre></section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>Controllers: o fiscal que nunca dorme</h3>
+<p>Os controllers são vários pequenos fiscais. Cada um vigia um tipo de coisa e compara o que deveria existir com o que existe de fato.</p>
+<p>Se o caderno diz “quero 4 pods da API” e só existem 2, o fiscal cria mais 2. Se existissem 5, ele apagaria 1. Esse ciclo de olhar, comparar e corrigir se chama reconciliação.</p>
+<p class="nt key"><b>Ideia-chave:</b> Desejado diferente do real: o controller age. Desejado igual ao real: nada acontece. Esse ciclo roda o tempo todo, para sempre.</p></section>
+<section class="st"><h3><span>Passo 7 · Conceito</span>kubelet: o encarregado de cada máquina</h3>
+<p>Cada node tem um encarregado chamado kubelet. Ele pergunta ao API server quais pods devem rodar na sua máquina e garante que estejam de pé.</p>
+<p>Ele também faz health checks: de tempos em tempos, “cutuca” cada container para saber se está vivo e respondendo. Se um não responde, ele reinicia.</p>
+<p class="nt good"><b>Bom saber:</b> Os anéis verdes no diagrama são health checks: pequenas perguntas do tipo “tudo bem aí?”.</p>
+<pre><code>kubectl describe node node-1</code></pre></section>
+<section class="st"><h3><span>Passo 8 · Conceito</span>Container runtime: quem liga os containers</h3>
+<p>Para ligar um container, o node precisa da imagem, a receita. Ele baixa a imagem de um registry: um depósito de imagens como o Docker Hub ou o da sua empresa.</p>
+<p>Quem faz o trabalho pesado de baixar e rodar é o container runtime, geralmente o containerd. O kubelet só dá a ordem.</p>
+<p class="nt warn"><b>Atenção:</b> Baixar uma imagem grande pode levar dezenas de segundos. Imagens enxutas fazem o cluster reagir mais rápido.</p></section>
+<section class="st"><h3><span>Passo 9 · Conceito</span>Todo pod tem seu endereço</h3>
+<p>Cada pod ganha um endereço IP próprio, como um ramal de telefone interno. Um pod pode ligar para outro em qualquer node, sem saber em que máquina ele está.</p>
+<p>Quem monta esse encanamento é a rede do cluster, com ajuda do kube-proxy em cada node. Para você, parece que todos os pods estão na mesma sala.</p>
+<p class="nt key"><b>Ideia-chave:</b> Endereços de pod mudam quando um pod é recriado. Na lição de Service você vai ver como resolver isso com um nome fixo.</p></section>
+<section class="st"><h3><span>Passo 10 · Trade-off</span>Trade-off: e se a gerência cair?</h3>
+<p>O API server parou. Curiosamente, a loja continua no ar: os pods que já estavam rodando seguem atendendo, porque os nodes não dependem da gerência para trabalhar.</p>
+<p>Mas ninguém consegue mudar nada: não dá para atualizar, escalar ou recuperar um pod que morrer. Por isso, em produção, o control plane roda em 3 cópias.</p>
+<p class="nt warn"><b>Atenção:</b> Control plane fora não derruba o app na hora, mas deixa o cluster sem ninguém para corrigir problemas.</p></section>
+<section class="st"><h3><span>Passo 11 · Resumo</span>Resumo: quem faz o quê</h3>
+<p>A gerência decide, a cozinha executa, e toda comunicação passa pelo balcão.</p>
+<p class="nt good"><b>Bom saber:</b> Se você usa um Kubernetes gerenciado, raramente vai mexer no control plane. Mas saber quem faz o quê ajuda muito a encontrar problemas.</p>
+<table><thead><tr><th>Peça</th><th>Onde fica</th><th>Faz o quê</th></tr></thead><tbody><tr><td>API server</td><td>Control plane</td><td>Recebe e confere todo pedido</td></tr><tr><td>etcd</td><td>Control plane</td><td>Guarda o estado do cluster</td></tr><tr><td>scheduler</td><td>Control plane</td><td>Escolhe o node de cada pod</td></tr><tr><td>controllers</td><td>Control plane</td><td>Corrigem desejado × real</td></tr><tr><td>kubelet</td><td>Cada node</td><td>Liga e vigia os pods</td></tr><tr><td>runtime</td><td>Cada node</td><td>Baixa imagens e roda containers</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#cluster-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/intro/" rel="prev">Lição anterior: Por que Kubernetes?</a><a href="../../licao/images/" rel="next">Próxima lição: Imagens de container</a></nav>
+</main>
+</body>
+</html>

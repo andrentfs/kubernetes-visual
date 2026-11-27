@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Health checks: readiness, liveness and startup — Kubernetes Visual</title>
+<meta name="description" content="How Kubernetes finds out whether an app is ready, alive, or just slow to start. Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/probes/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/probes/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/probes/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Health checks: readiness, liveness and startup">
+<meta property="og:description" content="How Kubernetes finds out whether an app is ready, alive, or just slow to start.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/probes/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Health checks: readiness, liveness and startup">
+<meta name="twitter:description" content="How Kubernetes finds out whether an app is ready, alive, or just slow to start.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Health checks: readiness, liveness and startup","description":"How Kubernetes finds out whether an app is ready, alive, or just slow to start.","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/probes/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT11M","educationalLevel":"Intermediate","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Operations · <a href="../../../licao/probes/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Health checks: readiness, liveness and startup</h1>
+<p class="lede">How Kubernetes finds out whether an app is ready, alive, or just slow to start.</p>
+<p class="chips"><span>11 min</span><span>Intermediate</span><span>11 steps</span></p>
+<a class="cta" href="../../../?lang=en#probes-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Tell running apart from healthy</li><li>Use readiness to control traffic</li><li>Use liveness to restart what froze</li><li>Protect slow apps with a startup probe</li><li>Avoid the probe that takes everything down</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Context</span>Running doesn’t mean healthy</h3>
+<p>Two API pods are serving the store. To Kubernetes, a container is “fine” as long as its process is running.</p>
+<p>But a process can be running and still unable to serve: still loading, without a database connection, or frozen. On its own, the cluster can’t tell.</p>
+<p class="nt key"><b>Key idea:</b> Kubernetes only knows what you teach it. Probes are the questions you teach the kubelet to ask.</p></section>
+<section class="st"><h3><span>Step 2 · Problem</span>Traffic arrives too soon</h3>
+<p>A new pod has just started. It needs about 20 seconds to read its settings and open the database connection.</p>
+<p>But as soon as the container is up, the Service starts sending customers to it. Anyone who lands on that pod in those 20 seconds gets an error.</p>
+<p class="nt warn"><b>Watch out:</b> Without a readiness probe, “container running” already counts as “ready to serve”.</p></section>
+<section class="st"><h3><span>Step 3 · Concept</span>Probe: a question asked over and over</h3>
+<p>A probe is a check the kubelet runs on each container, every so often (every 10 seconds by default).</p>
+<p>It comes in four kinds: an HTTP call (like GET /healthz, which must answer with a code between 200 and 399), a TCP connection to a port, a command run inside the container, or a gRPC call.</p>
+<p class="nt good"><b>Good to know:</b> The most used settings: initialDelaySeconds (how long to wait before the first check), periodSeconds (how often), timeoutSeconds (how long to wait for an answer) and failureThreshold (how many failures in a row count as “failed”, 3 by default).</p></section>
+<section class="st"><h3><span>Step 4 · Solution</span>Readiness: “can you take customers?”</h3>
+<p>The readiness probe answers a single question: can this pod receive traffic yet?</p>
+<p>While the answer is no, the pod stays off the Service’s endpoints. It keeps running; it just gets no customers. Nothing is restarted.</p>
+<p class="nt key"><b>Key idea:</b> Readiness controls traffic, not the pod’s life. Fails: out of the Service. Passes: into the Service.</p></section>
+<section class="st"><h3><span>Step 5 · Solution</span>Passed the probe, joins the Service</h3>
+<p>After 20 seconds, the new pod’s /healthz answers 200. The kubelet marks the pod Ready, and the Service starts sending it customers.</p>
+<p>Readiness keeps running after that. If the pod loses the database midday, it leaves the list again until it recovers, as you saw in the Service lesson.</p>
+</section>
+<section class="st"><h3><span>Step 6 · Problem</span>A pod that froze for good</h3>
+<p>A bug sent one pod into a deadlock: two parts of the program wait for each other forever. The process is still alive, but it never answers anything again.</p>
+<p>Readiness takes the pod out of the Service, which protects customers. But it stays there, idle, using memory and a replica slot, and never comes back on its own.</p>
+<p class="nt warn"><b>Watch out:</b> Readiness doesn’t restart anything. A frozen pod with only readiness stays out of service forever.</p></section>
+<section class="st"><h3><span>Step 7 · Solution</span>Liveness: “are you still alive?”</h3>
+<p>The liveness probe asks something else: is this container still working? If it fails 3 times in a row, the kubelet kills the container and starts it again, in the same pod.</p>
+<p>A few seconds later the restarted pod passes readiness and rejoins the Service. The RESTARTS column in kubectl get pods shows how many times this has happened.</p>
+<p class="nt key"><b>Key idea:</b> Liveness restarts the container. Use it for states the app can’t get out of on its own, like deadlocks.</p>
+<pre><code>kubectl get pods -w</code></pre></section>
+<section class="st"><h3><span>Step 8 · Problem</span>The slow app that never manages to start</h3>
+<p>A Java reporting service takes 90 seconds to start. Its liveness starts checking at 10 seconds, fails 3 times, and the kubelet restarts the container before it finishes loading.</p>
+<p>This repeats forever. The pod ends up in CrashLoopBackOff: Kubernetes waits longer and longer between attempts (10 s, 20 s, 40 s… up to 5 minutes).</p>
+<p class="nt warn"><b>Watch out:</b> CrashLoopBackOff is a symptom, not a cause. kubectl describe pod and kubectl logs --previous show what happened before each restart.</p>
+<pre><code>kubectl describe pod relatorios</code></pre></section>
+<section class="st"><h3><span>Step 9 · Solution</span>Startup probe: patience at the start line</h3>
+<p>The startup probe fixes this. Until it passes, liveness and readiness are switched off.</p>
+<p>With failureThreshold: 30 and periodSeconds: 10, the app has up to 300 seconds to start. Once startup passes, it steps aside and the other two take over.</p>
+<p class="nt good"><b>Good to know:</b> That way you keep a fast, strict liveness for everyday use without killing the app while it’s still starting.</p></section>
+<section class="st"><h3><span>Step 10 · Trade-off</span>Trade-off: the probe that takes everything down</h3>
+<p>Someone made the API’s liveness also check the database. It sounds careful, but the database went down for a minute and every liveness failed at once.</p>
+<p>Result: the kubelet restarted every API pod together. When the database came back, the whole API was still starting, and the store was down for longer than the database itself.</p>
+<p class="nt warn"><b>Watch out:</b> Liveness should check only the process itself. External dependencies (database, other APIs) belong in readiness, or nowhere.</p></section>
+<section class="st"><h3><span>Step 11 · Summary</span>Summary: three questions, three reactions</h3>
+<p>Use all three together: startup for slow apps, readiness always, liveness with care.</p>
+<p class="nt good"><b>Good to know:</b> Probes come up a lot in the exam: know httpGet, tcpSocket and exec by heart, and use kubectl explain pod.spec.containers.livenessProbe when you forget a field.</p>
+<table><thead><tr><th>Probe</th><th>Question</th><th>If it fails…</th></tr></thead><tbody><tr><td>startup</td><td>Finished starting?</td><td>Restarts; holds the others</td></tr><tr><td>readiness</td><td>Can it take customers?</td><td>Leaves the Service</td></tr><tr><td>liveness</td><td>Still alive?</td><td>Restarts the container</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#probes-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/rollout/" rel="prev">Previous lesson: Updating without downtime</a><a href="../../../en/lesson/nodefail/" rel="next">Next lesson: When a node goes down</a></nav>
+</main>
+</body>
+</html>

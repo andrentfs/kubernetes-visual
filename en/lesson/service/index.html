@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Service and Ingress — Kubernetes Visual</title>
+<meta name="description" content="Pods change address all the time. How does the website find the API, and how does the internet find the store? Lesson from the visual, interactive Kubernetes course.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/service/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/service/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/service/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Service and Ingress">
+<meta property="og:description" content="Pods change address all the time. How does the website find the API, and how does the internet find the store?">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/en/lesson/service/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Service and Ingress">
+<meta name="twitter:description" content="Pods change address all the time. How does the website find the API, and how does the internet find the store?">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Service and Ingress","description":"Pods change address all the time. How does the website find the API, and how does the internet find the store?","url":"https://andrentfs.github.io/kubernetes-visual/en/lesson/service/","inLanguage":"en","isAccessibleForFree":true,"timeRequired":"PT11M","educationalLevel":"Beginner","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../../?lang=en">Kubernetes Visual</a> / Running apps · <a href="../../../licao/service/" hreflang="pt-BR">Versão em português</a></p>
+<h1>Service and Ingress</h1>
+<p class="lede">Pods change address all the time. How does the website find the API, and how does the internet find the store?</p>
+<p class="chips"><span>11 min</span><span>Beginner</span><span>11 steps</span></p>
+<a class="cta" href="../../../?lang=en#service-1">▶ Open the interactive lesson</a>
+<p><small>This is the text version. The interactive lesson has the animated diagram for each step.</small></p>
+<h2>You will learn</h2>
+<ul><li>Understand why you don’t use a pod’s address</li><li>Use a Service as a fixed name</li><li>See the Service steer around sick pods</li><li>Open the app to the internet with an Ingress</li></ul>
+<h2>Step by step</h2>
+<section class="st"><h3><span>Step 1 · Context</span>The website talks to the API</h3>
+<p>When someone opens the store, the website pod (web) asks the API for the product list and prices. Right now there are 3 API pods spread across the nodes.</p>
+<p>For now, the website has been configured with the IP address of each API pod, written down by hand.</p>
+</section>
+<section class="st"><h3><span>Step 2 · Problem</span>The addresses change</h3>
+<p>An API pod was recreated and got a new address: it was 10.1.2.7, now it’s 10.1.2.9. The website keeps calling the old number, and requests get lost.</p>
+<p>Remember the last lesson? Pods are disposable. Anything that depends on a pod’s IP breaks at the first swap.</p>
+<p class="nt warn"><b>Watch out:</b> Writing down pod IPs is like writing down a temp worker’s desk extension: next week someone else answers, or nobody does.</p></section>
+<section class="st"><h3><span>Step 3 · Solution</span>Service: a name that doesn’t change</h3>
+<p>A Service gives the pods a fixed name, like “api”, and an address that never changes. The website now calls http://api and doesn’t need to know which pods are behind it.</p>
+<p>It’s like a call-centre number: you always dial the same number, and the centre puts you through to whoever is free.</p>
+<p class="nt key"><b>Key idea:</b> The Service is stable; the pods behind it change all the time. Whoever calls the Service doesn’t even notice.</p>
+<pre><code>kubectl expose deployment api --port=80</code></pre></section>
+<section class="st"><h3><span>Step 4 · Concept</span>Tags: how the Service finds pods</h3>
+<p>Every pod carries tags called labels, like app=api or app=web. The Service has a filter, the selector, that says: “I want every pod with app=api”.</p>
+<p>A new pod with the right tag joins the list on its own. A pod that dies leaves on its own. That list lives in EndpointSlice objects (the old Endpoints object has been deprecated since v1.33).</p>
+<p class="nt good"><b>Good to know:</b> Labels are the glue of Kubernetes: Services, Deployments and many tools find things by tag, not by name.</p></section>
+<section class="st"><h3><span>Step 5 · Concept</span>The Service shares out the work</h3>
+<p>Each request to http://api goes to one of the pods on the list. On average each pod gets a third of the work, and they all sit at a similar CPU, around 34%.</p>
+<p>This is called load balancing: spreading requests so nobody is overloaded while someone else sits idle.</p>
+</section>
+<section class="st"><h3><span>Step 6 · Problem</span>A pod gets sick</h3>
+<p>One of the pods lost its connection to the database. It’s running, but it answers with errors. The kubelet runs a health check called a readiness probe (“are you ready to serve?”) and gets a no.</p>
+<p>Meanwhile, some requests still land on that pod and fail.</p>
+<p class="nt warn"><b>Watch out:</b> A running pod is not the same as a healthy pod. Without a readiness probe, Kubernetes can’t tell the difference.</p></section>
+<section class="st"><h3><span>Step 7 · Solution</span>Sick pods leave the list at once</h3>
+<p>As soon as the readiness probe fails, the pod is removed from the Service’s endpoints. Nobody sends it requests any more.</p>
+<p>The other two pods take over the work (CPU goes up to 50%). When the sick pod recovers and passes the probe, it rejoins the list on its own.</p>
+
+<pre><code>kubectl get endpointslices -l kubernetes.io/service-name=api</code></pre></section>
+<section class="st"><h3><span>Step 8 · Problem</span>What about people outside the cluster?</h3>
+<p>The Service we created is a ClusterIP: its address only works inside the cluster. For your customers, out on the internet, the store simply doesn’t exist.</p>
+<p>We need a public front door.</p>
+</section>
+<section class="st"><h3><span>Step 9 · Solution</span>Ingress: the building’s front desk</h3>
+<p>An Ingress is the cluster’s front desk. It receives internet traffic on a public address and forwards it to the right Service.</p>
+<p>Behind it runs a program called an Ingress Controller, such as NGINX or Traefik, which does the actual work.</p>
+<p class="nt good"><b>Good to know:</b> Kubernetes is replacing Ingress with the Gateway API, which is more modern and flexible. The idea is the same: a front door with rules.</p>
+<pre><code>kubectl get ingress</code></pre></section>
+<section class="st"><h3><span>Step 10 · Concept</span>One address, many destinations</h3>
+<p>The front desk reads each visitor’s address and decides where to send them: loja.com/ goes to the web Service (the pages); loja.com/api goes to the api Service (the data).</p>
+<p>It also handles the padlock in the browser: the HTTPS certificate that keeps the connection encrypted.</p>
+<p class="nt key"><b>Key idea:</b> A single public address serves the whole site. To add a new area, you just add a new rule to the Ingress.</p></section>
+<section class="st"><h3><span>Step 11 · Summary</span>Summary: ways to expose an app</h3>
+<p>In practice: ClusterIP for internal conversations and Ingress for whatever comes from the internet.</p>
+
+<table><thead><tr><th>Type</th><th>Who can reach it</th><th>Typical use</th></tr></thead><tbody><tr><td>ClusterIP</td><td>Inside the cluster only</td><td>Internal API, database</td></tr><tr><td>NodePort</td><td>Fixed port on each node</td><td>Testing</td></tr><tr><td>LoadBalancer</td><td>Internet, via the cloud</td><td>One service, one IP</td></tr><tr><td>Ingress</td><td>Internet, by rules</td><td>HTTP websites and APIs</td></tr></tbody></table></section>
+<a class="cta" href="../../../?lang=en#service-1">▶ Open the interactive lesson</a>
+<nav class="pn"><a href="../../../en/lesson/storage/" rel="prev">Previous lesson: Storage: volumes, PV, PVC and StorageClass</a><a href="../../../en/lesson/network/" rel="next">Next lesson: Cluster networking: CNI, Services and CoreDNS</a></nav>
+</main>
+</body>
+</html>

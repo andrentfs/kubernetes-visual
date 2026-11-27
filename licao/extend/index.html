@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Extensões: CRI, CNI, CSI, CRDs e Operators — Kubernetes Visual</title>
+<meta name="description" content="O Kubernetes é uma plataforma: plugins de runtime, rede e disco, e novos tipos de objeto com seus próprios controladores. Lição do curso visual e interativo de Kubernetes.">
+<meta name="author" content="André Luiz">
+<link rel="canonical" href="https://andrentfs.github.io/kubernetes-visual/licao/extend/">
+<link rel="alternate" hreflang="pt-BR" href="https://andrentfs.github.io/kubernetes-visual/licao/extend/">
+<link rel="alternate" hreflang="en" href="https://andrentfs.github.io/kubernetes-visual/en/lesson/extend/">
+<link rel="alternate" hreflang="x-default" href="https://andrentfs.github.io/kubernetes-visual/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Kubernetes Visual">
+<meta property="og:title" content="Extensões: CRI, CNI, CSI, CRDs e Operators">
+<meta property="og:description" content="O Kubernetes é uma plataforma: plugins de runtime, rede e disco, e novos tipos de objeto com seus próprios controladores.">
+<meta property="og:url" content="https://andrentfs.github.io/kubernetes-visual/licao/extend/">
+<meta property="og:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Extensões: CRI, CNI, CSI, CRDs e Operators">
+<meta name="twitter:description" content="O Kubernetes é uma plataforma: plugins de runtime, rede e disco, e novos tipos de objeto com seus próprios controladores.">
+<meta name="twitter:image" content="https://andrentfs.github.io/kubernetes-visual/assets/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Extensões: CRI, CNI, CSI, CRDs e Operators","description":"O Kubernetes é uma plataforma: plugins de runtime, rede e disco, e novos tipos de objeto com seus próprios controladores.","url":"https://andrentfs.github.io/kubernetes-visual/licao/extend/","inLanguage":"pt-BR","isAccessibleForFree":true,"timeRequired":"PT12M","educationalLevel":"Intermediário","learningResourceType":"Lesson","isPartOf":{"@type":"Course","name":"Kubernetes Visual","url":"https://andrentfs.github.io/kubernetes-visual/"}}</script>
+<style>
+body{margin:0;background:#f3ede4;color:#211e1b;font:16px/1.6 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:#1d4ed8}.bc{font-size:.85rem;color:#6b6259}.bc a{color:inherit}
+h1{font-size:1.9rem;line-height:1.2;margin:.4rem 0}.lede{color:#4a433c}
+.chips span{display:inline-block;border:1.5px solid #211e1b;border-radius:99px;padding:.05rem .6rem;margin:0 .3rem .3rem 0;font-size:.8rem;background:#fffaf3}
+.cta{display:inline-block;margin:1rem 0;padding:.7rem 1.1rem;background:#cfe7b9;color:#211e1b;border:2px solid #211e1b;border-radius:10px;box-shadow:3px 3px 0 #211e1b;text-decoration:none;font-weight:700}
+.st{background:#fffaf3;border:1.5px solid #d9cfc2;border-radius:12px;padding:.4rem 1rem;margin:.8rem 0}
+.st h3 span{display:block;font-size:.75rem;color:#6b6259;font-weight:400}
+.nt{border-left:4px solid #9bc47a;padding-left:.7rem}.nt.warn{border-color:#e6a23c}.nt.key{border-color:#8b7bd8}
+pre{background:#211e1b;color:#f3ede4;padding:.6rem .8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;margin:.5rem 0}th,td{border:1px solid #d9cfc2;padding:.3rem .5rem;text-align:left}
+nav.pn{display:flex;flex-direction:column;gap:.4rem;margin-top:2rem}small{color:#6b6259}
+</style>
+</head>
+<body>
+<main>
+<p class="bc"><a href="../../?lang=pt">Kubernetes Visual</a> / Administração do cluster · <a href="../../en/lesson/extend/" hreflang="en">English version</a></p>
+<h1>Extensões: CRI, CNI, CSI, CRDs e Operators</h1>
+<p class="lede">O Kubernetes é uma plataforma: plugins de runtime, rede e disco, e novos tipos de objeto com seus próprios controladores.</p>
+<p class="chips"><span>12 min</span><span>Intermediário</span><span>10 passos</span></p>
+<a class="cta" href="../../?lang=pt#extend-1">▶ Abrir a lição interativa</a>
+<p><small>Esta é a versão em texto. A lição interativa tem o diagrama animado de cada passo.</small></p>
+<h2>Você vai aprender</h2>
+<ul><li>Conhecer as interfaces CRI, CNI e CSI</li><li>Entender o que é uma CRD</li><li>Entender o padrão Operator</li><li>Instalar e explorar operadores</li></ul>
+<h2>Passo a passo</h2>
+<section class="st"><h3><span>Passo 1 · Contexto</span>Três tomadas padronizadas</h3>
+<p>O kubelet não sabe rodar containers, montar rede nem criar discos sozinho. Ele conversa com plugins por três interfaces padronizadas.</p>
+<p>CRI para o runtime de containers, CNI para a rede dos pods, CSI para o armazenamento. Qualquer plugin que siga a interface encaixa.</p>
+<p class="nt key"><b>Ideia-chave:</b> É como uma tomada: o Kubernetes define o formato, e cada fornecedor faz o seu plugue.</p></section>
+<section class="st"><h3><span>Passo 2 · Conceito</span>CRI: o runtime de containers</h3>
+<p>Container Runtime Interface. O kubelet pede “crie este container” e o runtime faz: containerd ou CRI-O são os mais comuns.</p>
+<p>No node, crictl fala direto com o runtime pela CRI: ps, logs, images, inspect. Útil quando o kubectl não ajuda.</p>
+<p class="nt good"><b>Bom saber:</b> O Docker Engine não fala CRI direto; desde a versão 1.24 o Kubernetes usa containerd ou CRI-O.</p>
+<pre><code>crictl ps</code></pre></section>
+<section class="st"><h3><span>Passo 3 · Conceito</span>CSI: os drivers de disco</h3>
+<p>Container Storage Interface. Cada provedor de armazenamento (EBS na AWS, Persistent Disk no GCP, Ceph…) publica um driver CSI.</p>
+<p>A StorageClass indica o driver no campo provisioner, e ele cria, conecta e expande os discos.</p>
+
+<pre><code>kubectl get csidrivers</code></pre></section>
+<section class="st"><h3><span>Passo 4 · Conceito</span>CNI: a rede, de novo</h3>
+<p>Container Network Interface, que você já viu na lição de rede. Quando um pod nasce, o runtime chama o plugin CNI para dar IP e ligar o pod à rede.</p>
+<p>A configuração fica em /etc/cni/net.d; os binários, em /opt/cni/bin.</p>
+
+<pre><code>ls /etc/cni/net.d</code></pre></section>
+<section class="st"><h3><span>Passo 5 · Conceito</span>CRD: ensinando um tipo novo ao Kubernetes</h3>
+<p>Uma CustomResourceDefinition acrescenta um tipo novo à API, como Database. Depois de aplicada, o API server aceita objetos desse tipo e o kubectl passa a conhecê-los.</p>
+<p>A CRD define o nome, o grupo (como loja.com/v1) e o esquema dos campos.</p>
+
+<pre><code>kubectl apply -f database-crd.yaml</code></pre></section>
+<section class="st"><h3><span>Passo 6 · Conceito</span>Um objeto do tipo novo</h3>
+<p>Agora você cria um Database chamado loja-db com replicas: 3 e storage: 20Gi. Ele fica salvo no etcd como qualquer outro objeto.</p>
+<p>Mas, sozinho, nada acontece: nenhum pod nasce. A CRD só ensinou o formato; falta alguém que saiba agir.</p>
+<p class="nt warn"><b>Atenção:</b> CRD sem controlador é só um formulário guardado.</p>
+<pre><code>kubectl get databases</code></pre></section>
+<section class="st"><h3><span>Passo 7 · Conceito</span>Operator: o especialista automatizado</h3>
+<p>Um Operator é um controlador que vigia objetos do tipo novo e faz o trabalho: vê o loja-db e cria um StatefulSet, Services, PVCs, configura réplicas e backups.</p>
+<p>É o mesmo loop de reconciliação dos controllers nativos, com o conhecimento de um especialista (um DBA, por exemplo) escrito em código.</p>
+<p class="nt key"><b>Ideia-chave:</b> CRD + controlador = Operator. Você declara “quero um banco com 3 réplicas” e ele cuida do resto.</p></section>
+<section class="st"><h3><span>Passo 8 · Conceito</span>Instalando um operador</h3>
+<p>Operadores normalmente vêm em charts do Helm ou manifestos prontos, que instalam as CRDs e o pod do operador juntos.</p>
+<p>Exemplos comuns: cert-manager (certificados TLS), Prometheus Operator (monitoramento), operadores de bancos como CloudNativePG.</p>
+
+<pre><code>helm install cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set crds.enabled=true</code></pre></section>
+<section class="st"><h3><span>Passo 9 · Conceito</span>Explorando CRDs no cluster</h3>
+<p>kubectl get crd lista os tipos novos. kubectl api-resources mostra todos os tipos, nativos e personalizados, com nome curto e grupo.</p>
+<p>kubectl explain também funciona com CRDs que têm esquema: kubectl explain certificate.spec.</p>
+
+<pre><code>kubectl get crd | grep cert-manager</code></pre></section>
+<section class="st"><h3><span>Passo 10 · Resumo</span>Resumo: como o Kubernetes cresce</h3>
+<p>Interfaces padronizadas deixam trocar runtime, rede e disco. CRDs e Operators deixam a própria API crescer.</p>
+
+<table><thead><tr><th>Peça</th><th>Função</th></tr></thead><tbody><tr><td>CRI</td><td>Rodar containers</td></tr><tr><td>CNI</td><td>Rede dos pods</td></tr><tr><td>CSI</td><td>Discos</td></tr><tr><td>CRD</td><td>Tipo novo na API</td></tr><tr><td>Operator</td><td>Controlador do tipo novo</td></tr></tbody></table></section>
+<a class="cta" href="../../?lang=pt#extend-1">▶ Abrir a lição interativa</a>
+<nav class="pn"><a href="../../licao/trouble/" rel="prev">Lição anterior: Troubleshooting de cluster</a><a href="../../licao/rbac/" rel="next">Próxima lição: Segurança e RBAC</a></nav>
+</main>
+</body>
+</html>
