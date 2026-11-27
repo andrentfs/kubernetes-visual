@@ -2,7 +2,7 @@
 COMPOSE ?= docker compose
 DEV = $(COMPOSE) --profile dev run --rm dev
 
-.PHONY: up down build test test-unit test-i18n test-e2e shell serve preview clean
+.PHONY: up down build test test-unit test-i18n test-e2e shell serve preview lighthouse clean
 
 up:          ## Site em http://localhost:8082 (arquivos da pasta, sem cache)
 	$(COMPOSE) up site
@@ -33,6 +33,10 @@ serve: build ## Site servido pelo container de desenvolvimento em http://localho
 
 preview:     ## Imagem fechada, igual à publicada, em http://localhost:8081
 	$(COMPOSE) --profile preview up --build preview
+
+lighthouse: build ## Mede o site (mobile e desktop) com Lighthouse; saída em docs/lighthouse/ (NAME=after)
+	$(COMPOSE) up -d site
+	$(DEV) bash -c 'export CHROME_PATH=$$(ls -d /ms-playwright/chromium-*/chrome-linux*/chrome | head -1); for f in mobile desktop; do P=""; [ $$f = desktop ] && P="--preset=desktop"; npx -y lighthouse@13.6.0 http://site/ $$P --quiet --chrome-flags="--headless=new --no-sandbox" --output=json --output=html --output-path=docs/lighthouse/$(or $(NAME),latest)-$$f; done'
 
 clean:       ## Remove resultados de testes e o volume de node_modules
 	rm -rf test-results

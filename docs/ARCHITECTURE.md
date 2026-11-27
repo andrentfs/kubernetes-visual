@@ -1,0 +1,34 @@
+# Architecture
+
+Static site, no production build, served by GitHub Pages from the root of `main`. Development and tests run in Docker ([ADR-001](adr/ADR-001-docker-first.md)).
+
+```
+index.html ─┬─ css/app.css
+            ├─ data/meta.js        reference Kubernetes version
+            ├─ data/certs.js       CKA/CKAD domains, weights, competencies → lessons
+            ├─ data/scenes.js      window.buildScenes(H): scenes per lesson/step (language-neutral)
+            ├─ i18n/pt.js, en.js   window.TXT.{pt,en}: UI, lessons, captions, labels
+            ├─ js/term/lessons.js  ┐
+            ├─ js/term/files.js    ├─ simulated terminal (data → window.K8STERM_DATA; engine → window.K8STERM)
+            ├─ js/term/engine.js   ┘
+            ├─ js/geometry.js      isometric projection, colours, icons, scene helpers
+            ├─ js/content.js       active language, builds the lesson list L
+            ├─ js/renderer.js      paint(): diff-based SVG rendering, links, packets, camera, anti-overlap
+            └─ js/ui.js            routing (#lesson-step, #cka, #ckad), panels, search, progress, theme, terminal wiring
+```
+
+Classic scripts share top-level declarations, so **the order of `<script>` tags matters** ([ADR-002](adr/ADR-002-file-structure.md)).
+
+## Flow of a step
+
+1. `hashchange` → `show()` reads `#<lesson>-<step>`.
+2. The step's `s()` builds the entities. `paint()` diffs them against what is on screen and animates.
+3. The same scene, built in English, goes to `K8STERM.step()`, which derives a deterministic fake cluster state (pods, nodes, Services, PVCs…) and answers commands.
+
+## State kept in the browser (`localStorage`)
+
+`k8s-lang`, `k8s-theme`, `k8s-done` (lessons completed), `k8s-chk` (CKA/CKAD checklist).
+
+## Quality gates
+
+`make test`: unit tests (`tests/unit`), PT/EN parity (`tests/tools/i18n-parity.mjs`), end-to-end (`tests/e2e`: every step in both languages without console errors or overlapping links, terminal, views, layout). CI runs the same container (`.github/workflows/test.yml`).

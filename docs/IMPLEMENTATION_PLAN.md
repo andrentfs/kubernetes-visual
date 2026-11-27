@@ -1,6 +1,6 @@
 # Kubernetes Visual — Plano de implementação
 
-> Status: **Fase 1 em andamento (local, sem publicar).** Ver “Progresso” abaixo.
+> Status: **Fase 1 concluída (27/11/2026).** Próxima: Fase 2 — Simulações. Ver “Progresso” abaixo.
 > Data da análise: 27/11/2026 · Commit analisado: `7ad7b9f` (branch `main`).
 
 ---
@@ -18,7 +18,9 @@
 | 27/11/2026 | F5 Versão de referência + EndpointSlice | Implementado localmente: `data/meta.js` com **Kubernetes v1.37** (versão das provas CKA/CKAD na página oficial da Linux Foundation, conferida em 27/11/2026), exibida no menu lateral com link da fonte; terminal simula v1.37.0; `kubectl get endpointslices` (com `-l kubernetes.io/service-name=`), `get endpoints` mostra o aviso real de deprecated (v1.33+); textos e comandos das lições trocados para EndpointSlice; exemplo de upgrade do kubeadm passa a 1.35 → 1.36 → 1.37; `node-monitor-grace-period` = 50 s (padrão desde a v1.32, conforme a documentação oficial), com a linha do tempo de “Quando um node cai” recalculada (NotReady em ~50 s, despejo em ~5 min 50 s) |
 | 27/11/2026 | F6 Currículo CKA/CKAD | Conferido no repositório oficial `cncf/curriculum` (commit `f5ab45e`): `CKA_Curriculum_v1.37.pdf` e `CKAD_Curriculum_v1.37.pdf`. Todos os pesos de domínio e as competências batem 1:1 com `data/certs.js`. Fonte e data aparecem nas abas CKA/CKAD; teste unitário fixa os pesos oficiais |
 | 27/11/2026 | F8 SEO básico | `<title>`, description, canonical, Open Graph (com `assets/og-image.png` 1200×630), Twitter Card, JSON-LD `Course` (259 min de conteúdo), `robots.txt` e `sitemap.xml`; testes unitários. Preview no LinkedIn só pode ser validado depois de publicado (LinkedIn Post Inspector) |
-| — | F3 CI | Workflow escrito; precisa de push para rodar no GitHub |
+| 27/11/2026 | F7 Documentação e licença | Licença MIT (código) + CC BY 4.0 (conteúdo), aprovadas pelo autor; README em inglês e `README.pt-BR.md`; CONTRIBUTING, CODE_OF_CONDUCT (Contributor Covenant 2.1), SECURITY, CHANGELOG, ROADMAP; `docs/ARCHITECTURE.md`; guias de lição e de animação; templates de issue e PR |
+| 27/11/2026 | F9 Lighthouse “antes” | Medido (Lighthouse 13.6.0, container): mobile 71/94/74/100, desktop 99/95/74/100 (performance/acessibilidade/boas práticas/SEO). Detalhes e o que é artefato do ambiente local em `docs/lighthouse/README.md`; `make lighthouse` |
+| 27/11/2026 | F3 CI | Enviado ao GitHub junto com a Fase 1 (autorizado pelo autor) |
 
 ## 1. Diagnóstico da arquitetura atual
 
@@ -198,9 +200,9 @@ Complexidade relativa: P (até ~1 dia), M (2–3 dias), G (1 semana), GG (mais d
 | F4 | Refatoração em módulos | Screenshots de todos os passos idênticos antes/depois (diferença < 0,1%); nenhuma URL muda | G | F1 |
 | F5 | Versão de referência + EndpointSlice | Uma constante `K8S_REF` exibida no rodapé; textos e terminal usam EndpointSlice (`get endpointslices`); Endpoints citado como *deprecated* | M | F4 |
 | F6 | Currículo CKA/CKAD reconsultado | `certs.js` com data e link da consulta; pesos e competências conferidos no repositório oficial | P | acesso web |
-| F7 | Docs open source | Arquivos do §14 presentes, com screenshots reais e instruções de execução local | M | ADR-007 |
+| F7 ✅ | Docs open source | Arquivos do §14 presentes, com screenshots reais e instruções de execução local | M | ADR-007 |
 | F8 | SEO básico | Preview correto no LinkedIn Post Inspector; `robots.txt` e `sitemap.xml` válidos | P | — |
-| F9 | Lighthouse antes | Relatórios JSON e HTML reais versionados | P | — |
+| F9 ✅ | Lighthouse antes | Relatórios JSON e HTML reais versionados | P | — |
 | S1 | Motor de simulação | Testes unitários do relógio: velocidade, pausa, voltar para t−1 reproduz o estado exato | G | F4 |
 | S2 | Simulador de falha de node | O usuário derruba e restaura qualquer worker; Lease, Ready, taints, eviction, novo pod, EndpointSlice e scheduler visíveis na linha do tempo; nenhum pod “se move”; tempos reais configuráveis | GG | S1 |
 | S3 | Comparativo de interrupções | Tabela e animação curta para restart/replacement/failure/drain/graceful/eviction/PDB, validadas na documentação oficial | M | S1 |

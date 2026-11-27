@@ -1,0 +1,29 @@
+# Changelog
+
+All notable changes to this project. Format based on [Keep a Changelog](https://keepachangelog.com/); dates are in UTC-3.
+
+## [Unreleased] — Phase 1 (foundation)
+
+### Added
+- Docker-first development: `site` (nginx), `dev` (Playwright/Node) and `preview` containers, `Makefile`, CI workflow ([ADR-001](docs/adr/ADR-001-docker-first.md)).
+- Test suite: unit tests (`node:test`) for the simulated terminal, certification data and SEO; PT/EN parity check; Playwright end-to-end tests over all 236 steps in both languages.
+- Reference Kubernetes version (**v1.37**, the CKA/CKAD exam version on 27 Nov 2026) shown in the sidebar ([`data/meta.js`](data/meta.js)).
+- Terminal: `kubectl get endpointslices`, deprecation warning on `get endpoints`, read-only example YAML files (`ls`, `cat`).
+- SEO: description, canonical, Open Graph image, Twitter Card, Schema.org `Course`, `robots.txt`, `sitemap.xml`.
+- Lighthouse baseline in [`docs/lighthouse/`](docs/lighthouse/README.md).
+- Licenses (MIT for code, CC BY 4.0 for content) and community files.
+
+### Changed
+- Code split by responsibility: `css/`, `js/`, `js/term/`, `data/`, `i18n/` ([ADR-002](docs/adr/ADR-002-file-structure.md)). Rendered output identical for all steps.
+- Lessons use EndpointSlice instead of the deprecated Endpoints API.
+- Node failure timeline uses the current `node-monitor-grace-period` default (50 s).
+- kubeadm upgrade example: 1.35 → 1.36 → 1.37.
+- CKA/CKAD domains and competencies re-checked against `cncf/curriculum` v1.37 (matched 1:1); source shown on the exam pages.
+
+### Fixed
+- Exam box overflowing the page width (Scheduling lesson).
+- CKA/CKAD panel staying visible after returning to “Learn”.
+- Orphan diagram blocks left behind when switching lessons.
+
+## 2026-11-26 — Interactive terminal and node failure
+- Simulated `kubectl` terminal in 10 lessons; new lesson “When a node goes down”; layout fixes for small screens; LinkedIn credit.

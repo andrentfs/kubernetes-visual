@@ -1,64 +1,63 @@
 # Kubernetes Visual
 
-Curso interativo e visual sobre Kubernetes, em português (Brasil) e inglês. Cada conceito é um diagrama isométrico animado que você avança passo a passo, com terminal `kubectl` simulado e trilhas para as provas CKA e CKAD.
+[🇧🇷 Português](README.pt-BR.md) · 🇺🇸 English
 
-**No ar:** https://andrentfs.github.io/kubernetes-visual/
+A free, visual and interactive Kubernetes course in **English and Brazilian Portuguese**. Each concept is an animated isometric diagram you step through, with a simulated `kubectl` terminal and study tracks for the **CKA** and **CKAD** exams.
 
-![Lição “Quando um node cai” servida pelo container de preview](docs/img/preview-docker.png)
+**Live:** https://andrentfs.github.io/kubernetes-visual/
 
-## Desenvolvimento (Docker)
+![“When a node goes down” lesson served by the preview container](docs/img/preview-docker.png)
 
-O desenvolvimento é orientado a Docker ([ADR-001](docs/adr/ADR-001-docker-first.md)): só é preciso ter Docker e `make`.
+## What's inside
+
+- **22 lessons, 236 steps** in 5 modules: fundamentals, running apps, operations, cluster administration, security. Content targets **Kubernetes v1.37**, the CKA/CKAD exam version on 27 Nov 2026 ([`data/meta.js`](data/meta.js)).
+- **Animated diagrams:** controllers creating pods, packets flowing through Services, nodes failing, probes, rollouts…
+- **Simulated terminal** in 10 lessons: `kubectl get/describe/logs/exec/scale/rollout…`, outputs derived from the diagram of each step. It's a deterministic simulation, not a real cluster.
+- **CKA and CKAD pages:** official domains and weights ([`cncf/curriculum`](https://github.com/cncf/curriculum) v1.37), competency → lesson mapping, checklist and exam tips.
+
+## Development (Docker)
+
+Development is Docker-first ([ADR-001](docs/adr/ADR-001-docker-first.md)). You only need Docker (and `make`).
 
 ```bash
-make up        # site em http://localhost:8082 — lê os arquivos da pasta: edite e recarregue
-make test      # testes unitários + paridade PT/EN + E2E (Playwright/Chromium)
-make shell     # terminal dentro do container de desenvolvimento
-make preview   # imagem fechada, igual ao que vai publicado, em http://localhost:8081
-make down      # para tudo
+make up          # site at http://localhost:8082 — serves the folder: edit and reload
+make test        # unit tests + PT/EN parity + end-to-end (Playwright/Chromium)
+make shell       # shell inside the dev container
+make preview     # production-like image at http://localhost:8081
+make lighthouse  # Lighthouse (mobile + desktop) into docs/lighthouse/
+make down        # stop everything
 ```
 
-**No Windows** (sem `make`), use os comandos do Docker Compose diretamente:
+**Windows without `make`:**
 
 ```powershell
 docker compose up site                                    # http://localhost:8082
-docker compose --profile dev run --rm dev npm test        # testes
+docker compose --profile dev run --rm dev npm test        # tests
 docker compose --profile preview up --build preview       # http://localhost:8081
 ```
 
-Também dá para rodar só uma parte: `make test-unit`, `make test-i18n`, `make test-e2e`.
-Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modules`.
+The site also opens straight from disk (`index.html`), no server needed.
 
-| Container | Imagem | Uso |
-|---|---|---|
-| `site` | `nginx:1.27-alpine` | Serve a pasta sem cache (desenvolvimento) |
-| `dev` | `docker/Dockerfile.dev` (base `mcr.microsoft.com/playwright:v1.63.0-noble`) | Testes e ferramentas |
-| `preview` | `Dockerfile` (nginx + arquivos do site) | Conferir antes de publicar |
+## Project layout
 
-### Testes
-
-| Suíte | Onde | O que verifica |
-|---|---|---|
-| Unitários | `tests/unit/` (`node:test`) | Motor do terminal simulado: saídas, flags, pipes, determinismo, arquivos somente leitura |
-| Paridade PT/EN | `tests/tools/i18n-parity.mjs` | Mesmas chaves, lições, passos, campos e legendas nos dois idiomas |
-| E2E | `tests/e2e/` (Playwright) | Todos os passos nos dois idiomas sem erro e sem seta atravessando bloco; terminal; abas CKA/CKAD; idioma; teclado; layout desktop e celular |
-
-## Estrutura
-
-| Caminho | Conteúdo |
+| Path | Content |
 |---|---|
-| `index.html` | Estrutura da página e ordem de carregamento dos scripts |
-| `css/app.css` | Estilos |
-| `data/scenes.js` | Cenas de cada lição (iguais nos dois idiomas) |
-| `data/certs.js` | Domínios e competências CKA/CKAD |
-| `i18n/pt.js`, `i18n/en.js` | Textos |
-| `js/geometry.js` · `content.js` · `renderer.js` · `ui.js` | Motor isométrico e interface ([ADR-002](docs/adr/ADR-002-file-structure.md)) |
-| `js/term/` | Terminal `kubectl` simulado: `lessons.js` (dados por lição), `files.js` (YAMLs), `engine.js` (interpretador) |
+| `index.html` | Page structure and script order |
+| `css/app.css` | Styles |
+| `data/` | `scenes.js` (diagrams per step), `certs.js` (CKA/CKAD), `meta.js` (reference version) |
+| `i18n/` | `pt.js`, `en.js` (all texts) |
+| `js/` | `geometry.js`, `content.js`, `renderer.js`, `ui.js` (engine and UI) |
+| `js/term/` | Simulated terminal: `lessons.js` (data), `files.js` (example YAML), `engine.js` (interpreter) |
+| `tests/` | `unit/`, `e2e/`, `tools/` |
 
-O site também abre direto do disco (`index.html`), sem servidor.
+## Documentation
 
-## Publicação
+- [Architecture](docs/ARCHITECTURE.md) · [ADRs](docs/adr/) · [Implementation plan (PT)](docs/IMPLEMENTATION_PLAN.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
+- [Adding a lesson](docs/guides/NEW_LESSON.md) · [Diagrams and animations](docs/guides/ANIMATIONS.md)
+- [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Security](SECURITY.md)
+- [Lighthouse measurements](docs/lighthouse/README.md)
 
-O GitHub Pages publica a raiz da branch `main`. O site é estático e não tem etapa de build. `package.json`, `tests/`, `docker/` e `Makefile` são só para desenvolvimento.
+## License
 
-Plano de evolução: [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
+Code under [MIT](LICENSE). Educational content (texts, scenes, examples and images) under [CC BY 4.0](LICENSE-CONTENT.md).
+Kubernetes® is a registered trademark of The Linux Foundation. This project is independent and not affiliated with the CNCF or The Linux Foundation.
