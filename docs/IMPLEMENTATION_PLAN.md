@@ -1,6 +1,6 @@
 # Kubernetes Visual — Plano de implementação
 
-> Status (27/11/2026): **Fase 1 concluída e publicada. Trilha CKS completa** (página da prova, dicas e módulo 06, adiantados do item 16 da Fase 5). Próxima: Fase 2 — Simulações, que depende da aprovação do ADR-004. Ver “Progresso” abaixo.
+> Status (27/11/2026): **Fase 1 concluída e publicada. Trilha CKS completa** (página da prova, dicas e módulo 06, adiantados do item 16 da Fase 5). **ADRs 001–007 aceitos e implementados**, incluindo o motor de simulação (S1). Também adiantados da Fase 6: idioma sob demanda (ADR-003) e páginas por lição (C3, ADR-005). Próximo: Fase 2, S2 (simulador de falha de node). Ver “Progresso” abaixo.
 > Legenda do backlog: ✅ feito · 🟡 parcial · sem marca = não iniciado.
 > Data da análise: 27/11/2026 · Commit analisado: `7ad7b9f` (branch `main`).
 
@@ -24,6 +24,10 @@
 | 27/11/2026 | F3 CI | Enviado ao GitHub junto com a Fase 1 (autorizado pelo autor) |
 | 27/11/2026 | Trilha CKS (etapa 1) | Conferido `CKS_Curriculum v1.37.pdf` no `cncf/curriculum` (commit `f5ab45e`): 6 domínios (15/15/10/20/20/20) e 26 competências em `data/certs.js`, com cobertura honesta (4 cobertas, 12 parciais, 10 “em breve”, cada lacuna apontando para uma lição planejada). Aba CKS no topo e terceira aba na caixa “Na prova” em 9 lições. Testes: pesos oficiais da CKS, plano para toda lacuna, paridade de `examS`, E2E. Etapa 2 (módulo “Segurança avançada”, 5 lições) a fazer uma lição por vez com revisão do autor |
 | 27/11/2026 | Trilha CKS (etapa 2) | A pedido do autor, as 5 lições foram feitas juntas: `hardening`, `sistema`, `isolamento`, `supply`, `runtime` (módulo 06, nível Avançado, 52 passos, PT/EN, dicas CKS). Cobertura CKS: 26/26 competências. Caixa “Na prova” passa a aparecer em lições só com dica CKS. Testes novos: lições citadas nos mapas existem, CKS 100% coberta, passos/legendas iguais entre cenas e textos. E2E percorre 288 passos × 2 idiomas sem erro e sem seta atravessando bloco |
+| 27/11/2026 | ADR-006 kubeconform + links | Jobs `manifests` (kubeconform v0.8.0 strict, schema v1.37.0 + CRD da HTTPRoute) e `links` (lychee) no CI; `make manifests`. Os 28 YAMLs foram validados antes contra os mesmos schemas (28/28) e um teste negativo confirmou a recusa de campo inválido |
+| 27/11/2026 | ADR-003 idioma sob demanda | `i18n/labels.js` (rótulos dos dois idiomas) + `js/boot.js` carrega só `pt.js` ou `en.js`; ~67–69 KB gzip a menos na primeira visita; `file://` conferido |
+| 27/11/2026 | ADR-005 páginas por lição | 54 páginas (`licao/`, `en/lesson/`) com metadados próprios e texto completo, sem redirecionar; sitemap com `hreflang`; teste falha se estiverem desatualizadas |
+| 27/11/2026 | ADR-004 motor de simulação (S1) | `js/sim/engine.js` com 13 testes: velocidade 0,5×–10×, pausa, passo, seek e volta exata no tempo. Entra na interface com o S2 |
 
 ## 1. Diagnóstico da arquitetura atual
 
@@ -152,7 +156,7 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 | **ADR-001** ✅ | **Desenvolvimento orientado a Docker; produção estática sem build.** Servir, testar e medir sempre em containers (`make up/test/shell/preview`); imagem `dev` baseada em `mcr.microsoft.com/playwright` com versão fixa; o CI usa a mesma imagem. Detalhes em [`docs/adr/ADR-001-docker-first.md`](adr/ADR-001-docker-first.md) | Ambiente reprodutível (local = CI), contribuidor só precisa de Docker; o GitHub Pages continua sem build | Ferramentas instaladas no host; Vite/Next com build obrigatório |
 | **ADR-002** ✅ | Separar o `index.html` e o `term.js` em arquivos por responsabilidade (`css/`, `data/`, `i18n/`, `js/`, `js/term/`) usando **scripts clássicos** (não módulos ES, que não funcionam em `file://`). Detalhes em [`docs/adr/ADR-002-file-structure.md`](adr/ADR-002-file-structure.md) | Testabilidade e reuso sem perder abertura direta do arquivo nem exigir build | Módulos ES (quebram `file://`); manter o monólito |
 | **ADR-003** ✅ | Carregar o idioma ativo sob demanda. *Implementado com `js/boot.js` (scripts clássicos em ordem, sem `import()`, para manter `file://`). Detalhes em [`docs/adr/ADR-003-lazy-language.md`](adr/ADR-003-lazy-language.md)* | Corta cerca de 150 KB da primeira carga | Bundle por idioma, que exigiria build |
-| **ADR-004** | **Motor de simulação único** (relógio com velocidade, pausa, passo a passo, estados versionados para voltar no tempo), usado por: falha de node, autoscaling, troubleshooting e YAML interativo | Evita quatro implementações paralelas (DRY) | Uma animação ad hoc por simulador |
+| **ADR-004** ✅ | **Motor de simulação único** (relógio com velocidade, pausa, passo a passo, estados versionados para voltar no tempo), usado por: falha de node, autoscaling, troubleshooting e YAML interativo. *Motor implementado e testado em `js/sim/engine.js`; entra na interface com o S2. Detalhes em [`docs/adr/ADR-004-simulation-engine.md`](adr/ADR-004-simulation-engine.md)* | Evita quatro implementações paralelas (DRY) | Uma animação ad hoc por simulador |
 | **ADR-005** ✅ | Manter as rotas hash (compatibilidade) e **gerar páginas estáticas por lição** (`/licao/pods/`, `/en/lesson/pods/`) com metadados próprios, que redirecionam para o hash. Geradas por script no CI e versionadas, para o Pages continuar servindo a raiz | SEO e preview por lição sem quebrar links. *Implementado com uma mudança: as páginas têm o texto da lição e um botão para a versão interativa, sem redirecionar (redirecionar impediria a indexação). Detalhes em [`docs/adr/ADR-005-lesson-pages.md`](adr/ADR-005-lesson-pages.md)* | Trocar para History API, o que quebraria links existentes e exigiria fallback 404 |
 | **ADR-006** ✅ | Validar os YAMLs das lições com `kubeconform` no CI, contra o schema da versão de referência. Detalhes em [`docs/adr/ADR-006-kubeconform.md`](adr/ADR-006-kubeconform.md) | “Não inventar”: os manifestos ficam verificáveis | Revisão manual |
 | **ADR-007** ✅ | Licença: MIT para o código e CC BY 4.0 para o conteúdo. Detalhes em [`docs/adr/ADR-007-license.md`](adr/ADR-007-license.md) | Decisão do autor | Apache-2.0 para o código |
@@ -210,7 +214,7 @@ Complexidade relativa: P (até ~1 dia), M (2–3 dias), G (1 semana), GG (mais d
 | F7 ✅ | Docs open source | Arquivos do §14 presentes, com screenshots reais e instruções de execução local | M | ADR-007 |
 | F8 🟡 | SEO básico | Preview correto no LinkedIn Post Inspector; `robots.txt` e `sitemap.xml` válidos. *Feito: meta, OG, Twitter, JSON-LD, robots e sitemap, com teste unitário. Falta conferir no LinkedIn Post Inspector (precisa da conta do autor).* | P | — |
 | F9 ✅ | Lighthouse antes | Relatórios JSON e HTML reais versionados | P | — |
-| S1 | Motor de simulação | Testes unitários do relógio: velocidade, pausa, voltar para t−1 reproduz o estado exato | G | F4 |
+| S1 ✅ | Motor de simulação | Testes unitários do relógio: velocidade, pausa, voltar para t−1 reproduz o estado exato | G | F4 |
 | S2 | Simulador de falha de node | O usuário derruba e restaura qualquer worker; Lease, Ready, taints, eviction, novo pod, EndpointSlice e scheduler visíveis na linha do tempo; nenhum pod “se move”; tempos reais configuráveis | GG | S1 |
 | S3 | Comparativo de interrupções | Tabela e animação curta para restart/replacement/failure/drain/graceful/eviction/PDB, validadas na documentação oficial | M | S1 |
 | S4 | Rede por pacote | Para cada cenário do §5: IP origem→destino, porta, DNAT/SNAT quando houver, endpoint escolhido; Service/EndpointSlice/NetworkPolicy desenhados como objetos (não como saltos) | GG | S1 |
@@ -286,5 +290,5 @@ Até sua autorização, **nada vai para `main` nem para o GitHub Pages**. Opçõ
 2. ✅ Licença (ADR-007): MIT + CC BY 4.0.
 3. ✅ Preview: servidor local em Docker (`make up`, porta 8082) e prévia privada no Claude.
 4. ✅ Fase 1 autorizada, concluída e publicada.
-5. ✅ ADR-006, ADR-003 e ADR-005 implementados (27/11/2026).
-6. ⏳ Pendente: ADR-004 (necessário para a Fase 2).
+5. ✅ ADR-003, ADR-004 (motor), ADR-005 e ADR-006 implementados (27/11/2026). Todos os ADRs do plano estão aceitos.
+6. ⏳ Próximo: S2, o simulador de falha de node, primeiro uso do motor na interface.

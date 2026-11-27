@@ -19,6 +19,8 @@ index.html ─┬─ css/app.css
                  └─ js/ui.js            routing (#lesson-step, #cka, #ckad, #cks), panels, “On the exam” box (CKA/CKAD/CKS tabs), search, progress, theme, terminal wiring
 ```
 
+`js/sim/engine.js` (`window.K8SSIM`) is the shared simulation clock ([ADR-004](adr/ADR-004-simulation-engine.md)): speed, pause, step, seek and exact rewind. It has no DOM and is not loaded by `index.html` yet; the first simulator will load it.
+
 Classic scripts share top-level declarations, so **the order of `<script>` tags matters** ([ADR-002](adr/ADR-002-file-structure.md)).
 
 ## Flow of a step
