@@ -3,22 +3,24 @@
    with realistic output. Language-neutral output; UI strings in T. */
 (function(){
 'use strict';
-const LESSONS=['pods','workloads','service','probes','nodefail','trouble'];
+const LESSONS=['pods','workloads','config','storage','service','network','netpol','probes','nodefail','trouble'];
 const T={
  pt:{title:'Terminal',sim:'simulado',disc:'Apenas um exemplo simulado para estudo: as respostas são geradas a partir do diagrama deste passo e não vêm de um cluster real. Nomes, IPs, horários e detalhes podem ser diferentes do que você verá no seu cluster.',try:'Experimente:',ph:'digite um comando kubectl e aperte Enter',run:'Rodar no terminal',clear:'limpar',step:'Passo',
   unknownCmd:c=>`# Este terminal simulado não conhece "${c}". Digite help para ver o que dá para rodar.`,
   unknownVerb:v=>`# Dica: o verbo "${v}" não está na simulação. Digite help.`,
   help:`Comandos que este terminal simulado entende:
   kubectl get pods | deploy | rs | svc | endpoints | nodes | ingress
-              ds | sts | jobs | cronjobs | pvc | events | ns | all
-  kubectl describe pod | node | deploy | svc <nome>
+              ds | sts | jobs | cronjobs | cm | secret | pv | pvc | sc
+              netpol | events | ns | all
+  kubectl describe pod | node | deploy | svc | cm | pvc | pv | netpol <nome>
+  kubectl exec <pod> -- env | id | cat <arquivo> | nc | wget | nslookup
   kubectl logs <pod> [--previous] [-c <container>]
   kubectl scale deploy <nome> --replicas=N
   kubectl delete pod <nome>
   kubectl run · create · apply · expose · patch · rollout · set image · top
   opções: -n <ns>  -A  -o wide|yaml|name  -l app=api  -w  --show-labels
           --dry-run=client -o yaml
-  atalhos: k = kubectl · | grep <texto> · | grep -v <texto> · clear · history
+  atalhos: k = kubectl · | grep · | grep -v · | base64 -d · clear · history
   na aula de troubleshooting: systemctl, journalctl e crictl também respondem.
 # A saída é de exemplo, gerada a partir do que o diagrama mostra neste passo.`,
   watch:'# (-w fica observando; aqui a simulação para sozinha)'},
@@ -27,15 +29,17 @@ const T={
   unknownVerb:v=>`# Tip: the verb "${v}" isn't part of the simulation. Type help.`,
   help:`Commands this simulated terminal understands:
   kubectl get pods | deploy | rs | svc | endpoints | nodes | ingress
-              ds | sts | jobs | cronjobs | pvc | events | ns | all
-  kubectl describe pod | node | deploy | svc <name>
+              ds | sts | jobs | cronjobs | cm | secret | pv | pvc | sc
+              netpol | events | ns | all
+  kubectl describe pod | node | deploy | svc | cm | pvc | pv | netpol <name>
+  kubectl exec <pod> -- env | id | cat <file> | nc | wget | nslookup
   kubectl logs <pod> [--previous] [-c <container>]
   kubectl scale deploy <name> --replicas=N
   kubectl delete pod <name>
   kubectl run · create · apply · expose · patch · rollout · set image · top
   flags: -n <ns>  -A  -o wide|yaml|name  -l app=api  -w  --show-labels
          --dry-run=client -o yaml
-  shortcuts: k = kubectl · | grep <text> · | grep -v <text> · clear · history
+  shortcuts: k = kubectl · | grep · | grep -v · | base64 -d · clear · history
   in the troubleshooting lesson: systemctl, journalctl and crictl answer too.
 # Output is an example, generated from what the diagram shows in this step.`,
   watch:'# (-w keeps watching; here the simulation stops by itself)'}
@@ -56,7 +60,7 @@ function ageS(a){const m=/^(\d+)([smhd])$/.exec(a||'');if(!m)return 3600;return 
 
 /* ---------- images / owners ---------- */
 const IMG={api:'loja/api:1.0',web:'nginx:1.27',db:'postgres:16',agent:'fluent/fluent-bit:3.0',relatorio:'busybox:1.36',backup:'busybox:1.36',relatorios:'loja/relatorios:2.3',app:'loja/app:1.4','loja-v1':'loja/loja:1.0','loja-v2':'loja/loja:2.0',log:'busybox:1.36'};
-const NOTPOD=new Set(['kubelet','registry','crictl','etcd','apiserver','sched','init','proxy','adapter','taint']);
+const NOTPOD=new Set(['kubelet','registry','crictl','etcd','apiserver','sched','init','proxy','adapter','taint','cni','kube-proxy','coredns','attacker','root','log','/data','loja/api']);
 function ownerOf(lb){
  if(/^db-\d$/.test(lb))return{kind:'StatefulSet',name:'db',fixed:lb};
  if(/^job(-\d)?$/.test(lb))return{kind:'Job',name:'relatorio'};
@@ -79,6 +83,8 @@ function statusOf(e,bad,nodeDown){
  const r={status:'Running',ready:true,restarts:0,reason:'',badge:b};
  const t=b;
  if(/Ready: False|tolerationSeconds|^300 s/.test(t))return{...r,ready:false,reason:'nodeNR'};
+ if(/RWO: busy/.test(t))return{...r,status:'ContainerCreating',ready:false,phase:'Pending',reason:'multiattach',age:'40s'};
+ if(/^empty$|data lost/.test(t)&&e.st!=='dead')return{...r,reason:'emptydb',age:'20s'};
  if(/Multi-Attach/.test(t))return{...r,status:'ContainerCreating',ready:false,phase:'Pending',reason:'multiattach',age:'40s'};
  if(/Completed/.test(t))return{...r,status:'Completed',ready:false,phase:'Succeeded'};
  if(/OOMKilled|exit 137/.test(t))return{...r,status:/exit 137/.test(t)?'CrashLoopBackOff':'OOMKilled',ready:false,restarts:/exit 137/.test(t)?5:1,reason:'OOMKilled'};
@@ -97,7 +103,7 @@ function statusOf(e,bad,nodeDown){
  if(/Running/.test(t))return r;
  if(e.st==='dead')return nodeDown?{...r,status:'Terminating',ready:false,reason:'node'}:{...r,status:'Error',ready:false,reason:'error',phase:'Failed'};
  if(e.st==='pend')return{...r,status:'Pending',ready:false,phase:'Pending',unsched:true,reason:'pending'};
- if(e.c==='green')return{...r,status:'ContainerCreating',ready:false,phase:'Pending',age:'4s'};
+ if(e.c==='green')return{...r,age:'20s'};
  return r;
 }
 
@@ -111,6 +117,7 @@ const API_LOGS=(t)=>[
  `${t(22)} INFO  GET /api/produtos 200 18ms`,
  `${t(12)} INFO  POST /api/pedidos 201 42ms`,
  `${t(4)} INFO  GET /healthz 200 1ms`];
+const NP=(ns,name,sel,ing,eg,types)=>({ns,name,sel,ing:ing||(types.includes('Ingress')?'Allowing ingress traffic:\n  <none> (Selected pods are isolated for ingress connectivity)':null),eg,types});
 const OV={
  pods:{
   1:{set:[{name:'api',eid:['pd','ca'],node:'node-2',ip:'10.1.0.12',age:'15s',owner:null,lb:'api'}],
@@ -144,10 +151,63 @@ const OV={
   8:{out:[[/^kubectl describe pod relatorios$/,'@describe:relatorios-6d5f8b7c9-m2xkp']]},
   10:{pods:{db:{status:'Error',ready:false,reason:'error',phase:'Failed'},p2:{status:'CrashLoopBackOff',ready:false,restarts:4,reason:'crash',probeDb:true},p0:{probeDb:true},p1b:{probeDb:true}}},
  },
+ config:{
+  all:{uid:1000},
+  1:{env:{DB_HOST:'prod-db',LOG_LEVEL:'debug'},chips:['kubectl exec api -- env','kubectl get cm']},
+  2:{chips:['kubectl create configmap loja-config --from-literal=DB_HOST=db','kubectl get cm','kubectl describe cm loja-config']},
+  3:{files:{'/etc/config/DB_HOST':'db','/etc/config/LOG_LEVEL':'info'},chips:['kubectl exec $E:a0 -- env','kubectl exec $E:a1 -- ls /etc/config','kubectl exec $E:a1 -- cat /etc/config/DB_HOST']},
+  4:{cmData:{DB_HOST:'db-v2',LOG_LEVEL:'info'},env:{DB_HOST:'db'},files:{'/etc/config/DB_HOST':'db-v2','/etc/config/LOG_LEVEL':'info'},chips:['kubectl get cm loja-config -o yaml','kubectl exec $E:a0 -- env','kubectl exec $E:a1 -- cat /etc/config/DB_HOST','kubectl rollout restart deployment/api']},
+  5:{chips:['kubectl create secret generic db-cred --from-literal=password=s3nh4','kubectl get secret','kubectl describe secret db-cred',"kubectl get secret db-cred -o jsonpath='{.data.password}' | base64 -d"]},
+  6:{chips:['kubectl create secret tls loja-tls --cert=tls.crt --key=tls.key','kubectl get secret','kubectl create secret docker-registry regcred --docker-server=registry.loja.com --docker-username=loja --docker-password=s3nh4']},
+  7:{uid:0,chips:['kubectl exec $E:a0 -- id','kubectl exec $E:a0 -- whoami','kubectl describe pod $E:a0']},
+  8:{chips:['kubectl exec $E:a0 -- id','kubectl exec $E:a1 -- id']},
+  9:{chips:['kubectl exec $E:a0 -- id','kubectl describe pod $E:a1']},
+  10:{nsList:[['loja','kubernetes.io/metadata.name=loja,pod-security.kubernetes.io/enforce=restricted']],out:[[/^kubectl run root/,'Error from server (Forbidden): pods "root" is forbidden: violates PodSecurity "restricted:latest": allowPrivilegeEscalation != false (container "root" must set securityContext.allowPrivilegeEscalation=false), unrestricted capabilities (container "root" must set securityContext.capabilities.drop=["ALL"]), runAsNonRoot != true (pod or container "root" must set securityContext.runAsNonRoot=true), seccompProfile (pod or container "root" must set securityContext.seccompProfile.type to "RuntimeDefault" or "Localhost")']],chips:['kubectl label ns loja pod-security.kubernetes.io/enforce=restricted','kubectl run root --image=nginx -n loja','kubectl get ns loja --show-labels']},
+ },
+ storage:{
+  all:{pvName:'pv-dados'},
+  1:{chips:['kubectl get pods','kubectl logs $E:db2','kubectl get pvc']},
+  2:{pods:{w:{containers:['web','log']}},chips:['kubectl get pods -o wide','kubectl describe pod $E:db','kubectl logs $E:w -c log']},
+  3:{chips:['kubectl get pods -o wide','kubectl logs $E:db']},
+  4:{chips:['kubectl get pv','kubectl describe pv pv-dados','kubectl get pvc']},
+  5:{chips:['kubectl get pvc','kubectl get pv','kubectl describe pvc dados']},
+  6:{pods:{db:{claim:'dados'}},chips:['kubectl describe pod $E:db','kubectl describe pvc dados','kubectl get pv']},
+  7:{pods:{db:{claim:'dados'},db2:{claim:'dados'}},chips:['kubectl get pods -o wide','kubectl describe pod $E:db2','kubectl get pv']},
+  8:{chips:['kubectl get storageclass','kubectl get pvc','kubectl describe pvc dados']},
+  9:{pods:{db:{claim:'dados'}},chips:['kubectl describe sc standard','kubectl get pvc','kubectl describe pv pv-dados']},
+  10:{reclaim:'Retain',out:[[/^kubectl patch pv pv-dados/,'persistentvolume/pv-dados patched']],chips:['kubectl get pv','kubectl get pvc',`kubectl patch pv pv-dados -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'`]},
+  11:{pods:{db:{claim:'dados'}},out:[[/^kubectl edit pvc/,'persistentvolumeclaim/dados edited']],chips:['kubectl get pvc','kubectl get sc',`kubectl patch pvc dados -p '{"spec":{"resources":{"requests":{"storage":"20Gi"}}}}'`]},
+  12:{pods:{db:{claim:'dados'}}},
+ },
+ network:{
+  all:{svc:{sv:{name:'api'}}},
+  1:{chips:['kubectl get pods -o wide','kubectl exec $E:w0 -- wget -qO- -T 2 10.244.1.8:8080']},
+  2:{chips:['kubectl get pods -n kube-system -o wide','kubectl get ds -n kube-system','kubectl get nodes -o wide']},
+  3:{chips:['kubectl get svc','kubectl get endpoints api','kubectl get pods -n kube-system -l k8s-app=kube-proxy']},
+  4:{chips:['kubectl expose deploy api --port=80 --target-port=8080','kubectl get svc api','kubectl exec $E:w0 -- wget -qO- -T 2 api']},
+  5:{chips:['kubectl expose deploy api --type=NodePort --port=80','kubectl get svc api','curl http://192.168.1.11:30080']},
+  6:{chips:['kubectl get svc api','kubectl describe svc api']},
+  7:{svc:{sv:{name:'db',selector:{app:'db'},port:'5432/TCP',target:5432}},chips:['kubectl get svc db','kubectl get endpoints db','kubectl run t --image=busybox --rm -it -- nslookup db']},
+  8:{chips:['kubectl run t --image=busybox --rm -it -- nslookup api.loja','kubectl get svc -n kube-system','kubectl exec $E:w0 -- cat /etc/resolv.conf']},
+  9:{dnsDown:true,chips:['kubectl -n kube-system logs -l k8s-app=kube-dns','kubectl get pods -n kube-system -l k8s-app=kube-dns','kubectl run t --image=busybox --rm -it -- nslookup api.loja']},
+  10:{chips:['kubectl get gatewayclass','kubectl get gateway','kubectl get httproute']},
+ },
+ netpol:{
+  all:{names:{x:'hacker'},svcAdd:[{name:'db',ns:'dados',selector:{app:'db'},port:'5432/TCP',target:5432}],nsList:[['loja','kubernetes.io/metadata.name=loja'],['teste','kubernetes.io/metadata.name=teste'],['dados','kubernetes.io/metadata.name=dados']],chips:['kubectl get pods -A -o wide','kubectl get netpol -A','kubectl exec web -n loja -- nc -zv -w 2 db.dados 5432','kubectl exec hacker -n teste -- nc -zv -w 2 db.dados 5432']},
+  1:{},2:{chips:['kubectl get pods -A -o wide','kubectl get netpol -A','kubectl exec web -n loja -- nc -zv -w 2 db.dados 5432']},
+  3:{netpols:[NP('dados','deny-all','',null,null,'Ingress')],reach:{web:'timeout',hacker:'timeout'}},
+  4:{netpols:[NP('dados','deny-all','',null,null,'Ingress'),NP('dados','allow-web','app=db','Allowing ingress traffic:\n  To Port: <any> (traffic allowed to all ports)\n  From:\n    NamespaceSelector: kubernetes.io/metadata.name=loja\n    PodSelector: app=web',null,'Ingress')],reach:{hacker:'timeout'}},
+  5:{netpols:[NP('dados','deny-all','',null,null,'Ingress'),NP('dados','allow-loja','app=db','Allowing ingress traffic:\n  To Port: <any> (traffic allowed to all ports)\n  From:\n    NamespaceSelector: kubernetes.io/metadata.name=loja',null,'Ingress')],reach:{hacker:'timeout'}},
+  6:{netpols:[NP('dados','deny-all','',null,null,'Ingress'),NP('dados','allow-loja','app=db','Allowing ingress traffic:\n  To Port: 5432/TCP\n  From:\n    NamespaceSelector: kubernetes.io/metadata.name=loja',null,'Ingress')],reach:{hacker:'timeout'},reachPort:5432,chips:['kubectl describe netpol allow-loja -n dados','kubectl exec web -n loja -- nc -zv -w 2 db.dados 5432','kubectl exec web -n loja -- nc -zv -w 2 db.dados 22']},
+  7:{names:{x:'web-6f7c9d5b8-qzt2k'},netpols:[NP('dados','allow-web','app=db','Allowing ingress traffic:\n  To Port: <any> (traffic allowed to all ports)\n  From:\n    NamespaceSelector: kubernetes.io/metadata.name=loja\n  ----------\n  To Port: <any> (traffic allowed to all ports)\n  From:\n    NamespaceSelector: <none>\n    PodSelector: app=web',null,'Ingress')],chips:['kubectl describe netpol allow-web -n dados','kubectl exec web-6f7c9d5b8-qzt2k -n teste -- nc -zv -w 2 db.dados 5432','kubectl get pods -A --show-labels']},
+  8:{netpols:[NP('dados','allow-loja','app=db','Allowing ingress traffic:\n  To Port: 5432/TCP\n  From:\n    NamespaceSelector: kubernetes.io/metadata.name=loja',null,'Ingress'),NP('loja','deny-egress','',null,'Allowing egress traffic:\n  <none> (Selected pods are isolated for egress connectivity)','Egress')],reach:{web:'dns',hacker:'timeout'},chips:['kubectl get netpol -A','kubectl exec web -n loja -- nc -zv -w 2 db.dados 5432','kubectl exec web -n loja -- nslookup db.dados']},
+  9:{netpols:[NP('dados','allow-loja','app=db','Allowing ingress traffic:\n  To Port: 5432/TCP\n  From:\n    NamespaceSelector: kubernetes.io/metadata.name=loja',null,'Ingress'),NP('loja','deny-egress','',null,'Allowing egress traffic:\n  <none> (Selected pods are isolated for egress connectivity)','Egress'),NP('loja','allow-dns-db','',null,'Allowing egress traffic:\n  To Port: 53/UDP\n  To Port: 53/TCP\n  To:\n    NamespaceSelector: kubernetes.io/metadata.name=kube-system\n    PodSelector: k8s-app=kube-dns\n  ----------\n  To Port: 5432/TCP\n  To:\n    NamespaceSelector: kubernetes.io/metadata.name=dados','Egress')],reach:{hacker:'timeout'},chips:['kubectl exec web -n loja -- nc -zv -w 2 db.dados 5432','kubectl describe netpol allow-dns-db -n loja','kubectl get netpol -A']},
+  10:{netpols:[NP('dados','deny-all','',null,null,'Ingress'),NP('dados','allow-loja','app=db','Allowing ingress traffic:\n  To Port: 5432/TCP\n  From:\n    NamespaceSelector: kubernetes.io/metadata.name=loja',null,'Ingress'),NP('loja','deny-egress','',null,'Allowing egress traffic:\n  <none> (Selected pods are isolated for egress connectivity)','Egress'),NP('loja','allow-dns-db','',null,'Allowing egress traffic:\n  To Port: 53/UDP, 53/TCP (kube-dns)\n  ----------\n  To Port: 5432/TCP (ns dados)','Egress')],reach:{hacker:'timeout'}},
+ },
  nodefail:{
   all:{stsReplicas:1,svcAdd:[{name:'api',selector:{app:'api'}},{name:'db',selector:{app:'db'},port:'5432/TCP',target:5432,ip:'None'}],pods:{a3:{age:'5m'},db1:{age:'3m'}}},
   1:{chips:['kubectl get nodes','kubectl get leases -n kube-node-lease','kubectl get pods -o wide']},
-  6:{pods:{a3:{age:'4s'}}},
+  6:{pods:{a3:{age:'4s',status:'ContainerCreating',ready:false,phase:'Pending'}}},
   2:{nodeReady:{'node-3':true},chips:['kubectl get nodes','kubectl get pods -o wide']},
   3:{chips:['kubectl get nodes','kubectl get pods -o wide','kubectl get endpoints','kubectl describe node node-3']},
   5:{chips:['kubectl describe pod $A2','kubectl get pods -o wide']},
@@ -184,13 +244,14 @@ function derive(c){
  let pods=[];
  if(so.set){pods=clone(so.set).map(p=>({ns:'default',restarts:0,ready:true,status:'Running',age:'2d',containers:[p.lb],owner:p.owner===undefined?ownerOf(p.lb):p.owner,ip:p.ip||ipFor(p.name,p.node),...p}))}
  else E.filter(e=>e.pod&&!NOTPOD.has(e.lb)&&!/^data-\d$/.test(e.lb||'')).forEach(e=>{
-  const host=c.hostOf(e,slabs),node=nodeOfSlab(host)||'node-1',nd=nodes.find(n=>n.name===node);
+  const host=c.hostOf(e,slabs),nsm=host&&/^ns: (\S+)/.exec(host.lb||''),node=nodeOfSlab(host)||(nsm?'node-'+(slabs.indexOf(host)+1):'node-1'),nd=nodes.find(n=>n.name===node);
   const st=statusOf(e,0,nd&&!nd.ready);
   if(so.skipPend&&e.st==='pend'&&!st.badge)return;
   const o=ownerOf(e.lb),name=names[e.id]||podName(o,e.id,c.lesson);
   const ipm=/(\d+\.\d+\.\d+\.\d+)/.exec(st.badge||'');
-  const p={name,eid:[e.id],lb:e.lb,ns:'default',node:st.unsched?'<none>':node,ip:st.unsched?'<none>':(ipm?ipm[1]:ipFor(e.id+c.lesson,node)),owner:o,containers:[o.kind==='Deployment'?o.name.replace(/-v\d$/,''):o.name.replace(/-\d+$/,'')],age:st.age||'2d',...st};
+  const p={name,eid:[e.id],lb:e.lb,ns:nsm?nsm[1]:'default',node:st.unsched?'<none>':node,ip:st.unsched?'<none>':(ipm?ipm[1]:ipFor(e.id+c.lesson,node)),owner:o,containers:[o.kind==='Deployment'?o.name.replace(/-v\d$/,''):o.name.replace(/-\d+$/,'')],age:st.age||'2d',...st};
   if(o.labels)p.labels=o.labels;
+  {const cm=/claimName: (\S+)/.exec(st.badge||'');if(cm)p.claim=cm[1]}
   if(imgs[e.id])p.image=imgs[e.id];
   Object.assign(p,pp[e.id]||{});
   pods.push(p)});
@@ -205,19 +266,34 @@ function derive(c){
  E.filter(e=>e.lb==='Service').forEach(e=>{const b=(e.b||[]).filter(x=>x!=='bad'&&x!=='ok').join(' ');const o=svO[e.id]||{};
   const name=o.name||(e.id==='ws'?'web':/^[a-z][a-z-]*$/.test(b)?b:'api');
   let sel=o.selector;if(!sel){const m=/(?:selector:\s*)?(app|version)=(\S+)/.exec(b);sel=m?(m[1]==='version'?{app:'loja',version:m[2]}:{app:m[2]}):{app:name}}
-  if(!svcs.some(s=>s.name===name))svcs.push({name,eid:e.id,ip:'10.96.'+hn(name,200)+'.'+(10+hn(name+'x',200)),port:'80/TCP',target:name==='web'?80:8080,selector:sel,type:'ClusterIP',age:'5d'})});
- (so.svcAdd||[]).forEach(x=>{if(!svcs.some(v=>v.name===x.name))svcs.push({ip:'10.96.'+hn(x.name,200)+'.'+(10+hn(x.name+'x',200)),port:'80/TCP',target:8080,type:'ClusterIP',age:'5d',...x})});
+  const ipb=/(10\.96\.\d+\.\d+)/.exec(b);const headless=/clusterIP: None/.test(b);
+  if(!svcs.some(s=>s.name===name))svcs.push({name,eid:e.id,ns:o.ns||'default',ip:headless?'None':ipb?ipb[1]:'10.96.'+hn(name,200)+'.'+(10+hn(name+'x',200)),port:o.port||'80/TCP',target:o.target||(name==='web'?80:name==='db'?5432:8080),selector:sel,type:'ClusterIP',age:'5d'})});
+ if(slabs.some(x=>/:30080/.test(x.lb||''))){const a=svcs.find(x=>x.name==='api');if(a){a.type='NodePort';a.port='80:30080/TCP'}else svcs.push({name:'api',ns:'default',ip:'10.96.44.120',port:'80:30080/TCP',target:8080,selector:{app:'api'},type:'NodePort',age:'1m'})}
+ E.filter(e=>e.lb==='LoadBalancer').forEach(e=>{const a=svcs.find(x=>x.name==='api');const o={type:'LoadBalancer',port:'80:31480/TCP',ext:'203.0.113.10',eid:e.id};if(a)Object.assign(a,o);else svcs.push({name:'api',ns:'default',ip:'10.96.44.120',target:8080,selector:{app:'api'},age:'1m',...o})});
+(so.svcAdd||[]).forEach(x=>{if(!svcs.some(v=>v.name===x.name))svcs.push({ns:'default',ip:'10.96.'+hn(x.name,200)+'.'+(10+hn(x.name+'x',200)),port:'80/TCP',target:8080,type:'ClusterIP',age:'5d',...x})});
  // ingress
  const ings=E.filter(e=>e.lb==='Ingress').map(e=>({name:'loja',eid:e.id,host:'loja.com',tls:/https/.test((e.b||[]).join()),rules:svcs.filter(s=>s.selector).map(s=>({path:s.name==='web'?'/':'/'+s.name,svc:s.name}))}));
  // pvcs
  const pvcs=E.filter(e=>/^data-\d$/.test(e.lb||'')).map(e=>({name:'data-db-'+e.lb.slice(-1),eid:e.id,vol:'pvc-'+hs(e.id+c.lesson,8)+'-'+hs(e.id,4)+'-'+hs(e.id+'a',4)}));
+ const lbE=l=>E.filter(e=>e.lb===l),bd=e=>(e.b||[]).filter(x=>x!=='bad'&&x!=='ok').join(' ');
+ pvcs.forEach(x=>Object.assign(x,{status:'Bound',cap:'1Gi',mode:'RWO',sc:'standard'}));
+ const pvE=lbE('PV')[0],pvcE=lbE('PVC')[0],scE=lbE('StorageClass')[0],all=E.map(bd).join(' ');
+ const size=/20Gi/.test(all)?'20Gi':'10Gi';let pvs=null;
+ const pvcSt=pvcE&&pvcE.st!=='dead'?(/Pending/.test(bd(pvcE))?'Pending':'Bound'):null;
+ const pvName=so.pvName||'pv-dados';
+ if(pvE&&pvcSt!=='Pending'){const t=bd(pvE);const stt=/Released/.test(t)?'Released':(/Bound/.test(t)||pvcSt==='Bound')?'Bound':'Available';pvs=[{name:pvName,eid:pvE.id,cap:size,mode:/RWX/.test(t)?'RWX':'RWO',reclaim:so.reclaim||(scE?'Delete':'Retain'),status:stt,claim:stt==='Available'?'':'default/dados',sc:scE?'standard':'manual',zone:/zona-b/.test(t)?'zona-b':null}]}
+ if(pvcSt)pvcs.push({name:'dados',eid:pvcE.id,status:pvcSt,vol:pvcSt==='Bound'?pvName:'',cap:pvcSt==='Bound'?size:'',mode:pvcSt==='Bound'?'RWO':'',sc:scE?'standard':'manual',wffc:scE&&/WaitForFirstConsumer/.test(bd(scE))});
+ const scs=scE?[{name:'standard',eid:scE.id,prov:'ebs.csi.aws.com',reclaim:'Delete',bind:/WaitForFirstConsumer/.test(all)?'WaitForFirstConsumer':'Immediate',exp:/allowVolumeExpansion/.test(all)||c.step>=10}]:[];
+ const cms=lbE('ConfigMap').map(e=>({name:'loja-config',eid:e.id,data:so.cmData||{DB_HOST:'db',LOG_LEVEL:'info'}}));
+ const secrets=lbE('Secret').map(e=>/docker-registry/.test(bd(e))?{name:'regcred',eid:e.id,type:'kubernetes.io/dockerconfigjson',data:{'.dockerconfigjson':'eyJhdXRocyI6eyJyZWdpc3RyeS5sb2phLmNvbSI6eyJ1c2VybmFtZSI6ImxvamEifX19'}}:{name:'db-cred',eid:e.id,type:'Opaque',data:{password:'czNuaDQ=',username:'bG9qYQ=='}});
+ const gw={gc:lbE('GatewayClass')[0],gw:lbE('Gateway')[0],hr:lbE('HTTPRoute')[0]};
  // control plane extras
  const has=l=>E.some(e=>e.lb===l);
- return{lesson:c.lesson,step:c.step,nodes,pods,deps,svcs,ings,pvcs,so,
+ return{lesson:c.lesson,step:c.step,nodes,pods,deps,svcs,ings,pvcs,pvs,scs,cms,secrets,gw,netpols:so.netpols||[],so,
   ds:has('DaemonSet')||pods.some(p=>p.owner?.kind==='DaemonSet'),sts:has('StatefulSet')||pods.some(p=>p.owner?.kind==='StatefulSet'),
   job:E.find(e=>e.lb==='Job'),cron:has('CronJob')};
 }
-function ipFor(seed,node){const n=(/node-(\d)/.exec(node||'')||[0,0])[1];return`10.1.${n}.${10+hn(seed,230)}`}
+function ipFor(seed,node){const n=+((/node-(\d)/.exec(node||'')||[0,1])[1]);return`10.244.${Math.max(0,n-1)}.${10+hn(seed,230)}`}
 
 /* ---------- selectors / flags ---------- */
 function parseArgs(argv){const f={ns:null,all:false,o:null,l:null,w:false,prev:false,c:null,labels:false,dry:false,rest:[],kv:{}};
@@ -237,30 +313,30 @@ function parseArgs(argv){const f={ns:null,all:false,o:null,l:null,w:false,prev:f
   else f.rest.push(a)}
  return f}
 function matchSel(labels,sel){if(!sel)return true;return sel.split(',').every(t=>{const[k,v]=t.split('=');return labels&&labels[k]===v})}
-const RT={po:'pods',pod:'pods',pods:'pods',deploy:'deployments',deployment:'deployments',deployments:'deployments',rs:'replicasets',replicaset:'replicasets',replicasets:'replicasets',svc:'services',service:'services',services:'services',ep:'endpoints',endpoints:'endpoints',no:'nodes',node:'nodes',nodes:'nodes',ing:'ingress',ingress:'ingress',ingresses:'ingress',ds:'daemonsets',daemonset:'daemonsets',daemonsets:'daemonsets',sts:'statefulsets',statefulset:'statefulsets',statefulsets:'statefulsets',job:'jobs',jobs:'jobs',cj:'cronjobs',cronjob:'cronjobs',cronjobs:'cronjobs',pvc:'pvc',persistentvolumeclaim:'pvc',persistentvolumeclaims:'pvc',ev:'events',event:'events',events:'events',ns:'namespaces',namespace:'namespaces',namespaces:'namespaces',lease:'leases',leases:'leases',all:'all',pv:'pv',persistentvolume:'pv',persistentvolumes:'pv'};
+const RT={po:'pods',pod:'pods',pods:'pods',deploy:'deployments',deployment:'deployments',deployments:'deployments',rs:'replicasets',replicaset:'replicasets',replicasets:'replicasets',svc:'services',service:'services',services:'services',ep:'endpoints',endpoints:'endpoints',no:'nodes',node:'nodes',nodes:'nodes',ing:'ingress',ingress:'ingress',ingresses:'ingress',ds:'daemonsets',daemonset:'daemonsets',daemonsets:'daemonsets',sts:'statefulsets',statefulset:'statefulsets',statefulsets:'statefulsets',job:'jobs',jobs:'jobs',cj:'cronjobs',cronjob:'cronjobs',cronjobs:'cronjobs',pvc:'pvc',persistentvolumeclaim:'pvc',persistentvolumeclaims:'pvc',ev:'events',event:'events',events:'events',ns:'namespaces',namespace:'namespaces',namespaces:'namespaces',lease:'leases',leases:'leases',all:'all',pv:'pv',persistentvolume:'pv',persistentvolumes:'pv',sc:'storageclasses',storageclass:'storageclasses',storageclasses:'storageclasses',cm:'configmaps',configmap:'configmaps',configmaps:'configmaps',secret:'secrets',secrets:'secrets',netpol:'networkpolicies',networkpolicy:'networkpolicies',networkpolicies:'networkpolicies',gateway:'gateways',gateways:'gateways',gtw:'gateways',gatewayclass:'gatewayclasses',gatewayclasses:'gatewayclasses',gc:'gatewayclasses',httproute:'httproutes',httproutes:'httproutes'};
 
 /* ---------- system pods ---------- */
 function sysPods(s){const so=s.so;const L=[
- ['coredns-76f75df574-8xk2p','1/1','Running',0,'30d','10.1.0.2','controlplane'],
- ['coredns-76f75df574-tq9vz','1/1','Running',0,'30d','10.1.0.3','controlplane'],
+ ['coredns-76f75df574-8xk2p',so.dnsDown?'0/1':'1/1',so.dnsDown?'CrashLoopBackOff':'Running',so.dnsDown?6:0,'30d','10.1.0.2','controlplane'],
+ ['coredns-76f75df574-tq9vz',so.dnsDown?'0/1':'1/1',so.dnsDown?'CrashLoopBackOff':'Running',so.dnsDown?6:0,'30d','10.1.0.3','controlplane'],
  ['etcd-controlplane','1/1','Running',0,'30d','192.168.1.10','controlplane'],
  ['kube-apiserver-controlplane',so.apiExited?'0/1':'1/1',so.apiExited?'CrashLoopBackOff':'Running',so.apiExited?7:0,'30d','192.168.1.10','controlplane'],
  ['kube-controller-manager-controlplane','1/1','Running',0,'30d','192.168.1.10','controlplane'],
  ['kube-scheduler-controlplane',so.schedDown?'0/1':'1/1',so.schedDown?'CrashLoopBackOff':'Running',so.schedDown?9:0,'30d','192.168.1.10','controlplane']];
  s.nodes.forEach(n=>L.push(['kube-proxy-'+hs(n.name,5),n.ready?'1/1':'1/1','Running',0,'30d',n.ip,n.name]));
  s.nodes.forEach(n=>L.push(['calico-node-'+hs(n.name+'c',5),n.ready?'1/1':'0/1','Running',0,'30d',n.ip,n.name]));
- return L.map(r=>({ns:'kube-system',name:r[0],readyS:r[1],status:r[2],restarts:r[3],age:r[4],ip:r[5],node:r[6],sys:1}))}
+ return L.map(r=>({ns:'kube-system',name:r[0],readyS:r[1],status:r[2],restarts:r[3],age:r[4],ip:r[5],node:r[6],sys:1,labels:{'k8s-app':/^coredns/.test(r[0])?'kube-dns':r[0].split('-').slice(0,2).join('-')}}))}
 
 /* ---------- get ---------- */
 function readyS(p){if(p.readyS)return p.readyS;const n=p.containers.length;const r=p.ready?n:(p.status==='Running'&&p.reason==='readiness'||p.reason==='startup'||p.reason==='loading')?Math.max(0,n-1):0;return`${p.status==='Completed'?0:r}/${n}`}
 function restartsS(p){return p.restarts?`${p.restarts} (${p.restarts>3?'2m':'45s'} ago)`:'0'}
 function getPods(s,f){
  let list=s.pods.filter(p=>!p.gone);
- const ns=f.ns||'default';
- if(f.all)list=[...sysPods(s),...list];else if(ns==='kube-system')list=sysPods(s);else if(ns!=='default')list=[];
+ const ns=f.ns||'default';const others=[...new Set(list.filter(p=>p.ns!=='default').map(p=>p.ns))];
+ if(f.all)list=[...sysPods(s),...list];else if(ns==='kube-system')list=sysPods(s);else list=list.filter(p=>p.ns===ns);
  if(f.l)list=list.filter(p=>matchSel(p.labels,f.l));
  if(f.rest[2]){const n=f.rest[2];const p=list.find(x=>x.name===n);if(!p)return err404('pods',n);list=[p]}
- if(!list.length)return{txt:`No resources found in ${f.all?'any':ns} namespace.`};
+ if(!list.length)return{txt:`No resources found in ${f.all?'any':ns} namespace.`+(!f.ns&&!f.all&&others.length?`\n# ${LANG==='pt'?'Dica: os pods desta lição estão nos namespaces '+others.join(', ')+'. Use -A ou -n '+others[0]+'.':'Tip: this lesson’s pods are in the '+others.join(', ')+' namespaces. Use -A or -n '+others[0]+'.'}`:'')};
  if(f.o==='name')return{txt:list.map(p=>'pod/'+p.name).join('\n'),hi:list};
  if(f.o==='yaml'||f.o==='json')return{txt:list.map(p=>podYaml(s,p)).join('\n---\n'),hi:list};
  const wide=f.o==='wide';
@@ -278,11 +354,11 @@ function getDeps(s,f,one){let d=Object.values(s.deps);if((f.ns||'default')!=='de
 function getRS(s,f){const d=Object.values(s.deps);if(!d.length)return{txt:'No resources found in default namespace.'};
  return{txt:table(d.map(x=>[`${x.name}-${hs(x.name+s.lesson,9)}`,x.replicas,x.replicas,x.ready,x.age||'2d']),['NAME','DESIRED','CURRENT','READY','AGE'])}}
 function epsOf(s,sv){return s.pods.filter(p=>!p.gone&&p.status==='Running'&&p.ready&&matchSel(p.labels,Object.entries(sv.selector||{}).map(([k,v])=>k+'='+v).join(',')))}
-function getSvc(s,f,one){let L=s.svcs;if((f.ns||'default')!=='default'&&!f.all)L=f.ns==='kube-system'?[{name:'kube-dns',ip:'10.96.0.10',port:'53/UDP,53/TCP,9153/TCP',type:'ClusterIP',age:'30d',selector:{'k8s-app':'kube-dns'}}]:[];
+function getSvc(s,f,one){let L=f.all?s.svcs:s.svcs.filter(x=>(x.ns||'default')===(f.ns||'default'));if((f.ns||'default')!=='default'&&!f.all&&f.ns==='kube-system')L=f.ns==='kube-system'?[{name:'kube-dns',ip:'10.96.0.10',port:'53/UDP,53/TCP,9153/TCP',type:'ClusterIP',age:'30d',selector:{'k8s-app':'kube-dns'}}]:[];
  if(one){L=L.filter(x=>x.name===one);if(!L.length)return err404('services',one)}
  if(!L.length)return{txt:`No resources found in ${f.ns} namespace.`};
  const wide=f.o==='wide';
- return{txt:table(L.map(x=>[x.name,x.type,x.ip,'<none>',x.port,x.age,...(wide?[x.selector?Object.entries(x.selector).map(([k,v])=>k+'='+v).join(','):'<none>']:[])]),['NAME','TYPE','CLUSTER-IP','EXTERNAL-IP','PORT(S)','AGE',...(wide?['SELECTOR']:[])]),hiE:L.map(x=>x.eid).filter(Boolean)}}
+ return{txt:table(L.map(x=>[x.name,x.type,x.ip,x.ext||'<none>',x.port,x.age,...(wide?[x.selector?Object.entries(x.selector).map(([k,v])=>k+'='+v).join(','):'<none>']:[])]),['NAME','TYPE','CLUSTER-IP','EXTERNAL-IP','PORT(S)','AGE',...(wide?['SELECTOR']:[])]),hiE:L.map(x=>x.eid).filter(Boolean)}}
 function getEp(s,f,one){let L=s.svcs;if(one){L=L.filter(x=>x.name===one);if(!L.length)return err404('endpoints',one)}
  const hi=[];const rows=L.map(x=>{if(!x.selector)return[x.name,'192.168.1.10:6443','30d'];const e=epsOf(s,x);hi.push(...e);const t=e.map(p=>p.ip+':'+x.target);return[x.name,t.length?(t.length>3?t.slice(0,3).join(',')+` + ${t.length-3} more...`:t.join(',')):'<none>',x.age]});
  return{txt:table(rows,['NAME','ENDPOINTS','AGE']),hi,hiE:L.map(x=>x.eid).filter(Boolean)}}
@@ -304,7 +380,58 @@ function getJobs(s){const p=s.pods.filter(x=>x.owner?.kind==='Job');if(!p.length
  const by={};p.forEach(x=>{(by[x.owner.name]=by[x.owner.name]||[]).push(x)});
  const st=s.so;return{txt:table(Object.entries(by).map(([n,L])=>{const done=L.filter(x=>x.status==='Completed').length,failed=L.filter(x=>x.status==='Error').length;const tot=n==='relatorio'?3:1;return[n,failed>=3?'Failed':done>=tot?'Complete':'Running',`${done}/${tot}`,done>=tot?'21s':failed>=3?'2m':'34s','2m']}),['NAME','STATUS','COMPLETIONS','DURATION','AGE']),hi:p}}
 function getCJ(s){if(!s.cron)return{txt:'No resources found in default namespace.'};return{txt:table([['backup','0 3 * * *','<none>','False',0,'6h','9d']],['NAME','SCHEDULE','TIMEZONE','SUSPEND','ACTIVE','LAST SCHEDULE','AGE'])}}
-function getPVC(s){if(!s.pvcs.length)return{txt:'No resources found in default namespace.'};return{txt:table(s.pvcs.map(p=>[p.name,'Bound',p.vol,'1Gi','RWO','standard','<unset>','8d']),['NAME','STATUS','VOLUME','CAPACITY','ACCESS MODES','STORAGECLASS','VOLUMEATTRIBUTESCLASS','AGE']),hiE:s.pvcs.map(p=>p.eid)}}
+function getPVC(s,f,one){let L=s.pvcs;if(one){L=L.filter(x=>x.name===one);if(!L.length)return err404('persistentvolumeclaims',one)}if(!L.length)return{txt:'No resources found in default namespace.'};return{txt:table(L.map(p=>[p.name,p.status,p.vol,p.cap,p.mode,p.sc,'<unset>',p.status==='Pending'?'5s':'8d']),['NAME','STATUS','VOLUME','CAPACITY','ACCESS MODES','STORAGECLASS','VOLUMEATTRIBUTESCLASS','AGE']),hiE:L.map(p=>p.eid)}}
+function pvList(s){return s.pvs||s.pvcs.filter(p=>p.vol).map(p=>({name:p.vol,cap:p.cap,mode:p.mode,reclaim:'Delete',status:'Bound',claim:'default/'+p.name,sc:p.sc,eid:p.eid}))}
+function getPV(s,f,one){let L=pvList(s);if(one){L=L.filter(x=>x.name===one);if(!L.length)return err404('persistentvolumes',one)}if(!L.length)return{txt:'No resources found'};return{txt:table(L.map(p=>[p.name,p.cap,p.mode,p.reclaim,p.status,p.claim,p.sc,'<unset>','',p.status==='Available'?'40s':'8d']),['NAME','CAPACITY','ACCESS MODES','RECLAIM POLICY','STATUS','CLAIM','STORAGECLASS','VOLUMEATTRIBUTESCLASS','REASON','AGE']),hiE:L.map(p=>p.eid).filter(Boolean)}}
+function getSC(s){if(!s.scs.length)return{txt:'No resources found'};return{txt:table(s.scs.map(c=>[c.name+' (default)',c.prov,c.reclaim,c.bind,String(c.exp),'30d']),['NAME','PROVISIONER','RECLAIMPOLICY','VOLUMEBINDINGMODE','ALLOWVOLUMEEXPANSION','AGE']),hiE:s.scs.map(c=>c.eid)}}
+function getCM(s,f,one){let L=[...s.cms];if(f.ns==='kube-system')L=[{name:'coredns',data:{Corefile:'.:53 {...}'}},{name:'kube-proxy',data:{'config.conf':'','kubeconfig.conf':''}}];L.push({name:'kube-root-ca.crt',data:{'ca.crt':''}});if(one){L=L.filter(x=>x.name===one);if(!L.length)return err404('configmaps',one)}
+ if(one&&f.o==='yaml'){const c=L[0];return{txt:`apiVersion: v1\ndata:\n${Object.entries(c.data).map(([k,v])=>`  ${k}: ${v}`).join('\n')}\nkind: ConfigMap\nmetadata:\n  name: ${c.name}\n  namespace: default`,hiE:[c.eid].filter(Boolean)}}
+ return{txt:table(L.map(c=>[c.name,Object.keys(c.data).length,c.name==='kube-root-ca.crt'?'30d':'3m']),['NAME','DATA','AGE']),hiE:L.map(c=>c.eid).filter(Boolean)}}
+function getSecret(s,f,one){let L=s.secrets;if(one){L=L.filter(x=>x.name===one);if(!L.length)return err404('secrets',one)}if(!L.length)return{txt:'No resources found in default namespace.'};
+ const jp=/^jsonpath=\{\.data\.(.+)\}$/.exec(f.o||'');if(one&&jp){const k=jp[1].replace(/\\\./g,'.');const v=L[0].data[k];return{txt:v||'',hiE:[L[0].eid]}}
+ if(one&&f.o==='yaml'){const c=L[0];return{txt:`apiVersion: v1\ndata:\n${Object.entries(c.data).map(([k,v])=>`  ${k}: ${v}`).join('\n')}\nkind: Secret\nmetadata:\n  name: ${c.name}\n  namespace: default\ntype: ${c.type}\n# ${LANG==='pt'?'base64 não é criptografia: echo czNuaDQ= | base64 -d':'base64 is not encryption: echo czNuaDQ= | base64 -d'}`,hiE:[c.eid]}}
+ return{txt:table(L.map(c=>[c.name,c.type,Object.keys(c.data).length,'2m']),['NAME','TYPE','DATA','AGE']),hiE:L.map(c=>c.eid)}}
+function describeCM(s,c){return`Name:         ${c.name}\nNamespace:    default\nLabels:       <none>\nAnnotations:  <none>\n\nData\n====\n${Object.entries(c.data).map(([k,v])=>`${k}:\n----\n${v}\n`).join('\n')}\nBinaryData\n====\n\nEvents:  <none>`}
+function describeSecret(s,c){return`Name:         ${c.name}\nNamespace:    default\nLabels:       <none>\nAnnotations:  <none>\n\nType:  ${c.type}\n\nData\n====\n${Object.entries(c.data).map(([k,v])=>`${k}:  ${atob(v).length} bytes`).join('\n')}`}
+function describePVC(s,p){const ev=p.status==='Pending'?(p.wffc?[['Normal','WaitForFirstConsumer','4s','persistentvolume-controller','waiting for first consumer to be created before binding']]:[['Normal','ExternalProvisioning','3s','persistentvolume-controller','Waiting for a volume to be created either by the external provisioner "ebs.csi.aws.com" or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.'],['Normal','Provisioning','3s','ebs.csi.aws.com','External provisioner is provisioning volume for claim "default/dados"']]):[['Normal','ProvisioningSucceeded','8d','ebs.csi.aws.com',`Successfully provisioned volume ${p.vol}`]];
+ const used=s.pods.filter(x=>x.claim===p.name).map(x=>x.name);
+ return[`Name:          ${p.name}`,`Namespace:     default`,`StorageClass:  ${p.sc}`,`Status:        ${p.status}`,`Volume:        ${p.vol}`,`Labels:        <none>`,`Capacity:      ${p.cap}`,`Access Modes:  ${p.mode}`,`VolumeMode:    Filesystem`,`Used By:       ${used.join(', ')||'<none>'}`,evT(ev)].join('\n')}
+function describePV(s,p){return[`Name:            ${p.name}`,`Labels:          <none>`,`StorageClass:    ${p.sc}`,`Status:          ${p.status}`,`Claim:           ${p.claim}`,`Reclaim Policy:  ${p.reclaim}`,`Access Modes:    ${p.mode}`,`VolumeMode:      Filesystem`,`Capacity:        ${p.cap}`,`Node Affinity:   ${p.zone?`\n  Required Terms:\n    Term 0:        topology.kubernetes.io/zone in [${p.zone}]`:'<none>'}`,`Source:\n    Type:              CSI (a Container Storage Interface (CSI) volume source)\n    Driver:            ebs.csi.aws.com\n    VolumeHandle:      vol-0${hs(p.name,15)}`,'Events:            <none>'].join('\n')}
+function getNetpol(s,f,one){let L=s.netpols;if(!f.all)L=L.filter(n=>n.ns===(f.ns||'default'));if(one){L=L.filter(n=>n.name===one);if(!L.length)return err404('networkpolicies.networking.k8s.io',one)}
+ if(!L.length)return{txt:f.all?'No resources found':`No resources found in ${f.ns||'default'} namespace.`+(s.netpols.length&&!f.ns?`\n# ${LANG==='pt'?'Dica: as políticas desta lição estão em outros namespaces. Use -A ou -n dados.':'Tip: this lesson’s policies live in other namespaces. Use -A or -n dados.'}`:'')};
+ return{txt:table(L.map(n=>[...(f.all?[n.ns]:[]),n.name,n.sel||'<none>','2m']),[...(f.all?['NAMESPACE']:[]),'NAME','POD-SELECTOR','AGE']),hiE:['pol']}}
+function describeNP(s,n){return[`Name:         ${n.name}`,`Namespace:    ${n.ns}`,`Created on:   ${rfc(ago(120))}`,`Labels:       <none>`,`Annotations:  <none>`,`Spec:`,`  PodSelector:     ${n.sel||'<none> (Allowing the specific traffic to all pods in this namespace)'}`,`  ${n.ing||'Not affecting ingress traffic'}`.replace(/\n/g,'\n  '),`  ${n.eg||'Not affecting egress traffic'}`.replace(/\n/g,'\n  '),`  Policy Types: ${n.types}`].join('\n')}
+function getGW(s,R){const g=s.gw;if(R==='gatewayclasses')return g.gc?{txt:table([['nginx','gateway.nginx.org/nginx-gateway-controller','True','3d']],['NAME','CONTROLLER','ACCEPTED','AGE']),hiE:[g.gc.id]}:{txt:'No resources found'};
+ if(R==='gateways')return g.gw?{txt:table([['loja','nginx','203.0.113.10','True','3d']],['NAME','CLASS','ADDRESS','PROGRAMMED','AGE']),hiE:[g.gw.id]}:{txt:'No resources found in default namespace.'};
+ return g.hr?{txt:table([['api','["loja.com"]','3d']],['NAME','HOSTNAMES','AGE']),hiE:[g.hr.id]}:{txt:'No resources found in default namespace.'}}
+function dnsLookup(s,host){const d=s.so.dnsDown;if(d)return{txt:';; connection timed out; no servers could be reached\n',err:1,hiE:['dns']};
+ const parts=host.split('.');const name=parts[0];const ns=parts[1]||'default';const fq=parts.length>=3?host:`${name}.${ns}.svc.cluster.local`;
+ const sv=s.svcs.find(x=>x.name===name);if(!sv&&!['kubernetes'].includes(name))return{txt:`Server:\t\t10.96.0.10\nAddress:\t10.96.0.10:53\n\n** server can't find ${fq}: NXDOMAIN\n`,err:1,hiE:['dns']};
+ const ips=sv&&sv.ip==='None'?epsOf(s,sv).map(p=>p.ip):[sv?sv.ip:'10.96.0.1'];
+ return{txt:`Server:\t\t10.96.0.10\nAddress:\t10.96.0.10:53\n\n${ips.map(ip=>`Name:\t${fq}\nAddress: ${ip}`).join('\n')}\n`,hiE:['dns',sv&&sv.eid].filter(Boolean),hi:sv&&sv.ip==='None'?epsOf(s,sv):[]}}
+function netTest(s,p,cmd){const c0=cmd[0];const args=cmd.slice(1).filter(a=>!/^-/.test(a)&&!/^\d+$/.test(a)||/^\d{2,5}$/.test(a));
+ let host=(cmd.slice(1).find(a=>!/^-/.test(a)&&!/^\d+$/.test(a))||'').replace(/^https?:\/\//,'').split('/')[0];let port=(cmd.slice(1).find(a=>/^\d{2,5}$/.test(a)))||((host.split(':')[1])||(c0==='nc'?'':'80'));host=host.split(':')[0];
+ if(!host)return{txt:`${c0}: missing host`,err:1};
+ const key=`${p.ns}/${p.lb}`;const rmap=s.so.reach||{};let r=rmap[key]??rmap[p.lb]??'open';if(r==='open'&&s.so.reachPort&&port&&String(port)!==String(s.so.reachPort)&&/^db/.test(host))r='timeout';
+ if(s.so.dnsDown||r==='dns'){return{txt:c0==='curl'?`curl: (6) Could not resolve host: ${host}`:`${c0}: bad address '${host}'`,err:1,hi:[p]}}
+ const sv=s.svcs.find(x=>x.name===host.split('.')[0]);const ip=sv&&sv.ip!=='None'?sv.ip:'10.244.2.3';
+ if(r==='timeout')return{txt:c0==='curl'?`curl: (28) Connection timed out after 2002 milliseconds`:c0==='wget'?`Connecting to ${host} (${ip}:${port||80})\nwget: download timed out`:`nc: ${host} (${ip}:${port}): Connection timed out`,err:1,hi:[p]};
+ return{txt:c0==='curl'?`HTTP/1.1 200 OK\ncontent-type: application/json\n\n{"status":"ok"}`:c0==='wget'?`Connecting to ${host} (${ip}:${port||80})\nwriting to stdout\n{"status":"ok"}\n-                    100% |********************************|    15  0:00:00 ETA\nwritten to stdout`:`${host} (${ip}:${port}) open`,hi:[p],hiE:[sv&&sv.eid].filter(Boolean)}}
+function execCmd(s,f,argv){const i=argv.indexOf('--');const cmd=i>0?argv.slice(i+1):[];let t=(f.rest[1]||'').replace(/^(pod|pods|po)\//,'');
+ const p=s.pods.find(x=>x.name===t&&!x.gone)||s.pods.find(x=>!x.gone&&(x.name.startsWith(t+'-')||x.lb===t));
+ if(!p)return err404('pods',t);if(!cmd.length)return{txt:'error: you must specify at least one command for the container',err:1};
+ if(p.status!=='Running')return{txt:`error: unable to upgrade connection: container not found ("${p.containers[0]}")`,err:1};
+ const c0=cmd[0];const env={DB_HOST:'db',LOG_LEVEL:'info',...(s.so.env||{}),...((s.so.envBy||{})[p.eid&&p.eid[0]]||{})};
+ if(c0==='id'){const u=(s.so.uidBy||{})[p.eid&&p.eid[0]]??s.so.uid??0;return{txt:u===0?'uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)':`uid=${u} gid=3000 groups=2000,3000`,hi:[p]}}
+ if(c0==='whoami'){const u=s.so.uid??0;return{txt:u===0?'root':'whoami: unknown uid '+u,hi:[p]}}
+ if(c0==='env'||c0==='printenv')return{txt:['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin','HOSTNAME='+p.name,...Object.entries(env).map(([k,v])=>k+'='+v),'KUBERNETES_SERVICE_HOST=10.96.0.1','KUBERNETES_SERVICE_PORT=443'].join('\n'),hi:[p]};
+ if(c0==='cat'||c0==='ls'){const fp=cmd[1]||'';const files=s.so.files||{};if(c0==='ls'&&/\/etc\/config\/?$/.test(fp))return{txt:Object.keys(files).filter(k=>k.startsWith('/etc/config/')).map(k=>k.split('/').pop()).join('\n')||`ls: ${fp}: No such file or directory`,hi:[p]};if(files[fp]!=null)return{txt:files[fp],hi:[p]};if(fp==='/etc/resolv.conf')return{txt:`search ${p.ns}.svc.cluster.local svc.cluster.local cluster.local\nnameserver 10.96.0.10\noptions ndots:5`,hi:[p]};return{txt:`${c0}: can't open '${fp}': No such file or directory`,err:1}}
+ if(/^(nc|wget|curl)$/.test(c0))return netTest(s,p,cmd);
+ if(c0==='nslookup'){const r=dnsLookup(s,cmd[1]||'');return{...r,hi:[p]}}
+ if(c0==='sh'||c0==='bash'||c0==='/bin/sh')return{txt:`# ${LANG==='pt'?'(simulado: sem shell interativo; passe o comando depois do --, ex.: kubectl exec '+p.name+' -- env)':'(simulated: no interactive shell; pass the command after --, e.g. kubectl exec '+p.name+' -- env)'}`};
+ if(c0==='date')return{txt:new Date().toUTCString()};
+ return{txt:`sh: ${c0}: not found`,err:1}}
+
 function getEvents(s){const ev=[];s.pods.forEach(p=>podEvents(s,p).forEach(e=>ev.push([e[2],e[0],e[1],'pod/'+p.name,e[4]])));
  s.nodes.filter(n=>!n.ready).forEach(n=>ev.push(['2m','Normal','NodeNotReady','node/'+n.name,`Node ${n.name} status is now: NodeNotReady`]));
  if(!ev.length)return{txt:'No events found in default namespace.'};return{txt:table(ev,['LAST SEEN','TYPE','REASON','OBJECT','MESSAGE'])}}
@@ -357,7 +484,7 @@ function describePod(s,p){const o=p.owner,crash=p.status==='CrashLoopBackOff'||p
   `Status:           ${p.status==='Terminating'?'Terminating (lasts 30s)':p.phase||'Running'}`,`IP:               ${p.ip==='<none>'?'':p.ip}`,`IPs:\n  IP:  ${p.ip==='<none>'?'':p.ip}`,...(ctrl?[`Controlled By:    ${ctrl}`]:[]),
   init+`Containers:\n${cont}`,
   `Conditions:\n  Type                        Status\n  PodReadyToStartContainers   ${p.unsched?'False':'True'}\n  Initialized                 ${p.init?'False':'True'}\n  Ready                       ${ready?'True':'False'}\n  ContainersReady             ${ready?'True':'False'}\n  PodScheduled                ${p.unsched?'False':'True'}`,
-  `Volumes:\n  kube-api-access-${hs(p.name,5)}:\n    Type:                    Projected (a volume that contains injected data from multiple sources)`,
+  `Volumes:\n${p.claim?`  data:\n    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)\n    ClaimName:  ${p.claim}\n    ReadOnly:   false\n`:''}  kube-api-access-${hs(p.name,5)}:\n    Type:                    Projected (a volume that contains injected data from multiple sources)`,
   `QoS Class:                   Burstable`,`Node-Selectors:              <none>`,`Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s\n                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s`,
   evT(podEvents(s,p))].join('\n')}
 function describeNode(s,n){const pods=s.pods.filter(p=>p.node===n.name);const cpu=pods.length*250+(n.name==='controlplane'?950:350);
@@ -545,6 +672,7 @@ kubelet[51022]: I1126 17:00:03.019 kubelet_node_status.go:76] "Successfully regi
  if(/^(sudo )?crictl logs/.test(line))return{txt:so.apiExited?`I1126 17:02:01.002 options.go:228] external host was not specified, using 192.168.1.10
 E1126 17:02:01.311 run.go:72] "command failed" err="unknown flag: --etcd-servrs"`:'I1126 17:00:01.002 server.go:150] Version: v1.31.2',hiE:['sa']};
  if(/^(sudo )?cat \/etc\/kubernetes\/manifests\/kube-apiserver\.yaml/.test(line))return{txt:`    - --advertise-address=192.168.1.10\n    - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt\n    - --${so.apiExited?'etcd-servrs':'etcd-servers'}=https://127.0.0.1:2379\n    - --secure-port=6443`};
+ if(/^curl /.test(line)){const np=s.svcs.find(x=>x.type==='NodePort');const m=/:(\d{4,5})/.exec(line);return np&&m&&np.port.includes(':'+m[1])?{txt:'{"status":"ok","pod":"'+((s.pods.find(p=>p.lb==='api')||{}).name||'api')+'"}',hiE:s.nodes.map(n=>n.eid).filter(Boolean)}:{txt:`curl: (7) Failed to connect to ${(line.split('//')[1]||'').split(/[:/]/)[0]} port ${m?m[1]:80} after 3 ms: Couldn't connect to server`,err:1}}
  if(/^ssh /.test(line))return{txt:`Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.8.0-48-generic x86_64)\n# ${LANG==='pt'?'(simulado: os comandos continuam aqui mesmo)':'(simulated: commands keep running here)'}`};
  return null}
 
@@ -558,12 +686,13 @@ function exec(line){const s=ST,so=s.so;let raw=line.trim();if(!raw)return{txt:''
  if(cmd==='history')return{txt:HIST.map((h,i)=>String(i+1).padStart(4)+'  '+h).join('\n')};
  const sh=shellCmd(s,cmd);if(sh)return pipe(sh,parts);
  const argv=tok(cmd);if(argv[0]==='k')argv[0]='kubectl';
+ if(argv[0]==='kubectl'){const lead=[];while(argv[1]&&/^-/.test(argv[1])){const a=argv.splice(1,1)[0];lead.push(a);if((a==='-n'||a==='--namespace'||a==='--context')&&argv[1])lead.push(argv.splice(1,1)[0])}argv.push(...lead)}
  if(argv[0]!=='kubectl'){if(/^(alias|export|source|complete)\b/.test(argv[0]))return{txt:''};return{txt:`bash: ${argv[0]}: command not found\n`+T[LANG].unknownCmd(argv[0]),err:1}}
  if(so.apiDown)return{txt:'The connection to the server 192.168.1.10:6443 was refused - did you specify the right host or port?',err:1,hiE:['api','kc']};
  const verb=argv[1],f=parseArgs(argv.slice(1));
  const r=dispatch(s,verb,f,argv);return pipe(r,parts)}
 function tok(s){const o=[];let cur='',q=null;for(const ch of s){if(q){if(ch===q)q=null;else cur+=ch}else if(ch==='"'||ch==="'")q=ch;else if(/\s/.test(ch)){if(cur){o.push(cur);cur=''}}else cur+=ch}if(cur)o.push(cur);return o}
-function pipe(r,parts){if(!r||r.clear)return r;let txt=r.txt||'';for(const p of parts.slice(1)){const a=tok(p);if(a[0]==='grep'){const inv=a.includes('-v'),ic=a.includes('-i'),pat=a.filter(x=>!/^-/.test(x))[1]||'';const re=new RegExp(pat.replace(/[.*+?^${}()[\]\\]/g,'\\$&'),ic?'i':'');txt=txt.split('\n').filter(l=>re.test(l)!==inv).join('\n')}else if(a[0]==='tail'){const n=+(a[1]||'').replace('-n','').replace('-','')||10;txt=txt.split('\n').slice(-n).join('\n')}else if(a[0]==='head'){const n=+(a[1]||'').replace('-n','').replace('-','')||10;txt=txt.split('\n').slice(0,n).join('\n')}else if(a[0]==='wc'&&a.includes('-l')){txt=String(txt.split('\n').filter(Boolean).length)}}
+function pipe(r,parts){if(!r||r.clear)return r;let txt=r.txt||'';for(const p of parts.slice(1)){const a=tok(p);if(a[0]==='grep'){const inv=a.includes('-v'),ic=a.includes('-i'),pat=a.filter(x=>!/^-/.test(x))[1]||'';const re=new RegExp(pat.replace(/[.*+?^${}()[\]\\]/g,'\\$&'),ic?'i':'');txt=txt.split('\n').filter(l=>re.test(l)!==inv).join('\n')}else if(a[0]==='base64'&&(a.includes('-d')||a.includes('--decode'))){try{txt=atob(txt.trim())}catch(e){txt='base64: invalid input'}}else if(a[0]==='tail'){const n=+(a[1]||'').replace('-n','').replace('-','')||10;txt=txt.split('\n').slice(-n).join('\n')}else if(a[0]==='head'){const n=+(a[1]||'').replace('-n','').replace('-','')||10;txt=txt.split('\n').slice(0,n).join('\n')}else if(a[0]==='wc'&&a.includes('-l')){txt=String(txt.split('\n').filter(Boolean).length)}}
  return{...r,txt}}
 function dispatch(s,verb,f,argv){const one=f.rest[2];
  if(!verb)return{txt:'kubectl controls the Kubernetes cluster manager.\n\n'+T[LANG].help};
@@ -572,11 +701,11 @@ function dispatch(s,verb,f,argv){const one=f.rest[2];
   if(!R)return{txt:`error: the server doesn't have a resource type "${k}"`,err:1};
   const n=f.rest[2];let r;
   if(R==='pods'){r=getPods(s,{...f,rest:['get','pods',n].filter(Boolean)});if(f.w&&!r.err){const w=typeof s.so.watch==='function'?s.so.watch(s.pods):[];r.watch=[...w,T[LANG].watch]}}
-  else if(R==='deployments')r=getDeps(s,f,n);else if(R==='replicasets')r=getRS(s,f);else if(R==='services')r=getSvc(s,f,n);else if(R==='endpoints')r=getEp(s,f,n);else if(R==='nodes')r=getNodes(s,f,n);else if(R==='ingress')r=getIng(s,f);else if(R==='daemonsets')r=getDS(s,f);else if(R==='statefulsets')r=getSTS(s);else if(R==='jobs')r=getJobs(s);else if(R==='cronjobs')r=getCJ(s);else if(R==='pvc')r=getPVC(s);else if(R==='events')r=getEvents(s);else if(R==='all')r=getAll(s,f);
+  else if(R==='deployments')r=getDeps(s,f,n);else if(R==='replicasets')r=getRS(s,f);else if(R==='services')r=getSvc(s,f,n);else if(R==='endpoints')r=getEp(s,f,n);else if(R==='nodes')r=getNodes(s,f,n);else if(R==='ingress')r=getIng(s,f);else if(R==='daemonsets')r=getDS(s,f);else if(R==='statefulsets')r=getSTS(s);else if(R==='jobs')r=getJobs(s);else if(R==='cronjobs')r=getCJ(s);else if(R==='pvc')r=getPVC(s,f,n);else if(R==='events')r=getEvents(s);else if(R==='all')r=getAll(s,f);
   else if(R==='leases')r=f.ns!=='kube-node-lease'?{txt:`No resources found in ${f.ns||'default'} namespace.\n# ${LANG==='pt'?'Dica: os leases dos nodes ficam no namespace kube-node-lease (-n kube-node-lease)':'Tip: node leases live in the kube-node-lease namespace (-n kube-node-lease)'}`}:{txt:table(s.nodes.map(n=>[n.name,n.name,n.ready?'30d':'30d']),['NAME','HOLDER','AGE'])+`\n# ${LANG==='pt'?'Cada kubelet renova o seu lease a cada 10 s. Veja: kubectl get lease node-1 -n kube-node-lease -o yaml':'Each kubelet renews its lease every 10 s. See: kubectl get lease node-1 -n kube-node-lease -o yaml'}`,hiE:s.nodes.map(n=>n.eid).filter(Boolean)};
-  else if(R==='namespaces')r={txt:table([['default','Active','30d'],['kube-node-lease','Active','30d'],['kube-public','Active','30d'],['kube-system','Active','30d']],['NAME','STATUS','AGE'])};
-  else if(R==='pv')r=s.pvcs.length?{txt:table(s.pvcs.map(p=>[p.vol,'1Gi','RWO','Delete','Bound','default/'+p.name,'standard','<unset>','','8d']),['NAME','CAPACITY','ACCESS MODES','RECLAIM POLICY','STATUS','CLAIM','STORAGECLASS','VOLUMEATTRIBUTESCLASS','REASON','AGE'])}:{txt:'No resources found'};
-  if(r&&f.o==='yaml'&&R!=='pods'&&!r.err)r={...r,txt:`# (${LANG==='pt'?'simulado: YAML completo só para pods':'simulated: full YAML only for pods'})\n`+r.txt};
+  else if(R==='namespaces'){let L=[['default','Active','30d','kubernetes.io/metadata.name=default'],['kube-node-lease','Active','30d','kubernetes.io/metadata.name=kube-node-lease'],['kube-public','Active','30d','kubernetes.io/metadata.name=kube-public'],['kube-system','Active','30d','kubernetes.io/metadata.name=kube-system'],...(s.so.nsList||[]).map(x=>[x[0],'Active','2d',x[1]||'kubernetes.io/metadata.name='+x[0]])];if(n)L=L.filter(x=>x[0]===n);if(!L.length)r=err404('namespaces',n);else r={txt:table(L.map(x=>f.labels?x:x.slice(0,3)),['NAME','STATUS','AGE',...(f.labels?['LABELS']:[])])}}
+  else if(R==='pv')r=getPV(s,f,n);else if(R==='storageclasses')r=getSC(s);else if(R==='configmaps')r=getCM(s,f,n);else if(R==='secrets')r=getSecret(s,f,n);else if(R==='networkpolicies')r=getNetpol(s,f,n);else if(/^(gateways|gatewayclasses|httproutes)$/.test(R))r=getGW(s,R);
+  if(r&&f.o==='yaml'&&!/^(pods|configmaps|secrets)$/.test(R)&&!r.err)r={...r,txt:`# (${LANG==='pt'?'simulado: YAML completo só para pods':'simulated: full YAML only for pods'})\n`+r.txt};
   return r}
  if(verb==='describe'){let k=f.rest[1]||'',n=f.rest[2];if(k.includes('/')){[k,n]=k.split('/')}const R=RT[k];if(!R)return{txt:`error: the server doesn't have a resource type "${k}"`,err:1};
   if(R==='pods'){if(!n){const L=s.pods.filter(p=>!p.gone);return{txt:L.map(p=>describePod(s,p)).join('\n\n\n'),hi:L}}const p=s.pods.find(x=>x.name===n&&!x.gone)||sysPods(s).find(x=>x.name===n);if(!p)return err404('pods',n);if(p.sys)return{txt:`Name:             ${p.name}\nNamespace:        kube-system\nNode:             controlplane/192.168.1.10\nStatus:           Running\nControlled By:    Node/controlplane\nEvents:           <none>`};return{txt:describePod(s,p),hi:[p]}}
@@ -584,10 +713,18 @@ function dispatch(s,verb,f,argv){const one=f.rest[2];
   if(R==='deployments'){const d=n?s.deps[n]:Object.values(s.deps)[0];if(!d)return err404('deployments.apps',n||'');return{txt:describeDep(s,d),hi:s.pods.filter(p=>p.owner?.name===d.name)}}
   if(R==='services'){const sv=s.svcs.find(x=>x.name===n)||(!n&&s.svcs[1]);if(!sv)return err404('services',n||'');return{txt:describeSvc(s,sv),hiE:[sv.eid].filter(Boolean),hi:sv.selector?epsOf(s,sv):[]}}
   if(R==='endpoints'){return getEp(s,f,n)}
+  if(R==='configmaps'){const c=s.cms.find(x=>x.name===n)||(!n&&s.cms[0]);if(!c)return err404('configmaps',n||'');return{txt:describeCM(s,c),hiE:[c.eid]}}
+  if(R==='secrets'){const c=s.secrets.find(x=>x.name===n)||(!n&&s.secrets[0]);if(!c)return err404('secrets',n||'');return{txt:describeSecret(s,c),hiE:[c.eid]}}
+  if(R==='pvc'){const c=s.pvcs.find(x=>x.name===n)||(!n&&s.pvcs[0]);if(!c)return err404('persistentvolumeclaims',n||'');return{txt:describePVC(s,c),hiE:[c.eid]}}
+  if(R==='pv'){const c=pvList(s).find(x=>x.name===n)||(!n&&pvList(s)[0]);if(!c)return err404('persistentvolumes',n||'');return{txt:describePV(s,c),hiE:[c.eid].filter(Boolean)}}
+  if(R==='networkpolicies'){const L=s.netpols.filter(x=>(!f.ns||x.ns===f.ns)&&(!n||x.name===n));if(!L.length)return err404('networkpolicies.networking.k8s.io',n||'');return{txt:L.map(x=>describeNP(s,x)).join('\n\n'),hiE:['pol']}}
+  if(R==='storageclasses'){const c=s.scs[0];if(!c)return err404('storageclasses.storage.k8s.io',n||'');return{txt:`Name:                  ${c.name}\nIsDefaultClass:        Yes\nProvisioner:           ${c.prov}\nParameters:            type=gp3\nAllowVolumeExpansion:  ${c.exp?'True':'False'}\nReclaimPolicy:         ${c.reclaim}\nVolumeBindingMode:     ${c.bind}\nEvents:                <none>`,hiE:[c.eid]}}
   return{txt:`# (${LANG==='pt'?'simulado: describe disponível para pod, node, deploy e svc':'simulated: describe is available for pod, node, deploy and svc'})`}}
+ if(verb==='logs'&&f.l){if(/kube-dns/.test(f.l))return{txt:s.so.dnsDown?`.:53\n[INFO] plugin/reload: Running configuration SHA512 = 1b226df79860026c6a52e67daa10d7f0d57ec5b023288ec00c5e05f93523c894\nCoreDNS-1.11.3\nlinux/amd64, go1.21.11, a6338e9\n[FATAL] plugin/loop: Loop (127.0.0.1:47128 -> :53) detected for zone ".", see https://coredns.io/plugins/loop#troubleshooting. Query: "HINFO 5577006791947779410.8674665223082153551."`:`.:53\n[INFO] plugin/reload: Running configuration SHA512 = 1b226df79860026c6a52e67daa10d7f0d57ec5b023288ec00c5e05f93523c894\nCoreDNS-1.11.3\nlinux/amd64, go1.21.11, a6338e9`,hiE:['dns']};const L=s.pods.filter(p=>!p.gone&&matchSel(p.labels,f.l));if(!L.length)return{txt:'No resources found in default namespace.'};return{txt:L.map(p=>logsOf(s,p,f).txt).join('\n'),hi:L}}
  if(verb==='logs'){let n=f.rest[1];if(!n)return{txt:'error: expected \'logs [-f] [-p] (POD | TYPE/NAME) [-c CONTAINER]\'.',err:1};n=n.replace(/^(pod|pods|po)\//,'');
   if(/^(deploy|deployment)\//.test(n)){const d=n.split('/')[1];const p=s.pods.find(x=>x.owner?.name===d&&!x.gone);if(!p)return err404('deployments.apps',d);n=p.name;}
   const p=s.pods.find(x=>x.name===n&&!x.gone);if(!p)return err404('pods',n);const r=logsOf(s,p,f);return{...r,hi:[p]}}
+ if(verb==='run'&&argv.includes('--')){const cmd=argv.slice(argv.indexOf('--')+1);const n=f.rest[1]||'t';if(cmd[0]==='nslookup'){const r=dnsLookup(s,cmd[1]||'');return{...r,txt:r.txt+(argv.includes('--rm')?`pod "${n}" deleted`+(r.err?`\npod default/${n} terminated (Error)`:''):'')}}if(/^(wget|curl|nc)$/.test(cmd[0])){const r=netTest(s,{ns:f.ns||'default',lb:n,name:n},cmd);return{...r,txt:r.txt+(argv.includes('--rm')?`\npod "${n}" deleted`:'')}}}
  if(verb==='run'){const n=f.rest[1];const img=f.kv.image;if(!n||!img)return{txt:'error: required flag(s) "image" not set',err:1};if(f.dry&&f.o==='yaml')return{txt:dryYaml('pod',n,img,f)};if(f.dry)return{txt:`pod/${n} created (dry run)`};
   s.pods.push({name:n,lb:n,ns:'default',node:'node-1',ip:ipFor(n,'node-1'),owner:null,containers:[n],labels:{run:n},image:img,status:'ContainerCreating',ready:false,restarts:0,age:'1s',phase:'Pending'});setTimeout(()=>{const p=s.pods.find(x=>x.name===n);if(p){p.status=f.kv.restart==='Never'?'Completed':'Running';p.ready=f.kv.restart!=='Never';p.age='12s';p.phase='Running'}},3500);return{txt:`pod/${n} created`}}
  if(verb==='create'){const k=f.rest[1],n=f.rest[2];if(!k)return{txt:'error: must specify one of -f and -k',err:1};
@@ -602,7 +739,7 @@ function dispatch(s,verb,f,argv){const one=f.rest[2];
  if(verb==='expose'){const t=f.rest[1],n=f.rest[2]||(t||'').split('/')[1];return{txt:`service/${f.kv.name||n} exposed`}}
  if(verb==='scale')return scale(s,f);
  if(verb==='delete')return del(s,f);
- if(verb==='patch'||verb==='label'||verb==='annotate'){const t=f.rest[1]||'',n=f.rest[2]||t.split('/')[1];const k=(t.split('/')[0]||'').replace(/^svc$/,'service').replace(/^deploy$/,'deployment.apps').replace(/^po$/,'pod');return{txt:`${k}/${n} ${verb==='patch'?'patched':verb==='label'?'labeled':'annotated'}`}}
+ if(verb==='patch'||verb==='label'||verb==='annotate'){const t=f.rest[1]||'',n=f.rest[2]||t.split('/')[1];const k0=(t.split('/')[0]||'');const k=({svc:'service',service:'service',deploy:'deployment.apps',deployment:'deployment.apps',po:'pod',pod:'pod',ns:'namespace',namespace:'namespace',pv:'persistentvolume',pvc:'persistentvolumeclaim',cm:'configmap',configmap:'configmap',node:'node',no:'node',secret:'secret'})[k0]||k0;return{txt:`${k}/${n} ${verb==='patch'?'patched':verb==='label'?'labeled':'annotated'}`}}
  if(verb==='set'&&f.rest[1]==='image'){const t=f.rest[2]||'';return{txt:`${t.replace(/^deploy\//,'deployment.apps/').replace(/^deployment\//,'deployment.apps/')} image updated`}}
  if(verb==='rollout'){const sub=f.rest[1],t=(f.rest[2]||'').replace(/^deploy(ment)?\//,''),n=f.rest[3]||t;const d=s.deps[n];if(!d)return err404('deployments.apps',n);
   if(sub==='status')return{txt:d.ready>=d.replicas?`deployment "${n}" successfully rolled out`:`Waiting for deployment "${n}" rollout to finish: ${d.ready} of ${d.replicas} updated replicas are available...`};
@@ -617,14 +754,15 @@ function dispatch(s,verb,f,argv){const one=f.rest[2];
  if(verb==='cluster-info')return{txt:'Kubernetes control plane is running at https://192.168.1.10:6443\nCoreDNS is running at https://192.168.1.10:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy'};
  if(verb==='config')return{txt:/current-context/.test(argv.join(' '))?'kubernetes-admin@kubernetes':table([['*','kubernetes-admin@kubernetes','kubernetes','kubernetes-admin','']],['CURRENT','NAME','CLUSTER','AUTHINFO','NAMESPACE'])};
  if(verb==='api-resources')return{txt:table([['pods','po','v1','true','Pod'],['services','svc','v1','true','Service'],['deployments','deploy','apps/v1','true','Deployment'],['daemonsets','ds','apps/v1','true','DaemonSet'],['statefulsets','sts','apps/v1','true','StatefulSet'],['jobs','','batch/v1','true','Job'],['cronjobs','cj','batch/v1','true','CronJob'],['ingresses','ing','networking.k8s.io/v1','true','Ingress'],['nodes','no','v1','false','Node']],['NAME','SHORTNAMES','APIVERSION','NAMESPACED','KIND'])};
- if(verb==='exec')return{txt:/env/.test(argv.join(' '))?'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin\nHOSTNAME='+(f.rest[1]||'pod'):`# ${LANG==='pt'?'(simulado: exec não abre shell aqui)':'(simulated: exec does not open a shell here)'}`};
+ if(verb==='exec')return execCmd(s,f,argv);
+ if(verb==='exec-old')return{txt:/env/.test(argv.join(' '))?'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin\nHOSTNAME='+(f.rest[1]||'pod'):`# ${LANG==='pt'?'(simulado: exec não abre shell aqui)':'(simulated: exec does not open a shell here)'}`};
  if(verb==='taint'){const k=f.rest[1],n=f.rest[2];if(!/^(node|nodes|no)$/.test(k||''))return{txt:'error: at least one taint update is required',err:1};const nd=s.nodes.find(x=>x.name===n);if(!nd)return err404('nodes',n||'');const t=f.rest[3]||'';if(!t)return{txt:'error: at least one taint update is required',err:1};return{txt:`node/${n} ${/-$/.test(t)?'untainted':'tainted'}`,hiE:[nd.eid].filter(Boolean)}}
  if(verb==='cordon'||verb==='uncordon'||verb==='drain'){const n=f.rest[1];const nd=s.nodes.find(x=>x.name===n);if(!nd)return err404('nodes',n||'');return{txt:verb==='drain'?`node/${n} cordoned\nevicting pod default/${(s.pods.find(p=>p.node===n)||{name:'api'}).name}\nnode/${n} drained`:`node/${n} ${verb}ed`,hiE:[nd.eid].filter(Boolean)}}
  return{txt:`error: unknown command "${verb}" for "kubectl"\n\nDid you mean this?\n\tget\n\tdescribe\n\tlogs\n`+T[LANG].unknownVerb(verb),err:1}}
 
 /* ---------- suggestions ---------- */
 function suggest(s,cmd){const o=[];const add=c=>{if(c&&!o.includes(c))o.push(c)};
- const res=c=>c&&c.replace('$P0',(s.pods[0]||{}).name||'api').replace('$A2',(s.pods.find(p=>p.eid&&p.eid.includes('a2'))||{}).name||'api');
+ const res=c=>c&&c.replace('$P0',(s.pods[0]||{}).name||'api').replace('$A2',(s.pods.find(p=>p.eid&&p.eid.includes('a2'))||{}).name||'api').replace(/\$E:(\w+)/g,(m,id)=>(s.pods.find(p=>p.eid&&p.eid.includes(id))||{}).name||id);
  if(s.so.chips)s.so.chips.forEach(c=>add(res(c)));
  if(cmd)add(cmd.replace(/^kubectl logs api-7d9/,'kubectl logs api-7d9'));
  if(s.so.apiDown)return o.slice(0,4);
