@@ -99,6 +99,20 @@
       /** Próximo evento depois do instante atual (para “pular até o próximo acontecimento”). */
       nextEventAt: function () { var t = n * dt; var e = events.find(function (x) { return x.at > t + 1e-9 && x.at <= until; }); return e ? e.at : null; },
       events: function () { return events.map(function (e) { return { at: e.at, id: e.id }; }); },
+      /** Ação do usuário no meio da linha do tempo (ex.: derrubar um node agora).
+          Por padrão vale no próximo passo e apaga as ações do usuário que estavam depois dela
+          (ações no mesmo instante se somam):
+          quem volta no tempo e age de novo cria um novo futuro (como “desfazer e refazer”). */
+      act: function (e) {
+        var at = e.at == null ? (n + 1) * dt : e.at;
+        if (at <= n * dt) throw new Error('K8SSIM.act: só vale para o futuro (t > ' + n * dt + ')');
+        events = events.filter(function (x) { return !(x.user && x.at > at + 1e-9); });
+        events.push({ at: at, id: e.id || 'act', apply: e.apply, order: events.length + 1e6, user: true });
+        events.sort(function (a, b) { return a.at - b.at || a.order - b.order; });
+        var first = Math.ceil(at / dt - 1e-9);
+        Object.keys(checkpoints).forEach(function (k) { if (+k >= first) delete checkpoints[k]; });
+        return emit();
+      },
     };
     return api;
   }

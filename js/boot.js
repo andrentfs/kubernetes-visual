@@ -10,6 +10,13 @@
   window.K8S_LANG=l;
   function add(src,cb){var s=document.createElement('script');s.src=src;s.async=false;if(cb){s.onload=cb;s.onerror=cb}document.head.appendChild(s)}
   ['i18n/'+l+'.js','js/content.js','js/renderer.js','js/ui.js'].forEach(function(src){add(src)});
+  /** Carrega scripts sob demanda, em ordem, e chama cb depois do último (ex.: o simulador). */
+  var loaded={};
+  window.K8S_load=function(list,cb){
+    list=list.filter(function(s){return !loaded[s]});
+    if(!list.length){cb();return}
+    list.forEach(function(src,i){loaded[src]=1;add(src,i===list.length-1?cb:null)});
+  };
   window.K8S_loadLang=function(lang,cb){
     if(window.TXT&&window.TXT[lang]&&window.TXT[lang].les){cb();return}
     add('i18n/'+lang+'.js',cb);

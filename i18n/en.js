@@ -546,3 +546,25 @@ isolamento:['Two teams in namespaces; the Secret goes through the API server to 
 supply:['git, CI and registry down to the pods: every link can be attacked.','CI builds a distroless, non-root image.','Trivy finds two CRITICAL CVEs in the image.','v3 has no CRITICAL and goes on to the cluster.','CI generates the image’s SBOM.','Kubesec and KubeLinter analyse the YAML in CI.','CI signs; the cluster only uses verified images.','Admission rejects the docker.io image.','The pod uses the image by its pinned digest.','Minimal, scanned, signed image from an allowed origin.'],
 runtime:['The attacker opens a shell in the api pod.','Falco (grey) watches the pod’s syscalls.','Falco fires the terminal shell alert.','The api pod sends traffic to a mining pool.','Alert, logs and audit log to reconstruct the attack.','With a read-only root, the attacker can’t write anything.','The Policy decides what goes to audit.log.','With the --audit-* flags, the API server writes the log.','The audit log shows who deleted the Secret.','Falco watching the pods and auditing turned on.']
 });
+
+/* ---------- “When a node goes down” simulator (S2, #sim/nodefail) ---------- */
+Object.assign(window.TXT.en.ui,{simChip:'Simulator',simTag:'Simulator',simChipTime:'real time or faster',
+simT:'Simulator: take a node down',simLede:'Take nodes down and bring them back, and watch, second by second, what Kubernetes does. Go back in time and try another path.',
+simIntro:'Three nodes, an api Deployment with 3 replicas and a db StatefulSet with 1. Timings are the v1.37 defaults: Lease every 10 s, NotReady after 50 s without a Lease, and eviction after 300 s. It is a teaching simulation, not a real cluster.',
+simPlay:'Play',simRestart:'Start over',simBack1:'Back 1 s',simFwd1:'Forward 1 s',simNext:'Jump to the next event',simSpeed:'Speed',
+simReal:'{t} simulated · {r} real at {x}×',simDown:'Take down {n}',simUp:'Bring back {n}',
+simCfg:'Adjust the timings',simStart:'Time until the app is ready (example)',simCfgNote:'Changing a timing starts the simulation over.',
+simFeed:'Timeline',simEmpty:'Take a node down to start.',simBackLesson:'Back to the lesson',
+simClock:'Clock',simNodes:'Nodes Ready',simEps:'EndpointSlice',simTerm:'Terminating',
+simGoals:'Take nodes down and bring them back|See how long until NotReady and until eviction|See requests failing before NotReady|See the new pod start on another node (no pod moves)|See the StatefulSet wait for the old pod to go away|Go back in time and try another path',
+simF_down:'{n} went down. The cluster doesn’t know yet: its pods are still in the EndpointSlice and requests to them fail.',
+simF_up:'{n} is back and the kubelet renewed the Lease.',
+simF_notready:'{n} went more than {g} s without renewing the Lease: NotReady and the unreachable:NoExecute taint. Its pods leave the EndpointSlice.',
+simF_ready:'{n} is Ready again and the taint is gone.',
+simF_evict:'{p} went past the {s} s taint toleration: evicted, it stays Terminating until the kubelet confirms.',
+simF_create:'The ReplicaSet doesn’t count Terminating pods and created {p} to keep 3 replicas.',
+simF_createSts:'The old pod is gone and the StatefulSet recreated {p}.',
+simF_sched:'The scheduler put {p} on {n} (the Ready node with the fewest pods).',
+simF_running:'{p} became ready and joined the EndpointSlice.',
+simF_gone:'The kubelet on {n} confirmed and {p} was finally deleted.',
+simF_stuck:'The StatefulSet won’t create another {p} while the old one exists, so there are never two with the same identity.'});

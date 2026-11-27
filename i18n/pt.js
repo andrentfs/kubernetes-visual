@@ -546,3 +546,25 @@ isolamento:['Dois times em namespaces; o Secret passa pelo API server até o etc
 supply:['git, CI e registry até os pods: cada elo pode ser atacado.','O CI gera uma imagem distroless e sem root.','O Trivy acha duas CVEs CRITICAL na imagem.','A v3 não tem CRITICAL e segue para o cluster.','O CI gera o SBOM da imagem.','Kubesec e KubeLinter analisam o YAML no CI.','O CI assina; o cluster só usa imagem verificada.','O admission recusa a imagem de docker.io.','O pod usa a imagem pelo digest fixo.','Imagem mínima, escaneada, assinada e de origem permitida.'],
 runtime:['O invasor abre um shell no pod api.','O Falco (cinza) observa as syscalls do pod.','O Falco dispara o alerta de terminal shell.','O pod api manda tráfego para um pool de mineração.','Alerta, logs e audit log para reconstruir o ataque.','Com a raiz somente leitura, o invasor não grava nada.','A Policy define o que vai para o audit.log.','Com as flags --audit-*, o API server grava o log.','O audit log mostra quem apagou o Secret.','Falco vigiando os pods e auditoria ligada.']
 });
+
+/* ---------- Simulador “quando um node cai” (S2, #sim/nodefail) ---------- */
+Object.assign(window.TXT.pt.ui,{simChip:'Simulador',simTag:'Simulador',simChipTime:'tempo real ou acelerado',
+simT:'Simulador: derrube um node',simLede:'Derrube e religue nodes e veja, segundo a segundo, o que o Kubernetes faz. Volte no tempo e teste outro caminho.',
+simIntro:'Três nodes, um Deployment api com 3 réplicas e um StatefulSet db com 1. Os tempos são os padrões da v1.37: Lease a cada 10 s, NotReady depois de 50 s sem Lease e despejo depois de 300 s. É uma simulação didática, não um cluster real.',
+simPlay:'Tocar',simRestart:'Recomeçar',simBack1:'Voltar 1 s',simFwd1:'Avançar 1 s',simNext:'Pular para o próximo acontecimento',simSpeed:'Velocidade',
+simReal:'{t} simulados · {r} reais a {x}×',simDown:'Derrubar {n}',simUp:'Religar {n}',
+simCfg:'Ajustar os tempos',simStart:'Tempo até o app ficar pronto (exemplo)',simCfgNote:'Mudar um tempo recomeça a simulação.',
+simFeed:'Linha do tempo',simEmpty:'Derrube um node para começar.',simBackLesson:'Voltar para a lição',
+simClock:'Relógio',simNodes:'Nodes Ready',simEps:'EndpointSlice',simTerm:'Terminating',
+simGoals:'Derrubar e religar nodes|Ver quanto tempo até o NotReady e até o despejo|Ver requisições falhando antes do NotReady|Ver o pod novo nascer em outro node (nenhum pod se move)|Ver o StatefulSet esperar o pod antigo sumir|Voltar no tempo e testar outro caminho',
+simF_down:'{n} desligou. O cluster ainda não sabe: os pods dele continuam no EndpointSlice e as requisições para eles falham.',
+simF_up:'{n} voltou e o kubelet renovou o Lease.',
+simF_notready:'{n} ficou mais de {g} s sem renovar o Lease: NotReady e taint unreachable:NoExecute. Os pods dele saem do EndpointSlice.',
+simF_ready:'{n} está Ready de novo e o taint saiu.',
+simF_evict:'{p} passou dos {s} s de tolerância ao taint: despejado, fica Terminating até o kubelet confirmar.',
+simF_create:'O ReplicaSet não conta pods Terminating e criou {p} para manter 3 réplicas.',
+simF_createSts:'O pod antigo sumiu e o StatefulSet recriou {p}.',
+simF_sched:'O scheduler colocou {p} no {n} (node Ready com menos pods).',
+simF_running:'{p} ficou pronto e entrou no EndpointSlice.',
+simF_gone:'O kubelet do {n} confirmou e {p} foi apagado de vez.',
+simF_stuck:'O StatefulSet não cria outro {p} enquanto o antigo existir, para não ter dois com a mesma identidade.'});

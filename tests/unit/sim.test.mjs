@@ -116,3 +116,32 @@ test('definição inválida falha com mensagem clara', () => {
   assert.throws(() => K8SSIM.create({}), /init é obrigatório/);
   assert.throws(() => K8SSIM.create({ init: {}, events: [{ id: 'z' }] }), /evento sem "at" válido \(z\)/);
 });
+
+test('ação do usuário no meio da simulação vale no próximo passo e cria um novo futuro ao voltar no tempo', () => {
+  const mk = () => K8SSIM.create({ init: { up: true, log: [] }, until: 100, tick: (s, t) => { s.log.push(s.up ? 1 : 0); } });
+  const sim = mk();
+  sim.seek(10);
+  sim.act({ id: 'down', apply: s => { s.up = false; } });   // vale em t=11
+  sim.seek(20);
+  assert.equal(sim.get().state.up, false);
+  assert.deepEqual(P(sim.get().log.map(e => [e.t, e.id])), [[11, 'down']]);
+  sim.seek(30); sim.act({ id: 'up', apply: s => { s.up = true; } });   // t=31
+  sim.seek(40); assert.equal(sim.get().state.up, true);
+  // volta para t=15 e age de novo: as ações do usuário depois de t=16 (inclusive o "up" em 31) somem
+  sim.seek(15); sim.act({ id: 'up2', apply: s => { s.up = true; } });
+  sim.seek(40);
+  assert.deepEqual(P(sim.get().log.map(e => e.id)), ['down', 'up2']);
+  assert.equal(P(sim.get().state.log).slice(10, 16).join(''), '000001');
+  // reproduz exatamente: outra simulação com as mesmas ações dá o mesmo estado
+  const b = mk(); b.seek(10); b.act({ id: 'down', apply: s => { s.up = false; } }); b.seek(15); b.act({ id: 'up2', apply: s => { s.up = true; } }); b.seek(40);
+  assert.deepEqual(P(b.get().state), P(sim.get().state));
+  assert.throws(() => sim.act({ at: 5, apply: () => {} }), /só vale para o futuro/);
+});
+
+test('duas ações no mesmo instante se somam', () => {
+  const sim = K8SSIM.create({ init: { a: [] }, until: 10 });
+  sim.act({ id: 'x', apply: s => { s.a.push('x'); } });
+  sim.act({ id: 'y', apply: s => { s.a.push('y'); } });
+  sim.seek(1);
+  assert.deepEqual(P(sim.get().state.a), ['x', 'y']);
+});

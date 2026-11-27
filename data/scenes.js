@@ -222,7 +222,7 @@ netpol:{min:12,lvl:'int',mod:1,steps:[
 {k:'solucao',cmd:'kubectl exec web -- nc -zv -w 2 db.dados 5432',s:()=>({e:[...NP.base(),pod('dns',1,5,'v2','coredns',{ic:'globe',b:[':53 ok','ok']}),NP.pol('egress: 53 + db')],l:[['pol','w0','d']],f:[['w0','dns',1],['w0','db',2]]})},
 {k:'resumo',s:()=>({e:[...NP.base(),pod('x',1,5,'other','hacker',{ic:'user'}),NP.pol('NetworkPolicy')],l:[['pol','db','d']],f:[['w0','db',2],['x','db',1,'bad']]})}
 ]},
-nodefail:{min:12,lvl:'int',mod:2,steps:(()=>{
+nodefail:{min:12,lvl:'int',mod:2,sim:'nodefail',steps:(()=>{
 const HB=(n=[0,1,2])=>n.map(i=>['n'+i,'api',1,'hc']);
 const A=(o={})=>[pod('a0',0,1),pod('a1',1,1),...(o.a2===null?[]:[pod('a2',2,1,o.a2||'ok','api',{b:o.ab})]),...(o.a3?[pod('a3',0,4,o.a3)]:[])];
 const DB=(st,b)=>[pod('db0',2,3,st||'ok','db-0',{ic:'db',b}),pod('pv0',2,0,'other','data-0',{ic:'db'})];

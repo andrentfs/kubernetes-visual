@@ -2,7 +2,7 @@
 
 🇧🇷 Português · [🇺🇸 English](README.md)
 
-Curso interativo e visual sobre Kubernetes, em português (Brasil) e inglês. Cada conceito é um diagrama isométrico animado que você avança passo a passo, com terminal `kubectl` simulado e trilhas para as provas CKA, CKAD e CKS.
+Curso interativo e visual sobre Kubernetes, em português (Brasil) e inglês. Cada conceito é um diagrama isométrico animado que você avança passo a passo, com terminal `kubectl` simulado, um simulador de falha de node (derrube nodes, volte no tempo, mude os tempos) e trilhas para as provas CKA, CKAD e CKS.
 
 **No ar:** https://andrentfs.github.io/kubernetes-visual/
 
@@ -41,7 +41,7 @@ Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modu
 
 | Suíte | Onde | O que verifica |
 |---|---|---|
-| Unitários | `tests/unit/` (`node:test`) | Motor do terminal simulado; dados de certificação; SEO; cenas × textos; páginas por lição atualizadas; checagem rápida dos YAMLs |
+| Unitários | `tests/unit/` (`node:test`) | Motor do terminal simulado; motor de simulação e modelo de falha de node; dados de certificação; SEO; cenas × textos; páginas por lição atualizadas; checagem rápida dos YAMLs |
 | Manifestos (CI) | `tests/tools/extract-manifests.mjs` + kubeconform | Os 28 YAMLs de exemplo contra o schema da versão de referência ([ADR-006](docs/adr/ADR-006-kubeconform.md)) |
 | Links (CI) | lychee | Links dos documentos `.md` |
 | Paridade PT/EN | `tests/tools/i18n-parity.mjs` | Mesmas chaves, lições, passos, campos e legendas nos dois idiomas |
@@ -59,6 +59,7 @@ Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modu
 | `i18n/labels.js` | Rótulos dos diagramas, nos dois idiomas ([ADR-003](docs/adr/ADR-003-lazy-language.md)) |
 | `licao/`, `en/lesson/` | Páginas estáticas por lição, geradas por `scripts/gen-lesson-pages.mjs` ([ADR-005](docs/adr/ADR-005-lesson-pages.md)) |
 | `js/geometry.js` · `content.js` · `renderer.js` · `ui.js` | Motor isométrico e interface ([ADR-002](docs/adr/ADR-002-file-structure.md)) |
+| `js/sim/` | Simuladores, carregados sob demanda: `engine.js` (relógio, [ADR-004](docs/adr/ADR-004-simulation-engine.md)), `nodefail.js` (modelo), `ui.js` (tela) |
 | `js/term/` | Terminal `kubectl` simulado: `lessons.js` (dados por lição), `files.js` (YAMLs), `engine.js` (interpretador) |
 
 O site também abre direto do disco (`index.html`), sem servidor.

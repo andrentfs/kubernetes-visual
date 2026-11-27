@@ -233,3 +233,14 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 @media(prefers-reduced-motion:reduce){.ent,#lk,#pk,.side{transition:none}.pp{animation:none}}
 .refv{margin:10px 4px 0;font-size:11px;line-height:1.45;color:var(--muted)}.refv a{color:inherit;text-decoration:underline}
 .exam h3{flex-wrap:wrap}.exseg{display:inline-flex;margin-left:auto;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}.exseg button{all:unset;cursor:pointer;font:700 11px "JetBrains Mono",monospace;padding:3px 9px;color:var(--ink)}.exseg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}.exseg button:focus-visible{outline:2px solid var(--k8s);outline-offset:-2px}.exno{font-size:12.5px;line-height:1.5;color:var(--muted);margin:6px 0 0}
+
+/* Simulador (S2): #sim/nodefail */
+.chip.sim{background:var(--green);color:inherit;text-decoration:none;cursor:pointer}.chip.sim:hover{filter:brightness(.96)}
+.simmode .step .nav,.simmode .mnav,.simmode #replay,.simmode #pause,.simmode .trk .hd b{display:none}
+.simc{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}.simc label{font-size:12px;display:inline-flex;gap:6px;align-items:center;margin-left:4px}
+.simc select,.simcfg input{font:inherit;font-size:13px;border:1.5px solid var(--ink);border-radius:8px;background:var(--card);color:inherit;padding:4px 6px}
+.simclk{font-size:12px;opacity:.8;margin:4px 0 10px}
+.simn{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.simn .pop{min-height:40px;font-size:13px}.simn .pop.on{background:var(--red,#f1c3bd)}
+.simcfg{margin:10px 0;font-size:13px}.simcfg label{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:6px 0}.simcfg input{width:6em}
+.simf{list-style:none;padding:0;margin:6px 0;font-size:13px}.simf li{padding:5px 0;border-bottom:1px dashed var(--line,#d9cfc2)}.simf li b{display:inline-block;min-width:3.2em}.simf .empty{opacity:.7}
+#dots input[type=range]{width:100%;accent-color:#5a8f3a}
