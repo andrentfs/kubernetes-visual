@@ -399,7 +399,7 @@ function deconflict(list){const blocks=list.filter(e=>e.t==='block'),placed=[];
   for(let k=0;k<12;k++){const hit=obs.find(p=>r[0]<p[2]&&r[2]>p[0]&&r[1]<p[3]&&r[3]>p[1]);if(!hit)break;const d=r[3]-hit[1]+4;if(off+d>90)break;off+=d;r=[r[0],r[1]-d,r[2],r[3]-d]}
   e._bo=off;placed.push(r)})}
 function paint(sc,fresh){(sc.dead||[]).forEach(id=>{const e=sc.e.find(x=>x.id===id);if(e)e.st='dead'});fitSizes(sc.e);deconflict(sc.e);
- if(fresh){live.forEach(g=>g.remove());live.clear()}
+ if(fresh){live.forEach(g=>g.remove());live.clear();[...bg.querySelectorAll(':scope>g.ent'),...fg.querySelectorAll(':scope>g.ent')].forEach(g=>g.remove())}else{const keep=new Set(live.values());[...bg.querySelectorAll(':scope>g.ent'),...fg.querySelectorAll(':scope>g.ent')].forEach(g=>{if(!keep.has(g))g.remove()})}
  moveCam(camFor(sc),fresh);
  const seen=new Set(),by={};
  const anim=!RM.matches,order=sc.e.filter(e=>!live.has(e.id)).sort((a,b)=>(a.t==='slab'?-1e3:0)+depth(a)-((b.t==='slab'?-1e3:0)+depth(b))),gap=Math.min(55,700/Math.max(1,order.length));

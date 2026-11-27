@@ -21,7 +21,7 @@ const T={
   opções: -n <ns>  -A  -o wide|yaml|name  -l app=api  -w  --show-labels
           --dry-run=client -o yaml
   atalhos: k = kubectl · | grep · | grep -v · | base64 -d · clear · history
-  na aula de troubleshooting: systemctl, journalctl e crictl também respondem.
+  ls · cat <arquivo>.yaml (somente leitura) · na aula de troubleshooting: systemctl, journalctl, crictl.
 # A saída é de exemplo, gerada a partir do que o diagrama mostra neste passo.`,
   watch:'# (-w fica observando; aqui a simulação para sozinha)'},
  en:{title:'Terminal',sim:'simulated',disc:'Just a simulated example for studying: answers are generated from this step\'s diagram and do not come from a real cluster. Names, IPs, times and details may differ from what you will see in your own cluster.',try:'Try:',ph:'type a kubectl command and press Enter',run:'Run in terminal',clear:'clear',step:'Step',
@@ -40,7 +40,7 @@ const T={
   flags: -n <ns>  -A  -o wide|yaml|name  -l app=api  -w  --show-labels
          --dry-run=client -o yaml
   shortcuts: k = kubectl · | grep · | grep -v · | base64 -d · clear · history
-  in the troubleshooting lesson: systemctl, journalctl and crictl answer too.
+  ls · cat <file>.yaml (read-only) · in the troubleshooting lesson: systemctl, journalctl, crictl.
 # Output is an example, generated from what the diagram shows in this step.`,
   watch:'# (-w keeps watching; here the simulation stops by itself)'}
 };
@@ -676,6 +676,395 @@ E1126 17:02:01.311 run.go:72] "command failed" err="unknown flag: --etcd-servrs"
  if(/^ssh /.test(line))return{txt:`Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.8.0-48-generic x86_64)\n# ${LANG==='pt'?'(simulado: os comandos continuam aqui mesmo)':'(simulated: commands keep running here)'}`};
  return null}
 
+/* ---------- example files (read-only) ---------- */
+const DEP=(o={})=>`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${o.name||'api'}
+  labels:
+    app: ${o.name||'api'}
+spec:
+  replicas: ${o.replicas||3}
+  selector:
+    matchLabels:
+      app: ${o.name||'api'}
+  template:
+    metadata:
+      labels:
+        app: ${o.name||'api'}
+    spec:
+${o.podExtra||''}      containers:
+      - name: ${o.name||'api'}
+        image: ${o.image||'loja/api:1.0'}
+        ports:
+        - containerPort: ${o.port||8080}
+${o.ctrExtra||''}        resources:
+          requests:
+            cpu: 250m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: ${o.mem||'512Mi'}`;
+const PROBES=`        startupProbe:
+          httpGet: {path: /healthz, port: 8080}
+          periodSeconds: 10
+          failureThreshold: 30      # até 5 min para subir
+        readinessProbe:
+          httpGet: {path: /ready, port: 8080}
+          periodSeconds: 5
+        livenessProbe:
+          httpGet: {path: /healthz, port: 8080}
+          periodSeconds: 10
+          failureThreshold: 3
+`;
+const FILES={
+'pod.yaml':`apiVersion: v1
+kind: Pod
+metadata:
+  name: api
+  labels:
+    app: api
+spec:
+  containers:
+  - name: api
+    image: loja/api:1.0
+    ports:
+    - containerPort: 8080
+  - name: log                 # sidecar
+    image: busybox:1.36
+    command: ["sh", "-c", "tail -F /var/log/app/api.log"]`,
+'deployment.yaml':DEP({mem:'256Mi'}),
+'service.yaml':`apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  type: ClusterIP
+  selector:
+    app: api
+  ports:
+  - port: 80
+    targetPort: 8080`,
+'ingress.yaml':`apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: loja
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts: [loja.com]
+    secretName: loja-tls
+  rules:
+  - host: loja.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service: {name: web, port: {number: 80}}
+      - path: /api
+        pathType: Prefix
+        backend:
+          service: {name: api, port: {number: 80}}`,
+'configmap.yaml':`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loja-config
+data:
+  DB_HOST: db
+  LOG_LEVEL: info`,
+'secret.yaml':`apiVersion: v1
+kind: Secret
+metadata:
+  name: db-cred
+type: Opaque
+data:
+  username: bG9qYQ==      # "loja"  (base64, não é criptografia)
+  password: czNuaDQ=      # "s3nh4"`,
+'pv.yaml':`apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-dados
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /mnt/dados`,
+'pvc.yaml':`apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dados
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 10Gi`,
+'storageclass.yaml':`apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true`,
+'daemonset.yaml':`apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-agent
+spec:
+  selector:
+    matchLabels: {app: node-agent}
+  template:
+    metadata:
+      labels: {app: node-agent}
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
+      containers:
+      - name: agent
+        image: fluent/fluent-bit:3.0`,
+'statefulset.yaml':`apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db            # Service headless
+  replicas: 3
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      containers:
+      - name: db
+        image: postgres:16
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 1Gi`,
+'job.yaml':`apiVersion: batch/v1
+kind: Job
+metadata:
+  name: relatorio
+spec:
+  completions: 3
+  parallelism: 2
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: relatorio
+        image: busybox:1.36
+        command: ["sh", "-c", "echo ok"]`,
+'cronjob.yaml':`apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup
+spec:
+  schedule: "0 3 * * *"       # todo dia às 3h
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: backup
+            image: busybox:1.36
+            command: ["sh", "-c", "date"]`,
+'deny-all.yaml':`apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: dados
+spec:
+  podSelector: {}            # todos os pods do namespace
+  policyTypes: [Ingress]`,
+'allow-loja.yaml':`apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-loja
+  namespace: dados
+spec:
+  podSelector:
+    matchLabels: {app: db}
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: loja
+    ports:
+    - protocol: TCP
+      port: 5432`,
+'allow-dns-db.yaml':`apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-db
+  namespace: loja
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: kube-system}
+      podSelector:
+        matchLabels: {k8s-app: kube-dns}
+    ports:
+    - {protocol: UDP, port: 53}
+    - {protocol: TCP, port: 53}
+  - to:
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: dados}
+    ports:
+    - {protocol: TCP, port: 5432}`,
+'service-nodeport.yaml':`apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  type: NodePort
+  selector:
+    app: api
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30080           # 30000-32767`,
+'service-headless.yaml':`apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  clusterIP: None             # headless: DNS devolve o IP de cada pod
+  selector:
+    app: db
+  ports:
+  - port: 5432`,
+'httproute.yaml':`apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api
+spec:
+  parentRefs:
+  - name: loja                # o Gateway
+  hostnames: ["loja.com"]
+  rules:
+  - matches:
+    - path: {type: PathPrefix, value: /api}
+    backendRefs:
+    - name: api
+      port: 80`,
+};
+const LS={
+ pods:['pod.yaml','deployment.yaml'],
+ workloads:['deployment.yaml','daemonset.yaml','statefulset.yaml','job.yaml','cronjob.yaml'],
+ config:['configmap.yaml','secret.yaml','deployment.yaml'],
+ storage:['pv.yaml','pvc.yaml','storageclass.yaml','deployment.yaml'],
+ service:['deployment.yaml','service.yaml','ingress.yaml'],
+ network:['service.yaml','service-nodeport.yaml','service-headless.yaml','httproute.yaml'],
+ netpol:['deny-all.yaml','allow-loja.yaml','allow-dns-db.yaml'],
+ probes:['deployment.yaml','service.yaml'],
+ nodefail:['deployment.yaml','statefulset.yaml'],
+ trouble:['deployment.yaml','service.yaml'],
+};
+const FILEV={
+ workloads:{'deployment.yaml':DEP({})},
+ config:{'deployment.yaml':DEP({podExtra:`      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+`,ctrExtra:`        envFrom:
+        - configMapRef:
+            name: loja-config
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef: {name: db-cred, key: password}
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+            add: [NET_BIND_SERVICE]
+`}).replace(/(\n            memory: 512Mi)$/,'$1\n      volumes:\n      - name: config\n        configMap:\n          name: loja-config')},
+ storage:{'deployment.yaml':DEP({name:'db',replicas:1,image:'postgres:16',port:5432,ctrExtra:`        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+`}).replace(/(\n            memory: 512Mi)$/,'$1\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: dados')},
+ service:{'deployment.yaml':DEP({})},
+ probes:{'deployment.yaml':DEP({ctrExtra:PROBES})},
+ nodefail:{'deployment.yaml':DEP({podExtra:`      # padrão adicionado pelo Kubernetes em todo pod:
+      tolerations:
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 300
+`}),'statefulset.yaml':`apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  replicas: 1
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      containers:
+      - name: db
+        image: postgres:16
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ReadWriteOnce]   # um node por vez
+      resources:
+        requests:
+          storage: 1Gi`},
+ trouble:{'deployment.yaml':DEP({name:'web',replicas:2,image:'nginx:1.2O',port:80}),'service.yaml':`apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: wbe                  # repare no nome do label
+  ports:
+  - port: 80
+    targetPort: 80`},
+};
+const CMT_EN=[['# até 5 min para subir','# up to 5 min to start'],['(base64, não é criptografia)','(base64, not encryption)'],['# todo dia às 3h','# every day at 3 am'],['# todos os pods do namespace','# every pod in the namespace'],['# Service headless','# headless Service'],['# headless: DNS devolve o IP de cada pod','# headless: DNS returns each pod IP'],['# o Gateway','# the Gateway'],['# padrão adicionado pelo Kubernetes em todo pod:','# default added by Kubernetes to every pod:'],['# um node por vez','# one node at a time'],['# repare no nome do label','# look closely at the label']];
+function fileOf(lesson,name){let v=(FILEV[lesson]||{})[name];if(v==null){const ls=LS[lesson]||[];v=ls.includes(name)?FILES[name]:null}if(v!=null&&LANG==='en')CMT_EN.forEach(([a,b])=>{v=v.split(a).join(b)});return v}
+function ro(){return LANG==='pt'?'# Somente leitura: este arquivo é só para visualizar. Por ser uma simulação, não é possível alterá-lo.':'# Read-only: this file is just for viewing. Since this is a simulation, it can’t be changed.'}
+function fileCmd(s,line){const a=tok(line);const c=a[0];
+ if(c==='ls'){const L=LS[s.lesson]||[];if(!L.length)return{txt:''};return{txt:a.includes('-l')?L.map(f=>`-rw-r--r-- 1 aluno aluno ${String(fileOf(s.lesson,f).length).padStart(5)} Nov 27 09:00 ${f}`).join('\n'):L.join('  ')}}
+ if(/^(cat|more|less|head|tail|bat|view)$/.test(c)){const n=a.filter(x=>!/^-/.test(x))[1];if(!n)return{txt:`${c}: missing operand`,err:1};const t=fileOf(s.lesson,n.replace(/^\.\//,''));if(t==null)return{txt:`${c}: ${n}: No such file or directory`+((LS[s.lesson]||[]).length?`\n# ${LANG==='pt'?'Arquivos desta lição':'Files in this lesson'}: ${(LS[s.lesson]||[]).join(', ')}`:''),err:1};let out=t;if(c==='head')out=t.split('\n').slice(0,10).join('\n');return{txt:out,note:ro()}}
+ if(/^(vi|vim|nano|emacs|code|sed|touch|rm|mv|cp|echo)$/.test(c)){if(c==='echo'&&!/>/.test(line))return{txt:line.replace(/^echo\s*/,'').replace(/^["']|["']$/g,'')};return{txt:'',note:LANG==='pt'?'# Não dá para alterar arquivos aqui: por ser uma simulação, os arquivos são somente leitura. Use cat para ver o conteúdo.':'# Files can’t be changed here: since this is a simulation, they are read-only. Use cat to view the content.'}}
+ return null}
+
 /* ---------- main dispatcher ---------- */
 function exec(line){const s=ST,so=s.so;let raw=line.trim();if(!raw)return{txt:''};
  const parts=raw.split(/\s*\|\s*/);let cmd=parts[0];
@@ -685,6 +1074,7 @@ function exec(line){const s=ST,so=s.so;let raw=line.trim();if(!raw)return{txt:''
  if(cmd==='clear')return{clear:1};
  if(cmd==='history')return{txt:HIST.map((h,i)=>String(i+1).padStart(4)+'  '+h).join('\n')};
  const sh=shellCmd(s,cmd);if(sh)return pipe(sh,parts);
+ const fc=fileCmd(s,cmd);if(fc)return pipe(fc,parts);
  const argv=tok(cmd);if(argv[0]==='k')argv[0]='kubectl';
  if(argv[0]==='kubectl'){const lead=[];while(argv[1]&&/^-/.test(argv[1])){const a=argv.splice(1,1)[0];lead.push(a);if((a==='-n'||a==='--namespace'||a==='--context')&&argv[1])lead.push(argv.splice(1,1)[0])}argv.push(...lead)}
  if(argv[0]!=='kubectl'){if(/^(alias|export|source|complete)\b/.test(argv[0]))return{txt:''};return{txt:`bash: ${argv[0]}: command not found\n`+T[LANG].unknownCmd(argv[0]),err:1}}
@@ -705,7 +1095,8 @@ function dispatch(s,verb,f,argv){const one=f.rest[2];
   else if(R==='leases')r=f.ns!=='kube-node-lease'?{txt:`No resources found in ${f.ns||'default'} namespace.\n# ${LANG==='pt'?'Dica: os leases dos nodes ficam no namespace kube-node-lease (-n kube-node-lease)':'Tip: node leases live in the kube-node-lease namespace (-n kube-node-lease)'}`}:{txt:table(s.nodes.map(n=>[n.name,n.name,n.ready?'30d':'30d']),['NAME','HOLDER','AGE'])+`\n# ${LANG==='pt'?'Cada kubelet renova o seu lease a cada 10 s. Veja: kubectl get lease node-1 -n kube-node-lease -o yaml':'Each kubelet renews its lease every 10 s. See: kubectl get lease node-1 -n kube-node-lease -o yaml'}`,hiE:s.nodes.map(n=>n.eid).filter(Boolean)};
   else if(R==='namespaces'){let L=[['default','Active','30d','kubernetes.io/metadata.name=default'],['kube-node-lease','Active','30d','kubernetes.io/metadata.name=kube-node-lease'],['kube-public','Active','30d','kubernetes.io/metadata.name=kube-public'],['kube-system','Active','30d','kubernetes.io/metadata.name=kube-system'],...(s.so.nsList||[]).map(x=>[x[0],'Active','2d',x[1]||'kubernetes.io/metadata.name='+x[0]])];if(n)L=L.filter(x=>x[0]===n);if(!L.length)r=err404('namespaces',n);else r={txt:table(L.map(x=>f.labels?x:x.slice(0,3)),['NAME','STATUS','AGE',...(f.labels?['LABELS']:[])])}}
   else if(R==='pv')r=getPV(s,f,n);else if(R==='storageclasses')r=getSC(s);else if(R==='configmaps')r=getCM(s,f,n);else if(R==='secrets')r=getSecret(s,f,n);else if(R==='networkpolicies')r=getNetpol(s,f,n);else if(/^(gateways|gatewayclasses|httproutes)$/.test(R))r=getGW(s,R);
-  if(r&&f.o==='yaml'&&!/^(pods|configmaps|secrets)$/.test(R)&&!r.err)r={...r,txt:`# (${LANG==='pt'?'simulado: YAML completo só para pods':'simulated: full YAML only for pods'})\n`+r.txt};
+  if(R==='deployments'&&f.o==='yaml'&&!r.err){const t=fileOf(s.lesson,'deployment.yaml');if(t&&(!n||new RegExp('name: '+n+'\\n').test(t)))r={txt:t+`\nstatus:\n  replicas: ${(s.deps[n]||Object.values(s.deps)[0]||{replicas:3}).replicas}\n  readyReplicas: ${(s.deps[n]||Object.values(s.deps)[0]||{ready:3}).ready}`}}
+  if(r&&f.o==='yaml'&&!/^(pods|configmaps|secrets|deployments)$/.test(R)&&!r.err)r={...r,txt:`# (${LANG==='pt'?'simulado: YAML completo só para pods':'simulated: full YAML only for pods'})\n`+r.txt};
   return r}
  if(verb==='describe'){let k=f.rest[1]||'',n=f.rest[2];if(k.includes('/')){[k,n]=k.split('/')}const R=RT[k];if(!R)return{txt:`error: the server doesn't have a resource type "${k}"`,err:1};
   if(R==='pods'){if(!n){const L=s.pods.filter(p=>!p.gone);return{txt:L.map(p=>describePod(s,p)).join('\n\n\n'),hi:L}}const p=s.pods.find(x=>x.name===n&&!x.gone)||sysPods(s).find(x=>x.name===n);if(!p)return err404('pods',n);if(p.sys)return{txt:`Name:             ${p.name}\nNamespace:        kube-system\nNode:             controlplane/192.168.1.10\nStatus:           Running\nControlled By:    Node/controlplane\nEvents:           <none>`};return{txt:describePod(s,p),hi:[p]}}
@@ -747,7 +1138,7 @@ function dispatch(s,verb,f,argv){const one=f.rest[2];
   if(sub==='undo')return{txt:`deployment.apps/${n} rolled back`};if(sub==='restart')return{txt:`deployment.apps/${n} restarted`};if(sub==='pause')return{txt:`deployment.apps/${n} paused`};if(sub==='resume')return{txt:`deployment.apps/${n} resumed`};
   return{txt:'error: unknown rollout subcommand',err:1}}
  if(verb==='top')return top(s,f);
- if(verb==='edit')return{txt:`Edit cancelled, no changes made.\n# ${LANG==='pt'?'(simulado: o editor não abre aqui; na prova use kubectl edit ou -o yaml > arquivo)':'(simulated: no editor here; in the exam use kubectl edit or -o yaml > file)'}`};
+ if(verb==='edit')return{txt:'Edit cancelled, no changes made.',note:LANG==='pt'?'# Por ser uma simulação, não dá para editar recursos aqui. Use kubectl get <recurso> -o yaml para ver o conteúdo.':'# Since this is a simulation, resources can’t be edited here. Use kubectl get <resource> -o yaml to view the content.'};
  if(verb==='explain'){const k=f.rest[1]||'pod';return{txt:`KIND:       ${k.split('.')[0].replace(/^./,c=>c.toUpperCase())}\nVERSION:    v1\n\nFIELD: ${k} <Object>\n\nDESCRIPTION:\n    ${LANG==='pt'?'(simulado) Use kubectl explain para ver os campos de qualquer recurso sem sair do terminal.':'(simulated) Use kubectl explain to see any resource field without leaving the terminal.'}`}}
  if(verb==='auth')return{txt:'yes'};
  if(verb==='version')return{txt:'Client Version: v1.31.2\nKustomize Version: v5.4.2\nServer Version: v1.31.2'};
@@ -765,6 +1156,7 @@ function suggest(s,cmd){const o=[];const add=c=>{if(c&&!o.includes(c))o.push(c)}
  const res=c=>c&&c.replace('$P0',(s.pods[0]||{}).name||'api').replace('$A2',(s.pods.find(p=>p.eid&&p.eid.includes('a2'))||{}).name||'api').replace(/\$E:(\w+)/g,(m,id)=>(s.pods.find(p=>p.eid&&p.eid.includes(id))||{}).name||id);
  if(s.so.chips)s.so.chips.forEach(c=>add(res(c)));
  if(cmd)add(cmd.replace(/^kubectl logs api-7d9/,'kubectl logs api-7d9'));
+ {const m=/-f (\S+\.ya?ml)/.exec(cmd||'');if(m&&fileOf(s.lesson,m[1]))add('cat '+m[1])}
  if(s.so.apiDown)return o.slice(0,4);
  const bad=s.pods.find(p=>!p.gone&&p.status!=='Running'&&p.status!=='Completed')||s.pods.find(p=>!p.ready&&p.status==='Running');
  add('kubectl get pods'+(s.lesson==='pods'&&s.step>=6?' -o wide':''));
