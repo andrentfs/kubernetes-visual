@@ -7,6 +7,7 @@ A lesson is **four pieces**, all keyed by the same id (e.g. `quotas`):
 | Order and module | `data/scenes.js` → `window.LESSON_ORDER` | Where the lesson appears in the course |
 | Scenes | `data/scenes.js` → `quotas:{min,lvl,mod,steps:[…]}` | One diagram per step, language-neutral |
 | Texts | `i18n/pt.js` and `i18n/en.js` → `les.quotas` and `cap.quotas` | Title, steps, captions, exam box |
+| Diagram labels (if new) | `i18n/labels.js` → `TXT.pt.lbl` and `TXT.en.lbl` | Short words used inside diagrams via `tl('key')`; always loaded ([ADR-003](../adr/ADR-003-lazy-language.md)) |
 | Certification mapping (optional) | `data/certs.js` | Which CKA/CKAD/CKS competencies the lesson covers |
 
 ## 1. Scenes (`data/scenes.js`)

@@ -7,14 +7,16 @@ index.html ─┬─ css/app.css
             ├─ data/meta.js        reference Kubernetes version
             ├─ data/certs.js       CKA/CKAD/CKS domains, weights, competencies → lessons
             ├─ data/scenes.js      window.buildScenes(H): scenes per lesson/step (language-neutral)
-            ├─ i18n/pt.js, en.js   window.TXT.{pt,en}: UI, lessons, captions, labels
+            ├─ i18n/labels.js      window.TXT.{pt,en}.lbl: short diagram labels, both languages (always loaded)
             ├─ js/term/lessons.js  ┐
             ├─ js/term/files.js    ├─ simulated terminal (data → window.K8STERM_DATA; engine → window.K8STERM)
             ├─ js/term/engine.js   ┘
             ├─ js/geometry.js      isometric projection, colours, icons, scene helpers
-            ├─ js/content.js       active language, builds the lesson list L
-            ├─ js/renderer.js      paint(): diff-based SVG rendering, links, packets, camera, anti-overlap
-            └─ js/ui.js            routing (#lesson-step, #cka, #ckad, #cks), panels, “On the exam” box (CKA/CKAD/CKS tabs), search, progress, theme, terminal wiring
+            └─ js/boot.js          picks the language, then loads in order (ADR-003):
+                 ├─ i18n/pt.js or en.js   UI texts, lessons, captions (only the active language)
+                 ├─ js/content.js         active language, builds the lesson list L
+                 ├─ js/renderer.js        paint(): diff-based SVG rendering, links, packets, camera, anti-overlap
+                 └─ js/ui.js            routing (#lesson-step, #cka, #ckad, #cks), panels, “On the exam” box (CKA/CKAD/CKS tabs), search, progress, theme, terminal wiring
 ```
 
 Classic scripts share top-level declarations, so **the order of `<script>` tags matters** ([ADR-002](adr/ADR-002-file-structure.md)).

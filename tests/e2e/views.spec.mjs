@@ -51,3 +51,16 @@ test('caixa “Na prova” tem aba CKS com dicas onde o tema aparece', async ({ 
   await page.evaluate(() => { location.hash = 'pods-1'; });
   await expect(box.locator('.exno')).toContainText('CKS');
 });
+
+test('baixa só os textos do idioma em uso; o outro só na troca (ADR-003)', async ({ page }) => {
+  const got = [];
+  page.on('request', r => { const m = /\/i18n\/(\w+)\.js$/.exec(r.url()); if (m) got.push(m[1]); });
+  await open(page, 'pods-1', 'pt');
+  await expect(page.locator('#title')).not.toBeEmpty();
+  expect(got.sort()).toEqual(['labels', 'pt']);
+  await page.locator('#langB').click();
+  await page.locator('#langM button[data-l="en"]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  expect(got.sort()).toEqual(['en', 'labels', 'pt']);
+  await expect(page.locator('#title')).toHaveText(/Pod/);
+});

@@ -90,7 +90,7 @@ const ro=new ResizeObserver(()=>{if(lastScene)setVB(camFor(lastScene.sc));const 
 function applyUI(){document.documentElement.lang=LANG==='pt'?'pt-BR':'en';document.querySelectorAll('[data-t]').forEach(n=>{n.textContent=U_(n.dataset.t)});document.querySelectorAll('[data-ta]').forEach(n=>{n.setAttribute('aria-label',U_(n.dataset.ta));n.title=U_(n.dataset.ta)});document.querySelectorAll('[data-tp]').forEach(n=>{n.placeholder=U_(n.dataset.tp)});
  $('#pauseL').textContent=U_(paused?'resume':'pause');$('#pause').setAttribute('aria-label',U_(paused?'resume':'pause'));$('#langB b').textContent=LANG.toUpperCase();
  document.querySelectorAll('#langM button').forEach(b=>b.setAttribute('aria-checked',b.dataset.l===LANG))}
-function setLang(l){if(l===LANG)return;LANG=l;try{localStorage.setItem('k8s-lang',l)}catch(e){}buildL();cur=null;show();}
+function setLang(l){if(l===LANG)return;try{localStorage.setItem('k8s-lang',l)}catch(e){}window.K8S_loadLang(l,()=>{if(!window.TXT[l]||!window.TXT[l].les)return;LANG=l;buildL();cur=null;show()})}
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const v=b.dataset.v;if(v==='learn'){location.hash=window._lastLesson||`${L[0].id}-1`}else location.hash=v});
 $('#cert').addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){location.hash=`${L[+g.dataset.go].id}-1`}});
 $('#cert').addEventListener('change',e=>{const c=e.target.closest('[data-c]');if(!c)return;c.checked?CHK.add(c.dataset.c):CHK.delete(c.dataset.c);try{localStorage.setItem('k8s-chk',JSON.stringify([...CHK]))}catch(err){}setView(VIEW)});

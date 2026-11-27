@@ -3,7 +3,7 @@
    Script clássico (não módulo): as declarações de topo são compartilhadas entre os arquivos js/*.js,
    que precisam ser carregados nesta ordem: geometry → content → renderer → ui. */
 /* ---------- language + content ---------- */
-let LANG=(()=>{try{const v=localStorage.getItem('k8s-lang');if(v==='pt'||v==='en')return v}catch(e){}return (navigator.language||'pt').toLowerCase().startsWith('pt')?'pt':'en'})();
+let LANG=window.K8S_LANG||(()=>{try{const v=localStorage.getItem('k8s-lang');if(v==='pt'||v==='en')return v}catch(e){}return (navigator.language||'pt').toLowerCase().startsWith('pt')?'pt':'en'})();
 const TX=()=>window.TXT[LANG],tl=k=>(TX().lbl[k]??k),U_=k=>TX().ui[k];
 const S=window.buildScenes({node,nodes,pod,blk,cp,users,kub,SV,ING,at,tl});
 let L=[];

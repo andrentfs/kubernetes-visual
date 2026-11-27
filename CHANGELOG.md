@@ -6,6 +6,7 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 
 ### Added
 - CI validates the 28 example manifests with **kubeconform** (strict, Kubernetes v1.37.0 schemas + Gateway API CRD) and checks Markdown links with **lychee** ([ADR-006](docs/adr/ADR-006-kubeconform.md)). Locally: `make manifests`.
+- Only the active language's texts are downloaded on first visit (≈ 67–69 KB gzip less); the other one is fetched when you switch. Diagram labels moved to `i18n/labels.js` ([ADR-003](docs/adr/ADR-003-lazy-language.md)).
 
 ### Changed
 - Docs brought up to date: implementation plan statuses (Phase 1 done, CKS track done, pending ADRs), ADR-001/002 marked accepted, new [ADR-007](docs/adr/ADR-007-license.md) for the license, architecture and lesson guide cover CKS (`examS`, `adv` level, module 06).

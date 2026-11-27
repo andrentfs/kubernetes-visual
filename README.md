@@ -45,7 +45,7 @@ The site also opens straight from disk (`index.html`), no server needed.
 | `index.html` | Page structure and script order |
 | `css/app.css` | Styles |
 | `data/` | `scenes.js` (diagrams per step), `certs.js` (CKA/CKAD/CKS), `meta.js` (reference version) |
-| `i18n/` | `pt.js`, `en.js` (all texts) |
+| `i18n/` | `pt.js`, `en.js` (texts, only the active language is loaded), `labels.js` (diagram labels) |
 | `js/` | `geometry.js`, `content.js`, `renderer.js`, `ui.js` (engine and UI) |
 | `js/term/` | Simulated terminal: `lessons.js` (data), `files.js` (example YAML), `engine.js` (interpreter) |
 | `tests/` | `unit/`, `e2e/`, `tools/` |

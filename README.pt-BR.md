@@ -53,7 +53,8 @@ Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modu
 | `css/app.css` | Estilos |
 | `data/scenes.js` | Cenas de cada lição (iguais nos dois idiomas) |
 | `data/certs.js` | Domínios e competências CKA/CKAD/CKS |
-| `i18n/pt.js`, `i18n/en.js` | Textos |
+| `i18n/pt.js`, `i18n/en.js` | Textos (só o idioma em uso é baixado) |
+| `i18n/labels.js` | Rótulos dos diagramas, nos dois idiomas ([ADR-003](docs/adr/ADR-003-lazy-language.md)) |
 | `js/geometry.js` · `content.js` · `renderer.js` · `ui.js` | Motor isométrico e interface ([ADR-002](docs/adr/ADR-002-file-structure.md)) |
 | `js/term/` | Terminal `kubectl` simulado: `lessons.js` (dados por lição), `files.js` (YAMLs), `engine.js` (interpretador) |
 

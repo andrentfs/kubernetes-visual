@@ -36,3 +36,10 @@ test('robots.txt aponta para o sitemap, que é XML válido', () => {
   assert.match(url, /sitemap\.xml$/);
   assert.match(readFileSync(resolve(ROOT, 'sitemap.xml'), 'utf8'), /<urlset[\s\S]*<loc>https:\/\/andrentfs\.github\.io\/kubernetes-visual\/<\/loc>/);
 });
+
+test('index.html carrega só o loader de idioma, não os dois arquivos de texto (ADR-003)', () => {
+  const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+  assert.ok(html.includes('src="i18n/labels.js"'));
+  assert.ok(html.includes('src="js/boot.js"'));
+  assert.ok(!/src="i18n\/(pt|en)\.js"/.test(html));
+});
