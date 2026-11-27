@@ -1,7 +1,7 @@
 // Confere a paridade PT-BR × EN-US: mesmas chaves, mesmas lições, mesmos passos e campos.
 import { loadSite } from './load.mjs';
 
-const w = loadSite(['pt.js', 'en.js']);
+const w = loadSite(['i18n/pt.js', 'i18n/en.js']);
 const pt = w.TXT.pt, en = w.TXT.en;
 const errors = [];
 const keys = o => Object.keys(o || {}).sort();

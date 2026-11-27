@@ -37,13 +37,17 @@ Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modu
 
 ## Estrutura
 
-| Arquivo | Conteúdo |
+| Caminho | Conteúdo |
 |---|---|
-| `index.html` | Interface e motor do diagrama isométrico |
-| `scenes.js` | Cenas de cada lição (iguais nos dois idiomas) |
-| `pt.js` / `en.js` | Textos |
-| `certs.js` | Domínios e competências CKA/CKAD |
-| `term.js` | Terminal `kubectl` simulado |
+| `index.html` | Estrutura da página e ordem de carregamento dos scripts |
+| `css/app.css` | Estilos |
+| `data/scenes.js` | Cenas de cada lição (iguais nos dois idiomas) |
+| `data/certs.js` | Domínios e competências CKA/CKAD |
+| `i18n/pt.js`, `i18n/en.js` | Textos |
+| `js/geometry.js` · `content.js` · `renderer.js` · `ui.js` | Motor isométrico e interface ([ADR-002](docs/adr/ADR-002-file-structure.md)) |
+| `js/term/` | Terminal `kubectl` simulado: `lessons.js` (dados por lição), `files.js` (YAMLs), `engine.js` (interpretador) |
+
+O site também abre direto do disco (`index.html`), sem servidor.
 
 ## Publicação
 

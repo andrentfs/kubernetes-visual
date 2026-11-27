@@ -14,6 +14,7 @@
 | 27/11/2026 | F2 Paridade i18n | Implementado: `npm run test:i18n` |
 | 27/11/2026 | Unitários do terminal | Implementado: 11 testes `node:test` |
 | 27/11/2026 | Bug encontrado pelos testes | Caixa “Na prova” estourava a largura no passo `sched-1` (rolagem horizontal da página) — corrigido |
+| 27/11/2026 | F4 Refatoração (ADR-002) | Implementado localmente: `index.html` 80 KB → 7 KB + `css/app.css` + `js/{geometry,content,renderer,ui}.js`; `term.js` → `js/term/{lessons,files,engine}.js`; dados em `data/` e `i18n/`. DOM dos 236 passos idêntico antes/depois |
 | — | F3 CI | Workflow escrito; precisa de push para rodar no GitHub |
 
 ## 1. Diagnóstico da arquitetura atual
@@ -137,7 +138,7 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 | ADR | Proposta | Motivo | Alternativa descartada |
 |---|---|---|---|
 | **ADR-001** | **Desenvolvimento orientado a Docker; produção estática sem build.** Servir, testar e medir sempre em containers (`make up/test/shell/preview`); imagem `dev` baseada em `mcr.microsoft.com/playwright` com versão fixa; o CI usa a mesma imagem. Detalhes em [`docs/adr/ADR-001-docker-first.md`](adr/ADR-001-docker-first.md) | Ambiente reprodutível (local = CI), contribuidor só precisa de Docker; o GitHub Pages continua sem build | Ferramentas instaladas no host; Vite/Next com build obrigatório |
-| **ADR-002** | Separar `index.html` em módulos ES nativos (`<script type="module">`): `css/app.css`, `js/engine/` (iso, render, links, camera, layout), `js/ui/` (sidebar, search, progress, cert), `js/sim/` (relógio e linha do tempo compartilhados), `js/term/` (motor e dados por lição em `lessons/*.js`) | Testabilidade e reuso do motor nos simuladores | Manter o monólito |
+| **ADR-002** | Separar o `index.html` e o `term.js` em arquivos por responsabilidade (`css/`, `data/`, `i18n/`, `js/`, `js/term/`) usando **scripts clássicos** (não módulos ES, que não funcionam em `file://`). Detalhes em [`docs/adr/ADR-002-file-structure.md`](adr/ADR-002-file-structure.md) | Testabilidade e reuso sem perder abertura direta do arquivo nem exigir build | Módulos ES (quebram `file://`); manter o monólito |
 | **ADR-003** | Carregar o idioma ativo sob demanda (`import()` de `i18n/pt.js` ou `i18n/en.js`) | Corta cerca de 150 KB da primeira carga | Bundle por idioma, que exigiria build |
 | **ADR-004** | **Motor de simulação único** (relógio com velocidade, pausa, passo a passo, estados versionados para voltar no tempo), usado por: falha de node, autoscaling, troubleshooting e YAML interativo | Evita quatro implementações paralelas (DRY) | Uma animação ad hoc por simulador |
 | **ADR-005** | Manter as rotas hash (compatibilidade) e **gerar páginas estáticas por lição** (`/licao/pods/`, `/en/lesson/pods/`) com metadados próprios, que redirecionam para o hash. Geradas por script no CI e versionadas, para o Pages continuar servindo a raiz | SEO e preview por lição sem quebrar links | Trocar para History API, o que quebraria links existentes e exigiria fallback 404 |

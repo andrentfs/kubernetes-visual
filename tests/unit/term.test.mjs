@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadSite } from '../tools/load.mjs';
 
-const { K8STERM } = loadSite(['term.js']);
+const { K8STERM } = loadSite(['js/term/lessons.js', 'js/term/files.js', 'js/term/engine.js']);
 
 // Cena mínima: 3 nodes e pods apoiados neles (host = id do slab).
 const slab = (id, lb, st) => ({ t: 'slab', id, lb, st });
