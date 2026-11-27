@@ -231,3 +231,4 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 @media(max-width:1280px){.search kbd{display:none}}
 @media(max-width:1200px){.tabs span{display:none}.tabs button{padding:0 11px}}
 @media(prefers-reduced-motion:reduce){.ent,#lk,#pk,.side{transition:none}.pp{animation:none}}
+.refv{margin:10px 4px 0;font-size:11px;line-height:1.45;color:var(--muted)}.refv a{color:inherit;text-decoration:underline}

@@ -3,6 +3,7 @@
    Script clássico (não módulo): as declarações de topo são compartilhadas entre os arquivos js/*.js,
    que precisam ser carregados nesta ordem: geometry → content → renderer → ui. */
 /* ---------- UI ---------- */
+function refLine(){const r=window.K8S_REF;if(!r)return'';const d=new Date(r.checked+'T12:00:00').toLocaleDateString(LANG==='pt'?'pt-BR':'en-US',{day:'numeric',month:'short',year:'numeric'});return`<p class="refv">${esc(U_('refVer').replace('{v}',r.version).replace('{d}',d))} <a href="${r.source}" target="_blank" rel="noopener">${esc(U_('refSrc'))}</a></p>`}
 const side=$('#side');
 let DONE=new Set();try{DONE=new Set(JSON.parse(localStorage.getItem('k8s-done')||'[]'))}catch(e){}
 const openMods=new Set();
@@ -11,7 +12,7 @@ const DOC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wid
 const buildSide=()=>{const li0=cur?cur[0]:-1,mods=TX().mods,cnt=mi=>{const ls=L.filter(l=>l.mod===mi);return[ls.filter(l=>DONE.has(l.id)).length,ls.length]};
  if(cur)openMods.add(L[cur[0]].mod);
  side.innerHTML=`<div class="th">${FOLD('var(--ink)')}${U_('course')}<span>${L.length} ${U_('lessons')}</span></div>`+mods.map((m,mi)=>{const[d,t]=cnt(mi);return`<details data-m="${mi}" ${openMods.has(mi)?'open':''}><summary><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>${FOLD(['#7fb0ea','#8cc97a','#f0a868','#e58a7f','#ab95e2'][mi%5])}0${mi+1}. ${esc(m)}<span>${d}/${t}</span></summary><div class="lsl">${L.map((l,li)=>l.mod===mi?`<button class="les ${li===li0?'on':''} ${DONE.has(l.id)?'done':''}" type="button" data-i="${li}" ${li===li0?'aria-current="page"':''}>${DONE.has(l.id)?DOCK:DOC}<span>${esc(l.title)}</span></button>`:'').join('')}</div></details>`}).join('')+
- `<div class="card progc"><div class="ph">${U_('progress')}<span>${DONE.size} / ${L.length}</span></div><div class="pbar"><i style="width:${DONE.size/L.length*100}%"></i></div><ul>${mods.map((m,mi)=>{const[d,t]=cnt(mi);return`<li><b style="--p:${d/t*100}%"></b><em class="pl">${esc(m)}</em><span>${d}/${t}</span></li>`}).join('')}</ul></div>`+`<div class="sidecred">${document.querySelector('.bar .credit').outerHTML}</div>`;
+ `<div class="card progc"><div class="ph">${U_('progress')}<span>${DONE.size} / ${L.length}</span></div><div class="pbar"><i style="width:${DONE.size/L.length*100}%"></i></div><ul>${mods.map((m,mi)=>{const[d,t]=cnt(mi);return`<li><b style="--p:${d/t*100}%"></b><em class="pl">${esc(m)}</em><span>${d}/${t}</span></li>`}).join('')}</ul></div>`+refLine()+`<div class="sidecred">${document.querySelector('.bar .credit').outerHTML}</div>`;
  side.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{const m=+d.dataset.m;d.open?openMods.add(m):openMods.delete(m)}))};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 

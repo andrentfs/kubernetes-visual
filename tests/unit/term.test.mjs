@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadSite } from '../tools/load.mjs';
 
-const { K8STERM } = loadSite(['js/term/lessons.js', 'js/term/files.js', 'js/term/engine.js']);
+const { K8STERM, K8S_REF } = loadSite(['data/meta.js', 'js/term/lessons.js', 'js/term/files.js', 'js/term/engine.js']);
 
 // Cena mínima: 3 nodes e pods apoiados neles (host = id do slab).
 const slab = (id, lb, st) => ({ t: 'slab', id, lb, st });
@@ -92,4 +92,28 @@ test('dry-run gera YAML de Deployment', () => {
   const t = run('kubectl create deployment web --image=nginx --replicas=2 --dry-run=client -o yaml').txt;
   assert.match(t, /kind: Deployment/);
   assert.match(t, /replicas: 2/);
+});
+
+test('EndpointSlice: lista IPs dos pods prontos e filtra por service-name', () => {
+  load([{ t: 'block', id: 'sv', lb: 'Service', b: ['api'] }, pod('a0', 'api', 'n0'), pod('a1', 'api', 'n1', ['readiness: no', 'bad'])], { lesson: 'service', step: 4 });
+  const t = run('kubectl get endpointslices -l kubernetes.io/service-name=api').txt.split('\n');
+  assert.match(t[0], /^NAME\s+ADDRESSTYPE\s+PORTS\s+ENDPOINTS\s+AGE$/);
+  assert.equal(t.length, 2);
+  assert.match(t[1], /^api-[a-z0-9]{5}\s+IPv4\s+8080\s+10\.244\.\d+\.\d+\s/);
+});
+
+test('Service sem pods prontos: ENDPOINTS <unset>', () => {
+  load([{ t: 'block', id: 'sv', lb: 'Service', b: ['web'] }], { lesson: 'service', step: 4 });
+  assert.match(run('kubectl get endpointslices').txt, /<unset>/);
+});
+
+test('get endpoints avisa que a API está deprecated desde a v1.33', () => {
+  load([{ t: 'block', id: 'sv', lb: 'Service', b: ['api'] }]);
+  assert.match(run('kubectl get endpoints').txt.split('\n')[0], /^Warning: v1 Endpoints is deprecated in v1\.33\+; use discovery\.k8s\.io\/v1 EndpointSlice$/);
+});
+
+test('versão simulada vem da versão de referência (data/meta.js)', () => {
+  load([]);
+  assert.match(run('kubectl version').txt, new RegExp('Server Version: ' + K8S_REF.patch.replace(/\./g, '\\.')));
+  assert.match(run('kubectl get nodes').txt, new RegExp(K8S_REF.patch.replace(/\./g, '\\.')));
 });

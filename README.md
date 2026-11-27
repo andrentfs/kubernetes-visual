@@ -18,6 +18,14 @@ make preview   # imagem fechada, igual ao que vai publicado, em http://localhost
 make down      # para tudo
 ```
 
+**No Windows** (sem `make`), use os comandos do Docker Compose diretamente:
+
+```powershell
+docker compose up site                                    # http://localhost:8082
+docker compose --profile dev run --rm dev npm test        # testes
+docker compose --profile preview up --build preview       # http://localhost:8081
+```
+
 Também dá para rodar só uma parte: `make test-unit`, `make test-i18n`, `make test-e2e`.
 Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modules`.
 

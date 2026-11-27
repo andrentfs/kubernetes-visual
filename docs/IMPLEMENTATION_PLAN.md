@@ -15,6 +15,7 @@
 | 27/11/2026 | Unitários do terminal | Implementado: 11 testes `node:test` |
 | 27/11/2026 | Bug encontrado pelos testes | Caixa “Na prova” estourava a largura no passo `sched-1` (rolagem horizontal da página) — corrigido |
 | 27/11/2026 | F4 Refatoração (ADR-002) | Implementado localmente: `index.html` 80 KB → 7 KB + `css/app.css` + `js/{geometry,content,renderer,ui}.js`; `term.js` → `js/term/{lessons,files,engine}.js`; dados em `data/` e `i18n/`. DOM dos 236 passos idêntico antes/depois |
+| 27/11/2026 | F5 Versão de referência + EndpointSlice | Implementado localmente: `data/meta.js` com **Kubernetes v1.37** (versão das provas CKA/CKAD na página oficial da Linux Foundation, conferida em 27/11/2026), exibida no menu lateral com link da fonte; terminal simula v1.37.0; `kubectl get endpointslices` (com `-l kubernetes.io/service-name=`), `get endpoints` mostra o aviso real de deprecated (v1.33+); textos e comandos das lições trocados para EndpointSlice; exemplo de upgrade do kubeadm passa a 1.35 → 1.36 → 1.37; `node-monitor-grace-period` = 50 s (padrão desde a v1.32, conforme a documentação oficial), com a linha do tempo de “Quando um node cai” recalculada (NotReady em ~50 s, despejo em ~5 min 50 s) |
 | — | F3 CI | Workflow escrito; precisa de push para rodar no GitHub |
 
 ## 1. Diagnóstico da arquitetura atual
@@ -71,8 +72,8 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 
 | # | Ponto | Situação |
 |---|---|---|
-| P1 | Versão de referência | O conteúdo cita v1.27 a v1.36 em pontos diferentes e o terminal simula v1.31.2. É preciso **definir uma versão de referência única** (ex.: a usada pela prova na data da consulta) e exibi-la no site |
-| P2 | Endpoints × EndpointSlice | As lições e o terminal usam `Endpoints` (4 menções em PT) e só citam EndpointSlice uma vez. A API `Endpoints` está *deprecated* desde v1.33; o material precisa priorizar EndpointSlice |
+| P1 ✅ | Versão de referência | O conteúdo cita v1.27 a v1.36 em pontos diferentes e o terminal simula v1.31.2. É preciso **definir uma versão de referência única** (ex.: a usada pela prova na data da consulta) e exibi-la no site |
+| P2 ✅ | Endpoints × EndpointSlice | As lições e o terminal usam `Endpoints` (4 menções em PT) e só citam EndpointSlice uma vez. A API `Endpoints` está *deprecated* desde v1.33; o material precisa priorizar EndpointSlice |
 | P3 | Rede: Service, kube-proxy e NetworkPolicy aparecem como blocos com setas | É preciso diferenciar visualmente **objeto declarativo**, **controlador** e **dataplane**, conforme o requisito §5 |
 | P4 | DNAT/SNAT, IP de origem e destino, portas | Ainda não são exibidos |
 | P5 | `node-monitor-grace-period` (40 s → 50 s na v1.32) | Já está citado; validar na documentação oficial ao fixar a versão de referência |
