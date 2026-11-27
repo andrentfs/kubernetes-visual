@@ -2,7 +2,7 @@
 COMPOSE ?= docker compose
 DEV = $(COMPOSE) --profile dev run --rm dev
 
-.PHONY: up down build test test-unit test-i18n test-e2e shell serve preview lighthouse clean
+.PHONY: up down build test test-unit test-i18n test-e2e manifests shell serve preview lighthouse clean
 
 up:          ## Site em http://localhost:8082 (arquivos da pasta, sem cache)
 	$(COMPOSE) up site
@@ -24,6 +24,13 @@ test-i18n: build
 
 test-e2e: build
 	$(DEV) npm run test:e2e
+
+manifests: build ## Valida os YAMLs das lições com kubeconform (ADR-006)
+	$(DEV) node tests/tools/extract-manifests.mjs build/manifests
+	docker run --rm -v "$(CURDIR)/build/manifests:/m:ro" --entrypoint /kubeconform ghcr.io/yannh/kubeconform:v0.8.0 \
+	  -strict -summary -kubernetes-version $$($(DEV) node tests/tools/extract-manifests.mjs --k8s-version | tail -1) \
+	  -schema-location default \
+	  -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' /m
 
 shell: build ## Terminal dentro do container de desenvolvimento
 	$(DEV) bash

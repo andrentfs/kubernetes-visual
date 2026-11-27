@@ -4,6 +4,9 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Added
+- CI validates the 28 example manifests with **kubeconform** (strict, Kubernetes v1.37.0 schemas + Gateway API CRD) and checks Markdown links with **lychee** ([ADR-006](docs/adr/ADR-006-kubeconform.md)). Locally: `make manifests`.
+
 ### Changed
 - Docs brought up to date: implementation plan statuses (Phase 1 done, CKS track done, pending ADRs), ADR-001/002 marked accepted, new [ADR-007](docs/adr/ADR-007-license.md) for the license, architecture and lesson guide cover CKS (`examS`, `adv` level, module 06).
 

@@ -154,7 +154,7 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 | **ADR-003** | Carregar o idioma ativo sob demanda (`import()` de `i18n/pt.js` ou `i18n/en.js`) | Corta cerca de 150 KB da primeira carga | Bundle por idioma, que exigiria build |
 | **ADR-004** | **Motor de simulação único** (relógio com velocidade, pausa, passo a passo, estados versionados para voltar no tempo), usado por: falha de node, autoscaling, troubleshooting e YAML interativo | Evita quatro implementações paralelas (DRY) | Uma animação ad hoc por simulador |
 | **ADR-005** | Manter as rotas hash (compatibilidade) e **gerar páginas estáticas por lição** (`/licao/pods/`, `/en/lesson/pods/`) com metadados próprios, que redirecionam para o hash. Geradas por script no CI e versionadas, para o Pages continuar servindo a raiz | SEO e preview por lição sem quebrar links | Trocar para History API, o que quebraria links existentes e exigiria fallback 404 |
-| **ADR-006** | Validar os YAMLs das lições com `kubeconform` no CI, contra o schema da versão de referência | “Não inventar”: os manifestos ficam verificáveis | Revisão manual |
+| **ADR-006** ✅ | Validar os YAMLs das lições com `kubeconform` no CI, contra o schema da versão de referência. Detalhes em [`docs/adr/ADR-006-kubeconform.md`](adr/ADR-006-kubeconform.md) | “Não inventar”: os manifestos ficam verificáveis | Revisão manual |
 | **ADR-007** ✅ | Licença: MIT para o código e CC BY 4.0 para o conteúdo. Detalhes em [`docs/adr/ADR-007-license.md`](adr/ADR-007-license.md) | Decisão do autor | Apache-2.0 para o código |
 
 ---
@@ -203,7 +203,7 @@ Complexidade relativa: P (até ~1 dia), M (2–3 dias), G (1 semana), GG (mais d
 |---|---|---|:-:|---|
 | F1 ✅ | Testes E2E versionados | `npm test` percorre 236×2 passos sem erro de console; auditoria aponta 0 sobreposições; varredura do terminal sem exceções; roda local e no CI | M | — |
 | F2 ✅ | Paridade i18n | Script falha se faltar chave, passo, legenda ou caixa de prova em um idioma | P | — |
-| F3 🟡 | GitHub Actions | Workflow em PR e push roda F1, F2, link-check e kubeconform; **não** altera o deploy. *Feito: F1 e F2 no CI. Faltam link-check e kubeconform (ADR-006).* | P | F1, F2 |
+| F3 ✅ | GitHub Actions | Workflow em PR e push roda F1, F2, link-check e kubeconform; **não** altera o deploy. *Feito: F1 e F2 no CI, mais os jobs `manifests` (kubeconform) e `links` (lychee) do ADR-006.* | P | F1, F2 |
 | F4 ✅ | Refatoração em módulos | Screenshots de todos os passos idênticos antes/depois (diferença < 0,1%); nenhuma URL muda | G | F1 |
 | F5 ✅ | Versão de referência + EndpointSlice | Uma constante `K8S_REF` exibida no rodapé; textos e terminal usam EndpointSlice (`get endpointslices`); Endpoints citado como *deprecated* | M | F4 |
 | F6 ✅ | Currículo CKA/CKAD reconsultado | `certs.js` com data e link da consulta; pesos e competências conferidos no repositório oficial | P | acesso web |
@@ -286,4 +286,5 @@ Até sua autorização, **nada vai para `main` nem para o GitHub Pages**. Opçõ
 2. ✅ Licença (ADR-007): MIT + CC BY 4.0.
 3. ✅ Preview: servidor local em Docker (`make up`, porta 8082) e prévia privada no Claude.
 4. ✅ Fase 1 autorizada, concluída e publicada.
-5. ⏳ Pendentes: ADR-003, ADR-004 (necessário para a Fase 2), ADR-005 e ADR-006.
+5. ✅ ADR-006 implementado (27/11/2026).
+6. ⏳ Pendentes: ADR-003, ADR-004 (necessário para a Fase 2) e ADR-005.

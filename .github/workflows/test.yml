@@ -24,3 +24,39 @@ jobs:
           name: playwright-report
           path: test-results/
           retention-days: 7
+
+  # ADR-006: os YAMLs de exemplo das lições são validados contra o schema da versão de referência.
+  manifests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Extrai os YAMLs das lições
+        run: |
+          node tests/tools/extract-manifests.mjs build/manifests
+          echo "K8S_VERSION=$(node tests/tools/extract-manifests.mjs --k8s-version)" >> "$GITHUB_ENV"
+      - name: kubeconform (modo strict, schema da versão de referência)
+        run: >-
+          docker run --rm -v "$PWD/build/manifests:/m:ro" --entrypoint /kubeconform
+          ghcr.io/yannh/kubeconform:v0.8.0
+          -strict -summary -kubernetes-version "$K8S_VERSION"
+          -schema-location default
+          -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+          /m
+
+  # Links externos e internos dos documentos (README, docs, guias).
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          fail: true
+          args: >-
+            --no-progress --exclude-loopback --max-retries 3
+            --exclude 'linkedin\.com'
+            './**/*.md'

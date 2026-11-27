@@ -14,7 +14,7 @@ This covers:
 - documentation and images (`docs/`, `assets/`).
 
 You may share and adapt it for any purpose, including commercially, as long as you give appropriate credit
-(“Kubernetes Visual, by André Luiz — https://github.com/andrentfs/kubernetes-visual”), provide a link to the license
+(“Kubernetes Visual, by André Luiz — <https://github.com/andrentfs/kubernetes-visual>”), provide a link to the license
 and indicate if changes were made.
 
 All **source code** (everything else: `index.html`, `css/`, `js/` except the data noted above, `tests/`, `docker/`, build and CI files)
