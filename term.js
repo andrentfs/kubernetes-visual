@@ -5,7 +5,7 @@
 'use strict';
 const LESSONS=['pods','workloads','service','probes','trouble'];
 const T={
- pt:{title:'Terminal',sim:'simulado',try:'Experimente:',ph:'digite um comando kubectl e aperte Enter',run:'Rodar no terminal',clear:'limpar',step:'Passo',
+ pt:{title:'Terminal',sim:'simulado',disc:'Apenas um exemplo simulado para estudo: as respostas são geradas a partir do diagrama deste passo e não vêm de um cluster real. Nomes, IPs, horários e detalhes podem ser diferentes do que você verá no seu cluster.',try:'Experimente:',ph:'digite um comando kubectl e aperte Enter',run:'Rodar no terminal',clear:'limpar',step:'Passo',
   unknownCmd:c=>`# Este terminal simulado não conhece "${c}". Digite help para ver o que dá para rodar.`,
   unknownVerb:v=>`# Dica: o verbo "${v}" não está na simulação. Digite help.`,
   help:`Comandos que este terminal simulado entende:
@@ -22,7 +22,7 @@ const T={
   na aula de troubleshooting: systemctl, journalctl e crictl também respondem.
 # A saída é de exemplo, gerada a partir do que o diagrama mostra neste passo.`,
   watch:'# (-w fica observando; aqui a simulação para sozinha)'},
- en:{title:'Terminal',sim:'simulated',try:'Try:',ph:'type a kubectl command and press Enter',run:'Run in terminal',clear:'clear',step:'Step',
+ en:{title:'Terminal',sim:'simulated',disc:'Just a simulated example for studying: answers are generated from this step\'s diagram and do not come from a real cluster. Names, IPs, times and details may differ from what you will see in your own cluster.',try:'Try:',ph:'type a kubectl command and press Enter',run:'Run in terminal',clear:'clear',step:'Step',
   unknownCmd:c=>`# This simulated terminal doesn't know "${c}". Type help to see what you can run.`,
   unknownVerb:v=>`# Tip: the verb "${v}" isn't part of the simulation. Type help.`,
   help:`Commands this simulated terminal understands:
@@ -633,13 +633,13 @@ function run(line){if(busy){QUEUE.push(line);return}line=line.trim();if(!line)re
  const w=()=>{if(r.watch&&r.watch.length){let k=0;const nx=()=>{if(k>=r.watch.length){after();return}const l=r.watch[k++];setTimeout(()=>print(l,/^#/.test(l)?'nt':'',nx),900)};nx()}else after()};
  if(r.txt==='')w();else print(r.txt||'',r.err?'er':'',w)}
 function init(o){root=document.getElementById('term');if(!root)return;hiFn=o.hi;
- root.innerHTML=`<div class="thd"><span class="tdots"><i></i><i></i><i></i></span><b class="ttl"></b><em class="tsim"></em><button type="button" class="tclr"></button></div><div class="tchips"><span class="ttry"></span><span class="tcl"></span></div><div class="tout" role="log" aria-live="polite"></div><label class="tin"><b>$</b><input type="text" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="kubectl"></label>`;
+ root.innerHTML=`<div class="thd"><span class="tdots"><i></i><i></i><i></i></span><b class="ttl"></b><em class="tsim"></em><button type="button" class="tclr"></button></div><p class="tdisc"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg><span></span></p><div class="tchips"><span class="ttry"></span><span class="tcl"></span></div><div class="tout" role="log" aria-live="polite"></div><label class="tin"><b>$</b><input type="text" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="kubectl"></label>`;
  out=root.querySelector('.tout');inp=root.querySelector('input');chipsEl=root.querySelector('.tcl');
  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=inp.value;inp.value='';run(v)}else if(e.key==='ArrowUp'){if(HI>0){HI--;inp.value=HIST[HI];e.preventDefault()}}else if(e.key==='ArrowDown'){if(HI<HIST.length-1){HI++;inp.value=HIST[HI]}else{HI=HIST.length;inp.value=''}e.preventDefault()}else if(e.key==='l'&&e.ctrlKey){out.innerHTML='';e.preventDefault()}e.stopPropagation()});
  root.querySelector('.tclr').addEventListener('click',()=>{out.innerHTML='';inp.focus()});
  chipsEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;inp.value='';run(b.dataset.c);inp.focus({preventScroll:true})});
  out.addEventListener('click',()=>{if(!getSelection().toString())inp.focus({preventScroll:true})})}
-function ui(){const t=T[LANG];root.querySelector('.ttl').textContent=t.title;root.querySelector('.tsim').textContent=t.sim;root.querySelector('.tclr').textContent=t.clear;root.querySelector('.ttry').textContent=t.try;inp.placeholder=t.ph}
+function ui(){const t=T[LANG];root.querySelector('.ttl').textContent=t.title;root.querySelector('.tsim').textContent=t.sim;root.querySelector('.tsim').title=t.disc;root.querySelector('.tdisc span').textContent=t.disc;root.querySelector('.tclr').textContent=t.clear;root.querySelector('.ttry').textContent=t.try;inp.placeholder=t.ph}
 function step(c){if(!root)return;LANG=c.lang;const on=LESSONS.includes(c.lesson);root.hidden=!on;if(!on)return;ui();
  const key=c.lesson+'-'+c.step+'-'+LANG;if(key===lastKey)return;
  const newLesson=!lastKey.startsWith(c.lesson+'-');lastKey=key;CTX=c;
