@@ -254,7 +254,7 @@ ADR-007 (licença) ── F7
 
 Até sua autorização, **nada vai para `main` nem para o GitHub Pages**. Opções para pré-visualizar, a escolher:
 
-1. **Rodar no seu computador**: eu envio um `.zip` com os arquivos. Você descompacta e roda `python3 -m http.server 8080` na pasta, depois abre `http://localhost:8080`.
+1. **Rodar no seu computador**: eu envio um `.zip` com os arquivos. Você descompacta e roda `python3 -m http.server 8082` na pasta, depois abre `http://localhost:8082`.
 2. **Branch de preview no GitHub** (ex.: `preview`), sem afetar `main`. Exige autorização para *push* nessa branch.
 3. **Página de preview privada** separada, visível só para você, sem tocar na versão publicada.
 

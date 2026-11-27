@@ -16,7 +16,7 @@ O plano prevê testes unitários, E2E, acessibilidade, regressão visual, valida
 
    | Comando | O que faz | Container |
    |---|---|---|
-   | `make up` | Serve a pasta em http://localhost:8080, sem cache: edite e recarregue | `site` (`nginx:1.27-alpine`) |
+   | `make up` | Serve a pasta em http://localhost:8082, sem cache: edite e recarregue | `site` (`nginx:1.27-alpine`) |
    | `make test` | Testes unitários (`node:test`) + paridade PT/EN + E2E (Playwright/Chromium) | `dev` |
    | `make test-unit` / `test-i18n` / `test-e2e` | Cada suíte separada | `dev` |
    | `make shell` | Terminal dentro do ambiente de desenvolvimento | `dev` |

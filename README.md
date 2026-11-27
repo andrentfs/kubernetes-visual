@@ -11,7 +11,7 @@ Curso interativo e visual sobre Kubernetes, em português (Brasil) e inglês. Ca
 O desenvolvimento é orientado a Docker ([ADR-001](docs/adr/ADR-001-docker-first.md)): só é preciso ter Docker e `make`.
 
 ```bash
-make up        # site em http://localhost:8080 — lê os arquivos da pasta: edite e recarregue
+make up        # site em http://localhost:8082 — lê os arquivos da pasta: edite e recarregue
 make test      # testes unitários + paridade PT/EN + E2E (Playwright/Chromium)
 make shell     # terminal dentro do container de desenvolvimento
 make preview   # imagem fechada, igual ao que vai publicado, em http://localhost:8081

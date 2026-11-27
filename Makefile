@@ -4,7 +4,7 @@ DEV = $(COMPOSE) --profile dev run --rm dev
 
 .PHONY: up down build test test-unit test-i18n test-e2e shell serve preview clean
 
-up:          ## Site em http://localhost:8080 (arquivos da pasta, sem cache)
+up:          ## Site em http://localhost:8082 (arquivos da pasta, sem cache)
 	$(COMPOSE) up site
 
 down:        ## Para tudo
