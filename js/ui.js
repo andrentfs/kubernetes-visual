@@ -3,6 +3,14 @@
    Script clássico (não módulo): as declarações de topo são compartilhadas entre os arquivos js/*.js,
    que precisam ser carregados nesta ordem: geometry → content → renderer → ui. */
 /* ---------- UI ---------- */
+/* "Na prova" com abas CKA / CKAD; a escolha fica salva em k8s-exam */
+let EXSEL=(()=>{try{return localStorage.getItem('k8s-exam')||'cka'}catch(e){return'cka'}})(),EXLES=null;
+function renderExam(les){EXLES=les;const E=$('#exam');const ex={cka:les.exam,ckad:les.examD};E.hidden=!ex.cka&&!ex.ckad;if(E.hidden)return;
+ const cur=ex[EXSEL];
+ E.innerHTML=`<h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg>${U_('examT')}<span class="exseg" role="group" aria-label="${esc(U_('examT'))}">${['cka','ckad'].map(k=>`<button type="button" data-x="${k}" aria-pressed="${k===EXSEL}">${k.toUpperCase()}</button>`).join('')}</span></h3>`+
+ (cur?`<ul>${cur.t.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${cur.c?`<div class="exc">${cur.c.map(c=>`<code>${esc(c)}</code>`).join('')}</div>`:''}`:`<p class="exno">${esc(U_(EXSEL==='ckad'?'examNoCkad':'examNoCka'))}</p>`)}
+$('#exam').addEventListener('click',e=>{const b=e.target.closest('button[data-x]');if(!b)return;EXSEL=b.dataset.x;try{localStorage.setItem('k8s-exam',EXSEL)}catch(_){}if(EXLES)renderExam(EXLES)});
+
 function refLine(){const r=window.K8S_REF;if(!r)return'';const d=new Date(r.checked+'T12:00:00').toLocaleDateString(LANG==='pt'?'pt-BR':'en-US',{day:'numeric',month:'short',year:'numeric'});return`<p class="refv">${esc(U_('refVer').replace('{v}',r.version).replace('{d}',d))} <a href="${r.source}" target="_blank" rel="noopener">${esc(U_('refSrc'))}</a></p>`}
 const side=$('#side');
 let DONE=new Set();try{DONE=new Set(JSON.parse(localStorage.getItem('k8s-done')||'[]'))}catch(e){}
@@ -57,7 +65,7 @@ function show(){const hv=location.hash.slice(1);if(hv==='cka'||hv==='ckad'){setV
   (st.warn?`<div class="call warn">${SV_WARN}<div><small>${U_('warn')}</small>${esc(st.warn)}</div></div>`:'')+
   (st.chg?`<div class="chg"><small>${U_('changed')}</small><ul>${st.chg.map(([s,t])=>`<li><i class="${s==='+'?'p':s==='-'?'m':'t'}">${s==='~'?'↝':s}</i>${esc(t)}</li>`).join('')}</ul></div>`:'')+
   (st.cmd?`<div class="cmd"><code>${esc(st.cmd)}</code>${window.K8STERM&&K8STERM.has(les.id)?`<button type="button" id="runT" title="${esc(K8STERM.T().run)}">▶</button>`:''}<button type="button" id="copy">${U_('copy')}</button></div>`:'');
- {const ex=les.exam,E=$('#exam');E.hidden=!ex;if(ex)E.innerHTML=`<h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg>${U_('examT')}</h3><ul>${ex.t.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${ex.c?`<div class="exc">${ex.c.map(c=>`<code>${esc(c)}</code>`).join('')}</div>`:''}`}
+ renderExam(les);
  $('#cap').innerHTML=st.c?`<small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4M4 4h12l-2 4 2 4H4"/></svg>${U_('inDiagram')}</small>${esc(st.c)}`:'';$('#learn').innerHTML=les.goals.map(([g,at])=>`<li class="${si+1>=at?'ok':''}"><i>${si+1>=at?'✓':''}</i>${esc(g)}</li>`).join('');
  const last=si===les.steps.length-1,end=last&&li===L.length-1,nl=end?U_('end'):last?`${U_('nextLesson')}: ${L[li+1].title}`:`${U_('next')}: ${les.steps[si+1].n}`;
  ['#prev','#prev2'].forEach(q=>$(q).disabled=li===0&&si===0);['#next','#next2'].forEach(q=>$(q).disabled=end);

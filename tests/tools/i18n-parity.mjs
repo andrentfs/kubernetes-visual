@@ -21,6 +21,8 @@ for (const id of lessons) {
   if (a.steps.length !== b.steps.length) errors.push(`les.${id}: ${a.steps.length} passos em PT, ${b.steps.length} em EN`);
   if ((a.ml || []).length !== (b.ml || []).length) errors.push(`les.${id}.ml: tamanho diferente`);
   if (!!a.exam !== !!b.exam) errors.push(`les.${id}.exam: só em um idioma`);
+  for (const ex of ['exam', 'examD']) if (a[ex] && b[ex] && (a[ex].t.length !== b[ex].t.length || (a[ex].c || []).length !== (b[ex].c || []).length)) errors.push(`les.${id}.${ex}: itens diferentes`);
+  if (!!a.examD !== !!b.examD) errors.push(`les.${id}.examD: só em um idioma`);
   a.steps.forEach((s, i) => {
     const t = b.steps[i]; if (!t) return;
     const fa = keys(s).filter(k => s[k] != null), fb = keys(t).filter(k => t[k] != null);

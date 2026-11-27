@@ -2,7 +2,12 @@
 
 All notable changes to this project. Format based on [Keep a Changelog](https://keepachangelog.com/); dates are in UTC-3.
 
-## [Unreleased] — Phase 1 (foundation)
+## [Unreleased]
+
+### Added
+- “On the exam” box now has **CKA | CKAD** tabs. CKAD tips for the 18 lessons in the CKAD v1.37 curriculum, in PT and EN; lessons outside it say so. The choice is remembered.
+
+## 2026-11-27 — Phase 1 (foundation)
 
 ### Added
 - Docker-first development: `site` (nginx), `dev` (Playwright/Node) and `preview` containers, `Makefile`, CI workflow ([ADR-001](docs/adr/ADR-001-docker-first.md)).

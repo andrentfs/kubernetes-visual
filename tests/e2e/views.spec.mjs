@@ -29,3 +29,15 @@ test('setas do teclado avançam e voltam os passos', async ({ page }) => {
   await page.keyboard.press('ArrowLeft');
   await expect(page).toHaveURL(/#pods-1$/);
 });
+
+test('caixa “Na prova” alterna CKA/CKAD e lembra a escolha', async ({ page }) => {
+  await open(page, 'probes-1');
+  const box = page.locator('#exam');
+  await box.locator('button[data-x="ckad"]').click();
+  await expect(box.locator('button[data-x="ckad"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(box).toContainText('Probes e health checks');
+  await page.evaluate(() => { location.hash = 'kubeadm-1'; });
+  await expect(box.locator('.exno')).toContainText('CKAD');
+  await page.reload();
+  await expect(page.locator('#exam button[data-x="ckad"]')).toHaveAttribute('aria-pressed', 'true');
+});

@@ -232,3 +232,4 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 @media(max-width:1200px){.tabs span{display:none}.tabs button{padding:0 11px}}
 @media(prefers-reduced-motion:reduce){.ent,#lk,#pk,.side{transition:none}.pp{animation:none}}
 .refv{margin:10px 4px 0;font-size:11px;line-height:1.45;color:var(--muted)}.refv a{color:inherit;text-decoration:underline}
+.exam h3{flex-wrap:wrap}.exseg{display:inline-flex;margin-left:auto;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}.exseg button{all:unset;cursor:pointer;font:700 11px "JetBrains Mono",monospace;padding:3px 9px;color:var(--ink)}.exseg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}.exseg button:focus-visible{outline:2px solid var(--k8s);outline-offset:-2px}.exno{font-size:12.5px;line-height:1.5;color:var(--muted);margin:6px 0 0}
