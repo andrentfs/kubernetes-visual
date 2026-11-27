@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://andrentfs.github.io/kubernetes-visual/sitemap.xml

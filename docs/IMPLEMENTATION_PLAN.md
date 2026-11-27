@@ -16,6 +16,8 @@
 | 27/11/2026 | Bug encontrado pelos testes | Caixa “Na prova” estourava a largura no passo `sched-1` (rolagem horizontal da página) — corrigido |
 | 27/11/2026 | F4 Refatoração (ADR-002) | Implementado localmente: `index.html` 80 KB → 7 KB + `css/app.css` + `js/{geometry,content,renderer,ui}.js`; `term.js` → `js/term/{lessons,files,engine}.js`; dados em `data/` e `i18n/`. DOM dos 236 passos idêntico antes/depois |
 | 27/11/2026 | F5 Versão de referência + EndpointSlice | Implementado localmente: `data/meta.js` com **Kubernetes v1.37** (versão das provas CKA/CKAD na página oficial da Linux Foundation, conferida em 27/11/2026), exibida no menu lateral com link da fonte; terminal simula v1.37.0; `kubectl get endpointslices` (com `-l kubernetes.io/service-name=`), `get endpoints` mostra o aviso real de deprecated (v1.33+); textos e comandos das lições trocados para EndpointSlice; exemplo de upgrade do kubeadm passa a 1.35 → 1.36 → 1.37; `node-monitor-grace-period` = 50 s (padrão desde a v1.32, conforme a documentação oficial), com a linha do tempo de “Quando um node cai” recalculada (NotReady em ~50 s, despejo em ~5 min 50 s) |
+| 27/11/2026 | F6 Currículo CKA/CKAD | Conferido no repositório oficial `cncf/curriculum` (commit `f5ab45e`): `CKA_Curriculum_v1.37.pdf` e `CKAD_Curriculum_v1.37.pdf`. Todos os pesos de domínio e as competências batem 1:1 com `data/certs.js`. Fonte e data aparecem nas abas CKA/CKAD; teste unitário fixa os pesos oficiais |
+| 27/11/2026 | F8 SEO básico | `<title>`, description, canonical, Open Graph (com `assets/og-image.png` 1200×630), Twitter Card, JSON-LD `Course` (259 min de conteúdo), `robots.txt` e `sitemap.xml`; testes unitários. Preview no LinkedIn só pode ser validado depois de publicado (LinkedIn Post Inspector) |
 | — | F3 CI | Workflow escrito; precisa de push para rodar no GitHub |
 
 ## 1. Diagnóstico da arquitetura atual
@@ -77,7 +79,7 @@ Site 100% estático, sem build, publicado na raiz da branch `main` pelo GitHub P
 | P3 | Rede: Service, kube-proxy e NetworkPolicy aparecem como blocos com setas | É preciso diferenciar visualmente **objeto declarativo**, **controlador** e **dataplane**, conforme o requisito §5 |
 | P4 | DNAT/SNAT, IP de origem e destino, portas | Ainda não são exibidos |
 | P5 | `node-monitor-grace-period` (40 s → 50 s na v1.32) | Já está citado; validar na documentação oficial ao fixar a versão de referência |
-| P6 | Pesos e competências CKA/CKAD em `certs.js` | Mapeados a partir do currículo de 18/02/2025. **Reconsultar `github.com/cncf/curriculum`** e registrar a data. A consulta não foi feita nesta análise porque o acesso web ficou bloqueado aguardando permissão |
+| P6 ✅ | Pesos e competências CKA/CKAD em `certs.js` | Mapeados a partir do currículo de 18/02/2025. **Reconsultar `github.com/cncf/curriculum`** e registrar a data. A consulta não foi feita nesta análise porque o acesso web ficou bloqueado aguardando permissão |
 | P7 | Selos GA/Beta/Alpha/deprecated | Não existem; cada recurso citado precisa do selo e da versão |
 | P8 | Referências oficiais por lição | Não existem |
 

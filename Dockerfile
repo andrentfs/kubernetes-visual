@@ -2,7 +2,8 @@
 # O site é estático e não tem etapa de build: a imagem só serve os arquivos com nginx.
 FROM nginx:1.27-alpine
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html /usr/share/nginx/html/
+COPY index.html robots.txt sitemap.xml /usr/share/nginx/html/
+COPY assets /usr/share/nginx/html/assets
 COPY css /usr/share/nginx/html/css
 COPY js /usr/share/nginx/html/js
 COPY data /usr/share/nginx/html/data
