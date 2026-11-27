@@ -229,8 +229,11 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 .logo{flex:none;white-space:nowrap}.tabs{flex:none}
 .search{flex:0 1 340px;min-width:0;width:auto}.search input{min-width:0}
 @media(min-width:1280px) and (max-width:1599px){.app{grid-template-columns:262px minmax(0,1fr) 296px;gap:14px}}
-@media(max-width:1440px){.head{grid-template-columns:minmax(0,1fr)}.chips{padding-top:0}.prog{display:none}.bar .credit__text{display:none}.bar .credit{margin-left:0}.ctl .ib span{display:none}.ctl .ib{padding:0;width:40px}}
-@media(min-width:861px) and (max-width:1440px){.mets{max-width:calc(100% - 150px)}}
+@media(max-width:1440px){.head{grid-template-columns:minmax(0,1fr)}.chips{padding-top:0}.prog{display:none}.bar .credit__text{display:none}.bar .credit{margin-left:0}}
+.ctl .ib span{display:none}.ctl .ib{padding:0;width:40px}
+.met{min-width:0;padding:4px 10px 5px}.met b{font-size:15px}.mets{scrollbar-width:none}.mets::-webkit-scrollbar{display:none}
+@media(min-width:861px){.dia{container-type:inline-size}.mets{flex-wrap:wrap;overflow:visible;max-width:calc(100% - 150px)}}
+@container (max-width:880px){.ovl{position:relative;top:0;left:0;right:0;padding:12px 12px 0}.mets{max-width:none}}
 @media(max-width:1280px){.search kbd{display:none}}
 @media(max-width:1200px){.tabs span{display:none}.tabs button{padding:0 11px}}
 @media(prefers-reduced-motion:reduce){.ent,#lk,#pk,.side{transition:none}.pp{animation:none}}
