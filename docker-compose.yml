@@ -1,6 +1,6 @@
 # Uso:
 #   docker compose up            -> http://localhost:8080 (lê os arquivos da pasta: edite e recarregue)
-#   docker compose up --build preview  -> http://localhost:8081 (imagem fechada, igual ao que vai publicado)
+#   docker compose --profile preview up --build  -> http://localhost:8081 (imagem fechada, igual ao que vai publicado)
 services:
   site:
     image: nginx:1.27-alpine
