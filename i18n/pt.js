@@ -568,3 +568,5 @@ simF_sched:'O scheduler colocou {p} no {n} (node Ready com menos pods).',
 simF_running:'{p} ficou pronto e entrou no EndpointSlice.',
 simF_gone:'O kubelet do {n} confirmou e {p} foi apagado de vez.',
 simF_stuck:'O StatefulSet não cria outro {p} enquanto o antigo existir, para não ter dois com a mesma identidade.'});
+Object.assign(window.TXT.pt.ui,{sideHide:'Recolher o menu',sideShow:'Mostrar o menu'});
+Object.assign(window.TXT.pt.ui,{railProg:'Progresso: {d} de {t} lições',flyEsc:'Esc fecha',flyAll:'Abrir o menu completo'});

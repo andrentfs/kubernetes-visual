@@ -8,6 +8,7 @@
   else try{l=localStorage.getItem('k8s-lang')}catch(e){}
   if(l!=='pt'&&l!=='en')l=(navigator.language||'pt').toLowerCase().indexOf('pt')===0?'pt':'en';
   window.K8S_LANG=l;
+  try{if(localStorage.getItem('k8s-side')==='0')document.body.classList.add('sidecol')}catch(e){}  // menu lateral recolhido
   function add(src,cb){var s=document.createElement('script');s.src=src;s.async=false;if(cb){s.onload=cb;s.onerror=cb}document.head.appendChild(s)}
   ['i18n/'+l+'.js','js/content.js','js/renderer.js','js/ui.js'].forEach(function(src){add(src)});
   /** Carrega scripts sob demanda, em ordem, e chama cb depois do último (ex.: o simulador). */

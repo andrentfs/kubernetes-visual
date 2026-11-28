@@ -9,4 +9,4 @@ const S=window.buildScenes({node,nodes,pod,blk,cp,users,kub,SV,ING,at,tl});
 let L=[];
 function buildL(){L=window.LESSON_ORDER.filter(id=>TX().les[id]&&S[id]).map(id=>{const sc=S[id],tx=TX().les[id];return{id,mod:sc.mod,min:sc.min,lvl:TX().lv[sc.lvl],exam:tx.exam,examD:tx.examD,examS:tx.examS,sim:sc.sim,title:tx.t,lede:tx.lede,ml:tx.ml,goals:tx.goals,steps:sc.steps.map((st,i)=>({...tx.steps[i],c:(TX().cap||{})[id]?.[i],k:st.k,cmd:st.cmd,s:st.s}))}})}
 buildL();
-const MODC=['#cfe1f6','#d1e9c2','#fcd4ad','#f1c3bd','#e2d6f4'];
+const MODC=['#cfe1f6','#d1e9c2','#fcd4ad','#f1c3bd','#e2d6f4','#f6e7b4'];

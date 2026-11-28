@@ -12,16 +12,53 @@ function renderExam(les){EXLES=les;const E=$('#exam');const ex={cka:les.exam,cka
 $('#exam').addEventListener('click',e=>{const b=e.target.closest('button[data-x]');if(!b)return;EXSEL=b.dataset.x;try{localStorage.setItem('k8s-exam',EXSEL)}catch(_){}if(EXLES)renderExam(EXLES)});
 
 function refLine(){const r=window.K8S_REF;if(!r)return'';const d=new Date(r.checked+'T12:00:00').toLocaleDateString(LANG==='pt'?'pt-BR':'en-US',{day:'numeric',month:'short',year:'numeric'});return`<p class="refv">${esc(U_('refVer').replace('{v}',r.version).replace('{d}',d))} <a href="${r.source}" target="_blank" rel="noopener">${esc(U_('refSrc'))}</a></p>`}
+/** Recolhe/mostra o menu lateral em telas largas (≥ 1280 px); a escolha fica salva (k8s-side).
+    Fechar: alça com seta na borda direita do menu (#sideH). Abrir: botão ☰ do topo (#menu). */
+const WIDE=()=>matchMedia('(min-width:1280px)').matches;
+function sideLabels(){const col=document.body.classList.contains('sidecol'),h=$('#sideH'),m=$('#menu'),o=$('#railOpen');if(o)o.setAttribute('aria-expanded',String(!col));if(h){h.setAttribute('aria-expanded',String(!col));h.setAttribute('aria-label',U_('sideHide'));h.title=U_('sideHide')+' ( [ )'}if(m&&WIDE()){m.setAttribute('aria-expanded',String(!col));m.setAttribute('aria-label',U_('sideShow'));m.title=U_('sideShow')+' ( [ )'}}
+function toggleSide(){closeFly();const col=document.body.classList.toggle('sidecol');try{localStorage.setItem('k8s-side',col?'0':'1')}catch(e){}sideLabels();(col?$('#railOpen'):$('#sideH'))?.focus({preventScroll:true})}
 const side=$('#side');
+$('#sideH').addEventListener('click',toggleSide);
+$('#rail').addEventListener('click',e=>{const b=e.target.closest('.rb');if(!b)return;if(b.id==='railOpen'){toggleSide();return}const mi=+b.dataset.m;FLY===mi?closeFly(true):openFly(mi)});
+$('#fly').addEventListener('click',e=>{const b=e.target.closest('.les');if(b){closeFly();go(+b.dataset.i,0);return}const a=e.target.closest('[data-full]');if(a){const mi=+a.dataset.full;openMods.add(mi);toggleSide();buildSide()}});
+$('#fly').addEventListener('keydown',e=>{if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;e.preventDefault();e.stopPropagation();const it=[...$('#fly').querySelectorAll('.les')],k=it.indexOf(document.activeElement);it[(k+(e.key==='ArrowDown'?1:-1)+it.length)%it.length].focus()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&FLY>=0){e.stopPropagation();closeFly(true)}},true);
+document.addEventListener('pointerdown',e=>{if(FLY>=0&&!e.target.closest('#fly,#rail'))closeFly()});
+addEventListener('resize',()=>{if(FLY>=0)closeFly()});
 let DONE=new Set();try{DONE=new Set(JSON.parse(localStorage.getItem('k8s-done')||'[]'))}catch(e){}
 const openMods=new Set();
 const FOLD=c=>`<svg class="fold" viewBox="0 0 20 16"><path d="M1.5 3.2c0-.9.7-1.7 1.7-1.7h4.4l1.8 2h7.4c.9 0 1.7.7 1.7 1.7v8c0 .9-.8 1.7-1.7 1.7H3.2c-1 0-1.7-.8-1.7-1.7Z" fill="${c}" stroke="var(--ink)" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
 const DOC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 2h8l4 4v16H6Z"/><path d="M14 2v4h4"/></svg>',DOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>';
 const buildSide=()=>{const li0=cur?cur[0]:-1,mods=TX().mods,cnt=mi=>{const ls=L.filter(l=>l.mod===mi);return[ls.filter(l=>DONE.has(l.id)).length,ls.length]};
  if(cur)openMods.add(L[cur[0]].mod);
- side.innerHTML=`<div class="th">${FOLD('var(--ink)')}${U_('course')}<span>${L.length} ${U_('lessons')}</span></div>`+mods.map((m,mi)=>{const[d,t]=cnt(mi);return`<details data-m="${mi}" ${openMods.has(mi)?'open':''}><summary><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>${FOLD(['#7fb0ea','#8cc97a','#f0a868','#e58a7f','#ab95e2'][mi%5])}0${mi+1}. ${esc(m)}<span>${d}/${t}</span></summary><div class="lsl">${L.map((l,li)=>l.mod===mi?`<button class="les ${li===li0?'on':''} ${DONE.has(l.id)?'done':''}" type="button" data-i="${li}" ${li===li0?'aria-current="page"':''}>${DONE.has(l.id)?DOCK:DOC}<span>${esc(l.title)}</span></button>`:'').join('')}</div></details>`}).join('')+
+ side.innerHTML=`<div class="th">${FOLD('var(--ink)')}${U_('course')}<span>${L.length} ${U_('lessons')}</span></div>`+mods.map((m,mi)=>{const[d,t]=cnt(mi);return`<details data-m="${mi}" ${openMods.has(mi)?'open':''}><summary><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>${FOLD(FOLDC[mi%6])}0${mi+1}. ${esc(m)}<span>${d}/${t}</span></summary><div class="lsl">${L.map((l,li)=>l.mod===mi?`<button class="les ${li===li0?'on':''} ${DONE.has(l.id)?'done':''}" type="button" data-i="${li}" ${li===li0?'aria-current="page"':''}>${DONE.has(l.id)?DOCK:DOC}<span>${esc(l.title)}</span></button>`:'').join('')}</div></details>`}).join('')+
  `<div class="card progc"><div class="ph">${U_('progress')}<span>${DONE.size} / ${L.length}</span></div><div class="pbar"><i style="width:${DONE.size/L.length*100}%"></i></div><ul>${mods.map((m,mi)=>{const[d,t]=cnt(mi);return`<li><b style="--p:${d/t*100}%"></b><em class="pl">${esc(m)}</em><span>${d}/${t}</span></li>`}).join('')}</ul></div>`+refLine()+`<div class="sidecred">${document.querySelector('.bar .credit').outerHTML}</div>`;
- side.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{const m=+d.dataset.m;d.open?openMods.add(m):openMods.delete(m)}))};
+ side.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{const m=+d.dataset.m;d.open?openMods.add(m):openMods.delete(m)}));buildRail(mods,cnt,li0)};
+/* ---------- Menu recolhido: coluna de ícones + submenu por módulo ---------- */
+const FOLDC=['#7fb0ea','#8cc97a','#f0a868','#e58a7f','#ab95e2','#e3c25a'];
+let FLY=-1;
+function buildRail(mods,cnt,li0){
+ const r=$('#rail');if(!r)return;const curMod=li0>=0?L[li0].mod:-1,R=2*Math.PI*15,pd=DONE.size/L.length;
+ r.setAttribute('aria-label',U_('sideShow'));
+ r.innerHTML=`<button type="button" class="rb top" id="railOpen" data-tip="${esc(U_('sideShow'))} ( [ )" aria-label="${esc(U_('sideShow'))}" aria-controls="side" aria-expanded="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 7 5 5-5 5M13 7l5 5-5 5"/></svg></button><hr>`+
+  mods.map((m,mi)=>{const[d,t]=cnt(mi),tip=`0${mi+1}. ${m} · ${d}/${t}`;return`<button type="button" class="rb${mi===curMod?' cur':''}${mi===FLY?' open':''}" data-m="${mi}" data-tip="${esc(tip)}" aria-label="${esc(tip)}" aria-haspopup="true" aria-expanded="${mi===FLY}">${FOLD(FOLDC[mi%6])}<small>0${mi+1}</small>${d===t?'<i class="ok" aria-hidden="true">✓</i>':d?`<i aria-hidden="true">${d}/${t}</i>`:''}</button>`}).join('')+
+  `<hr><div class="ring" data-tip="${esc(U_('railProg').replace('{d}',DONE.size).replace('{t}',L.length))}" tabindex="0" role="img" aria-label="${esc(U_('railProg').replace('{d}',DONE.size).replace('{t}',L.length))}"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="none" stroke="var(--line)" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="var(--green3)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(pd*R).toFixed(1)} ${R.toFixed(1)}" transform="rotate(-90 18 18)"/></svg><b>${DONE.size}/${L.length}</b></div>`;
+ if(FLY>=0)openFly(FLY,false);
+ sideLabels();
+}
+function openFly(mi,focus=true){
+ const f=$('#fly'),b=$(`#rail .rb[data-m="${mi}"]`);if(!f||!b)return;FLY=mi;
+ const li0=cur?cur[0]:-1,ls=L.map((l,li)=>[l,li]).filter(([l])=>l.mod===mi),d=ls.filter(([l])=>DONE.has(l.id)).length;
+ f.innerHTML=`<div class="fh">${FOLD(FOLDC[mi%6])}<b>0${mi+1}. ${esc(TX().mods[mi])}</b><span>${d}/${ls.length}</span></div><div class="fl" role="menu">`+
+  ls.map(([l,li])=>`<button type="button" role="menuitem" class="les ${li===li0?'on':''} ${DONE.has(l.id)?'done':''}" data-i="${li}" ${li===li0?'aria-current="page"':''}>${DONE.has(l.id)?DOCK:DOC}<span>${esc(l.title)}</span></button>`).join('')+
+  `</div><div class="ff"><span>${esc(U_('flyEsc'))}</span><button type="button" class="lk" data-full="${mi}">${esc(U_('flyAll'))}</button></div>`;
+ f.hidden=false;
+ document.querySelectorAll('#rail .rb[data-m]').forEach(x=>{const on=+x.dataset.m===mi;x.classList.toggle('open',on);x.setAttribute('aria-expanded',String(on))});
+ const r=b.getBoundingClientRect(),h=f.offsetHeight;f.style.left=`${Math.round(r.right+12)}px`;f.style.top=`${Math.round(Math.max(72,Math.min(r.top-10,innerHeight-h-12)))}px`;
+ f.style.setProperty('--ay',`${Math.round(r.top+r.height/2-parseFloat(f.style.top))}px`);
+ if(focus)(f.querySelector('.les.on')||f.querySelector('.les')).focus({preventScroll:true});
+}
+function closeFly(back){const f=$('#fly');if(!f||f.hidden)return;f.hidden=true;const mi=FLY;FLY=-1;document.querySelectorAll('#rail .rb[data-m]').forEach(x=>{x.classList.remove('open');x.setAttribute('aria-expanded','false')});if(back)$(`#rail .rb[data-m="${mi}"]`)?.focus({preventScroll:true})}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 const SV_SPARK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>';
@@ -79,11 +116,11 @@ const drawer=o=>{side.classList.toggle('open',o);$('#scrim').classList.toggle('o
 const replay=()=>{const[li,si]=cur;paint(L[li].steps[si].s(),true)};
 const togglePause=()=>{paused=!paused;paused?sv.pauseAnimations():sv.unpauseAnimations();$('#pauseI').setAttribute('d',paused?'M7 4l13 8-13 8z':'M9 5v14M15 5v14');applyUI()};
 side.addEventListener('click',e=>{const b=e.target.closest('.les');if(b){go(+b.dataset.i,0);drawer(false)}});
-$('#menu').addEventListener('click',()=>drawer(!side.classList.contains('open')));
+$('#menu').addEventListener('click',()=>{if(WIDE()){toggleSide();return}drawer(!side.classList.contains('open'))});
 $('#scrim').addEventListener('click',()=>drawer(false));
 $('#dots').addEventListener('click',e=>{const b=e.target.closest('button');if(b)go(cur[0],+b.dataset.s)});
 ['#prev','#prev2'].forEach(q=>$(q).addEventListener('click',()=>step(-1)));['#next','#next2'].forEach(q=>$(q).addEventListener('click',()=>step(1)));
-document.addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('input,textarea,select'))return;if(VIEW!=='learn')return;if(window.SIMUI&&SIMUI.key(e))return;if(e.key==='ArrowRight')step(1);else if(e.key==='ArrowLeft')step(-1);else if(e.key==='Escape')drawer(false);else if(e.key==='r'||e.key==='R')replay();else if(e.key===' '&&!e.target.closest('button')){e.preventDefault();togglePause()}});
+document.addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('input,textarea,select'))return;if(VIEW!=='learn')return;if(window.SIMUI&&SIMUI.key(e))return;if(e.key==='['&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&matchMedia('(min-width:1280px)').matches){e.preventDefault();toggleSide();return}if(e.key==='ArrowRight')step(1);else if(e.key==='ArrowLeft')step(-1);else if(e.key==='Escape')drawer(false);else if(e.key==='r'||e.key==='R')replay();else if(e.key===' '&&!e.target.closest('button')){e.preventDefault();togglePause()}});
 $('#step').addEventListener('click',e=>{if(e.target.id==='runT'){K8STERM.run($('#step code').textContent);return}if(e.target.id!=='copy')return;const t=$('#step code').textContent;try{navigator.clipboard.writeText(t).then(()=>{e.target.textContent=U_('copied')},()=>{e.target.textContent=U_('copyFail')})}catch(err){e.target.textContent=U_('copyFail')}});
 $('#replay').addEventListener('click',replay);$('#pause').addEventListener('click',togglePause);
 $('#svw').addEventListener('pointerdown',()=>{$('#svw')._u=1});$('#full').addEventListener('click',()=>{const d=$('#dia');try{(document.fullscreenElement?document.exitFullscreen():d.requestFullscreen())?.catch?.(()=>{})}catch(err){}});

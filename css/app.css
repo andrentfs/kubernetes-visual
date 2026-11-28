@@ -244,3 +244,50 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 .simcfg{margin:10px 0;font-size:13px}.simcfg label{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:6px 0}.simcfg input{width:6em}
 .simf{list-style:none;padding:0;margin:6px 0;font-size:13px}.simf li{padding:5px 0;border-bottom:1px dashed var(--line,#d9cfc2)}.simf li b{display:inline-block;min-width:3.2em}.simf .empty{opacity:.7}
 #dots input[type=range]{width:100%;accent-color:#5a8f3a}
+
+/* Menu lateral recolhível (telas ≥ 1280 px; abaixo disso ele já é gaveta pelo ☰).
+   Fechar: passar o mouse na borda direita do menu mostra uma alça com seta (#sideH).
+   Abrir: com o menu recolhido, o ☰ aparece no topo. */
+.app{position:relative;--sw:262px;--gp:14px}
+.sideh{display:none}
+@media(min-width:1280px){
+ .sideh{display:block;position:absolute;top:18px;bottom:24px;left:calc(max(16px,2vw) + var(--sw) + var(--gp)/2 - 9px);width:18px;padding:0;border:0;background:none;cursor:pointer;z-index:5}
+ .sideh::before{content:"";position:absolute;top:0;bottom:0;left:8px;width:2px;border-radius:2px;background:var(--line2);opacity:0;transition:opacity .15s}
+ .sideh .pill{position:sticky;top:calc(50vh - 40px);display:grid;place-items:center;width:22px;height:38px;margin-left:-2px;border:1.5px solid var(--ink);border-radius:999px;background:var(--card);color:var(--ink);box-shadow:2px 2px 0 var(--drop);opacity:0;transform:translateX(4px);transition:opacity .15s,transform .15s}
+ .sideh:hover::before,.sideh:focus-visible::before{opacity:1}
+ .sideh:hover .pill,.sideh:focus-visible .pill{opacity:1;transform:none}
+ .sideh:focus-visible{outline:none}.sideh:focus-visible .pill{outline:2px solid var(--k8s);outline-offset:2px}
+ body.sidecol .app{grid-template-columns:56px minmax(0,1fr) 296px}
+ body.sidecol .side,body.sidecol .sideh{display:none}
+}
+@media(min-width:1280px) and (hover:none){.sideh .pill{opacity:.7;transform:none}}
+@media(min-width:1600px){.app{--sw:260px;--gp:18px}body.sidecol .app{grid-template-columns:56px minmax(0,1fr) 350px}}
+@media(prefers-reduced-motion:reduce){.sideh .pill,.sideh::before{transition:none}}
+
+/* Coluna de ícones (menu recolhido) e submenu por módulo */
+.rail,.fly[hidden]{display:none}
+@media(min-width:1280px){
+ body.sidecol .rail{display:flex;flex-direction:column;align-items:center;gap:6px;position:sticky;top:76px;padding:8px 0;width:56px;box-sizing:border-box;border:1.5px solid var(--line2);border-radius:14px;background:var(--card)}
+ .rail hr{width:60%;border:0;border-top:1px solid var(--line);margin:2px 0}
+ .rb{all:unset;box-sizing:border-box;position:relative;display:grid;place-items:center;align-content:center;width:42px;height:46px;border:1.5px solid transparent;border-radius:10px;cursor:pointer;color:var(--ink);transition:background .12s,border-color .12s,box-shadow .12s,transform .12s}
+ .rb .fold{width:22px;height:18px}.rb small{font-size:9.5px;font-weight:700;line-height:1.3}
+ .rb.top{height:38px}
+ /* relevo só no mouse em cima ou no foco do teclado */
+ .rb:hover,.rb:focus-visible,.rb.open{border-color:var(--ink);background:var(--paper);box-shadow:1.5px 2.5px 0 var(--drop);transform:translate(-1px,-1px)}
+ .rb:focus-visible{outline:2px solid var(--k8s);outline-offset:2px}
+ .rb.cur{background:var(--green);border-color:var(--ink)}
+ .rb i{position:absolute;top:-3px;right:-6px;font-style:normal;font-size:8.5px;font-weight:800;line-height:1.35;border-radius:99px;padding:0 4px;border:1.2px solid var(--ink);background:var(--card)}
+ .rb i.ok{background:var(--green3);color:#fff;border-color:#2f6a2a}
+ .ring{position:relative;width:40px;height:40px;border-radius:50%}.ring svg{width:40px;height:40px;display:block}.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:8.5px}
+ .ring:focus-visible{outline:2px solid var(--k8s);outline-offset:2px}
+ /* dicas no mouse em cima e no foco */
+ .rail [data-tip]::after{content:attr(data-tip);position:absolute;left:calc(100% + 12px);top:50%;transform:translate(-4px,-50%);white-space:nowrap;background:var(--ink);color:var(--paper);font-weight:600;font-size:12px;line-height:1.3;padding:6px 10px;border-radius:8px;box-shadow:2px 2px 0 rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;z-index:70}
+ .rail [data-tip]:hover::after,.rail [data-tip]:focus-visible::after{opacity:1;transform:translate(0,-50%)}
+ .rail .rb.open::after{display:none}
+ .fly:not([hidden]){display:block;position:fixed;z-index:60;width:300px;max-height:calc(100vh - 90px);overflow:auto;background:var(--card);border:1.5px solid var(--ink);border-radius:14px;box-shadow:3px 4px 0 var(--drop);padding:10px 8px 8px}
+ .fly .fh{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:2px 8px 8px;border-bottom:1px solid var(--line);margin-bottom:6px}.fly .fh .fold{width:20px;height:16px;flex:none}.fly .fh span{margin-left:auto;font-size:12px;opacity:.7}
+ .fly .fl{display:grid;gap:2px}
+ .fly .ff{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line);margin-top:6px;padding:8px 8px 2px;font-size:12px;color:var(--muted)}
+ .fly .lk{all:unset;cursor:pointer;color:var(--ink);text-decoration:underline;font-size:12px}.fly .lk:focus-visible{outline:2px solid var(--k8s);outline-offset:2px}
+}
+@media(prefers-reduced-motion:reduce){.rb,.rail [data-tip]::after{transition:none}}
