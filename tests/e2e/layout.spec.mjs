@@ -23,8 +23,13 @@ test('menu lateral: alça na borda recolhe; coluna de ícones com dicas, submenu
   const before = await stage();
   await expect(page.locator('#rail')).toBeHidden();
   const h = page.locator('#sideH');
+  await expect(h).toBeVisible();                                  // sempre à mostra, sem precisar do mouse
+  const y0 = (await h.boundingBox()).y;
+  await page.mouse.wheel(0, 600);
+  await expect.poll(async () => Math.round((await h.boundingBox()).y)).toBe(Math.round(y0)); // não se move com a rolagem
+  await page.mouse.wheel(0, -600);
   await h.hover();
-  await expect(h.locator('.pill')).toHaveCSS('opacity', '1');
+  await expect(h).toHaveCSS('opacity', '1');
   await expect(h).toHaveAttribute('aria-label', 'Recolher o menu');
   await h.click();
   await expect(page.locator('body')).toHaveClass(/sidecol/);

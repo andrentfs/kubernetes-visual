@@ -4,8 +4,13 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Fixed
+- The collapse handle (‹) is now always visible on wide screens, at the same height of the window as you scroll; it used to appear only on hover and could end up off-screen, because a `<button>` centres its content vertically.
+
+## 2026-11-27 — Collapsible sidebar
+
 ### Added
-- **Collapsible sidebar** on wide screens (≥ 1280 px). Hovering the menu’s right edge shows a handle with an arrow to collapse it. Collapsed, it becomes a column of module icons (colour, number, progress badge, current module highlighted, overall progress ring); hovering shows the module name and progress, and clicking opens a submenu with that module’s lessons (arrow keys, Esc, click outside). » opens the full menu, the `[` key toggles, and the choice is remembered. The lesson gains about 200 px. Smaller screens keep the drawer.
+- **Collapsible sidebar** on wide screens (≥ 1280 px). A handle with an arrow on the menu’s right edge collapses it. Collapsed, it becomes a column of module icons (colour, number, progress badge, current module highlighted, overall progress ring); hovering shows the module name and progress, and clicking opens a submenu with that module’s lessons (arrow keys, Esc, click outside). » opens the full menu, the `[` key toggles, and the choice is remembered. The lesson gains about 200 px. Smaller screens keep the drawer.
 
 ### Fixed
 - Module 06 folder had the same colour as module 01; it now has its own.
