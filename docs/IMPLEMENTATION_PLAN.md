@@ -29,6 +29,7 @@
 | 27/11/2026 | ADR-005 páginas por lição | 54 páginas (`licao/`, `en/lesson/`) com metadados próprios e texto completo, sem redirecionar; sitemap com `hreflang`; teste falha se estiverem desatualizadas |
 | 27/11/2026 | ADR-004 motor de simulação (S1) | `js/sim/engine.js` com 15 testes: velocidade 0,5×–10×, pausa, passo, seek, volta exata no tempo e ações do usuário |
 | 27/11/2026 | S2 simulador de falha de node | `#sim/nodefail` (botão “Simulador” na lição): derrubar/religar qualquer node; Lease, NotReady, taint, EndpointSlice, despejo, ReplicaSet, scheduler e StatefulSet na linha do tempo; tempos ajustáveis; nenhum pod se move. 8 testes do modelo + E2E em PT/EN |
+| 28/11/2026 | Correção: abas da caixa “Na prova” | Relato de Júlio César (cluster-1, nodefail-1, módulo 06). Causa: regra introduzida com o módulo CKS forçava a única prova com dicas mesmo após clique. Regra única `CERTS_TAB` (data/certs.js) + testes unitários e E2E (27 lições × 2 idiomas, desktop e celular). Mensagens “sem dicas” corrigidas; dica CKA da lição `tudo` |
 
 ## 1. Diagnóstico da arquitetura atual
 

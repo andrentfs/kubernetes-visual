@@ -53,3 +53,29 @@ test('CKS: as 26 competências estão cobertas por lições', () => {
   assert.equal(all.length, 26);
   assert.deepEqual(all.filter(([, les, st]) => st !== 'full' || !les.length).map(([id]) => id), []);
 });
+
+// Regressão (relato de 28/11/2026): em lições com dica de uma prova só (cluster, nodefail, módulo 06),
+// as abas da caixa “Na prova” ficavam presas nessa prova.
+test('CERTS_TAB: clique numa aba sempre vale; sem clique, abre na única prova com dica', () => {
+  const { CERTS_TAB } = loadSite(['data/certs.js']);
+  const T = { t: ['x'] };
+  assert.equal(CERTS_TAB({ cka: T }, 'ckad', false), 'cka', 'cluster/nodefail: abre na CKA');
+  assert.equal(CERTS_TAB({ cka: T }, 'ckad', true), 'ckad', 'cluster/nodefail: clique em CKAD mostra CKAD');
+  assert.equal(CERTS_TAB({ cka: T }, 'cks', true), 'cks');
+  assert.equal(CERTS_TAB({ cks: T }, 'cka', false), 'cks', 'módulo 06: abre na CKS');
+  assert.equal(CERTS_TAB({ cks: T }, 'cka', true), 'cka', 'módulo 06: clique em CKA mostra CKA (sem dicas)');
+  assert.equal(CERTS_TAB({ cka: T, ckad: T }, 'cks', false), 'cks', 'várias provas: respeita a escolha salva');
+  assert.equal(CERTS_TAB({ cka: T, ckad: T, cks: T }, 'ckad', false), 'ckad');
+  assert.equal(CERTS_TAB({}, 'cka', false), null, 'sem dicas: sem caixa');
+});
+
+test('dicas de prova: módulo 06 tem CKS; a revisão (tudo) tem as três; PT e EN iguais', () => {
+  const w = loadSite(['data/scenes.js', 'i18n/labels.js', 'i18n/pt.js', 'i18n/en.js']);
+  const S = w.buildScenes(new Proxy({}, { get: () => () => [0, 0] }));
+  for (const id of w.LESSON_ORDER) {
+    const has = l => ['exam', 'examD', 'examS'].filter(k => w.TXT[l].les[id][k]?.t?.length).join();
+    assert.equal(has('pt'), has('en'), `${id}: mesmas provas em PT e EN`);
+    if (S[id].mod === 5) assert.ok(w.TXT.pt.les[id].examS?.t?.length, `${id}: dica CKS`);
+  }
+  for (const k of ['exam', 'examD', 'examS']) assert.ok(w.TXT.pt.les.tudo[k]?.t?.length, `tudo.${k}`);
+});

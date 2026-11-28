@@ -78,3 +78,16 @@ en:{tabs:{learn:'Learn',cka:'CKA',ckad:'CKAD',cks:'CKS'},
   tips:[['Take the CKA first','Only people who passed the CKA can take the CKS. Many tasks rely on admin basics: control plane manifests, kubelet, RBAC.'],['Careful with the API server','Several tasks ask for kube-apiserver flags (admission, audit, Secret encryption). Back up /etc/kubernetes/manifests/kube-apiserver.yaml before editing and wait for the pod to come back.'],['Know securityContext by heart','runAsNonRoot, readOnlyRootFilesystem, allowPrivilegeEscalation: false, capabilities drop ALL, seccompProfile and appArmorProfile.'],['Network: deny by default','A deny-all NetworkPolicy per namespace, then allow only what is needed, including egress to DNS.'],['Images and supply chain','Scan images, analyse manifests (Kubesec, KubeLinter) and restrict registries with admission.'],['Skip and come back','Tasks have different weights. If you get stuck, flag it and move on; come back at the end.']]}
 }
 };
+
+/* Aba que a caixa “Na prova” de uma lição mostra.
+   tips: {cka, ckad, cks} com as dicas da lição (ou vazio); pref: prova escolhida e salva (k8s-exam);
+   picked: true se a pessoa clicou numa aba nesta lição.
+   - Clique numa aba sempre vale, mesmo sem dica (aí aparece “sem dicas para…”).
+   - Sem clique, vale a escolha salva; se a lição só tem dica de UMA prova e não da escolhida,
+     a caixa abre nela (ex.: lições do módulo 06, só CKS). */
+window.CERTS_TAB=function(tips,pref,picked){
+  var has=['cka','ckad','cks'].filter(function(k){return tips&&tips[k]});
+  if(!has.length)return null;
+  if(picked||tips[pref]||has.length!==1)return pref;
+  return has[0];
+};

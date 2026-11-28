@@ -90,3 +90,17 @@ test('em tela estreita não há alça nem coluna de ícones; o ☰ continua abri
   await page.locator('#menu').click();
   await expect(page.locator('#side')).toHaveClass(/open/);
 });
+
+test('caixa “Na prova” no celular e no desktop: abas respondem e nada estoura a largura', async ({ page }) => {
+  const errors = await open(page, 'cluster-1', 'pt');
+  for (const id of ['cluster', 'hardening']) {
+    await page.evaluate(h => { location.hash = h; }, `${id}-1`);
+    const box = page.locator('#exam');
+    await box.scrollIntoViewIfNeeded();
+    await expect(box).toBeVisible();
+    await box.locator('button[data-x="ckad"]').click();
+    await expect(box.locator('button[aria-pressed="true"]')).toHaveText('CKAD');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  }
+  expect(errors).toEqual([]);
+});
