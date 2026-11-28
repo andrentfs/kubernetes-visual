@@ -374,3 +374,10 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 @media(min-width:1280px) and (max-width:1599px){.nav .back{flex:none;padding-left:14px;padding-right:14px}.nav .back span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}
 .dia:fullscreen .fsside .nav{display:grid!important}
 .dia:fullscreen .nav .back span{position:static;width:auto;height:auto;overflow:visible;clip-path:none}
+/* tela cheia: "Na prova" e terminal entram no painel, abaixo do texto; o painel fica um pouco mais largo
+   para o terminal respirar, e tudo some junto com "Ocultar o texto" */
+.dia:fullscreen{--fsw:min(480px,38vw)}
+.dia:fullscreen .fsside>.card{margin:0;flex:none}
+.dia:fullscreen .fsside .term .tout,.dia:fullscreen .fsside .term pre{max-height:40vh}
+.dia.fsno .fsside>.card{display:none}
+.dia:fullscreen .fsside .step{min-height:0}

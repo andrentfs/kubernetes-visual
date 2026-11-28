@@ -174,7 +174,10 @@ addEventListener('resize',fitSoon);if(window.ResizeObserver){const h=$('.head');
 // Tela cheia: o cartão do passo (texto, Voltar/Próximo) vai para um painel ao lado do diagrama e volta ao sair.
 // O cartão é movido, não copiado: render, botões e teclado continuam funcionando sem código extra.
 function fsLabel(){const d=$('#dia'),t=$('#fsTog');if(!t)return;const off=d.classList.contains('fsno');t.setAttribute('aria-expanded',String(!off));t.querySelector('span').textContent=U_(off?'fsShow':'fsHide');t.title=U_(off?'fsShow':'fsHide')+' (T)'}
-document.addEventListener('fullscreenchange',()=>{const d=$('#dia'),card=$('.step'),side=$('#fsside'),panel=$('.panel');if(!d||!card)return;
- if(document.fullscreenElement===d){side.appendChild(card);fsLabel()}else if(card.parentNode===side){panel.prepend(card);d.classList.remove('fsno')}fitSoon()});
+// Também vão o "Na prova" e o terminal (quando a lição tem): cada um deixa um marcador no lugar e volta para ele.
+const FSMOVE=['.step','#exam','#term'];
+document.addEventListener('fullscreenchange',()=>{const d=$('#dia'),side=$('#fsside');if(!d||!side)return;
+ if(document.fullscreenElement===d){FSMOVE.forEach(q=>{const el=$(q);if(!el||el.parentNode===side)return;const mk=document.createComment('fs:'+q);el.before(mk);el._fsmk=mk;side.appendChild(el)});fsLabel()}
+ else{FSMOVE.forEach(q=>{const el=$(q);if(el&&el._fsmk){el._fsmk.replaceWith(el);el._fsmk=null}});d.classList.remove('fsno')}fitSoon()});
 $('#fsTog').addEventListener('click',()=>{$('#dia').classList.toggle('fsno');fsLabel()});
 document.addEventListener('keydown',e=>{if((e.key==='t'||e.key==='T')&&document.fullscreenElement===$('#dia')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();$('#fsTog').click()}});

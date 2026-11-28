@@ -232,6 +232,10 @@ test('tela cheia mostra o texto do passo, navega, oculta com T e devolve o cart�
   await expect(side.locator('.step h2')).toHaveText(/Probe/);
   await expect(side.locator('#next')).toBeVisible();
   await expect(page.locator('#full')).toBeVisible();                 // controles não ficam sob o painel
+  await expect(side.locator('#exam')).toBeVisible();                // “Na prova” e terminal também vão para a tela cheia
+  await expect(side.locator('#term')).toHaveCount(1);
+  const termShown = await page.locator('#term').evaluate(e => !e.hidden);
+  if (termShown) await expect(side.locator('#term .thd')).toBeVisible();
   await side.locator('#next').click();
   await expect(page).toHaveURL(/#probes-4$/);
   await expect(side.locator('.step .sh')).toContainText('4 / 11');
@@ -243,5 +247,8 @@ test('tela cheia mostra o texto do passo, navega, oculta com T e devolve o cart�
   await page.evaluate(() => document.exitFullscreen());
   await expect(page.locator('.panel > .step')).toHaveCount(1);
   await expect(page.locator('#fsside .step')).toHaveCount(0);
+  await expect(page.locator('#fsside .card')).toHaveCount(0);
+  await expect(page.locator('.panel > #exam')).toHaveCount(1);
+  expect(await page.locator('#term').evaluate(e => e.previousElementSibling?.classList.contains('stage'))).toBe(true);
   expect(errors).toEqual([]);
 });

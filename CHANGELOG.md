@@ -5,7 +5,7 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
-- **Text in full screen**: the full-screen diagram now shows the step text on the side (below it on portrait screens), with Back/Next working. “Hide the text” (or the T key) leaves only the diagram, and “Show the text” brings it back.
+- **Text in full screen**: the full-screen diagram now shows the step text on the side (below it on portrait screens), with Back/Next working. “Hide the text” (or the T key) leaves only the diagram, and “Show the text” brings it back. The “On the exam” box and the terminal (in lessons that have one) come along below the text, so you can switch exam tabs and run commands without leaving full screen.
 - **KCNA and KCSA mock exams** (new “Mock exams” tab, `#quiz`): 30 original questions per exam in PT and EN, spread by the official domain weights (cncf/curriculum `f5ab45e`), 45 min, 75% to pass (the real exams have 60 questions in 90 min, per the Linux Foundation docs). Shuffled order, timer, flag for review, question map, keyboard, resume after reload, score by domain and a review with an explanation and an official docs link for every question. Loaded only when the tab opens. All question links are listed in `docs/quiz-references.md` so the CI link check verifies them.
 
 ### Fixed
