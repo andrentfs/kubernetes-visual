@@ -321,3 +321,17 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 .qz .card{padding:18px 20px}.qzq{padding:20px 22px}
 /* Celular: com a aba Simulados são 5 abas; ícone em cima e nome embaixo para caberem na largura */
 @media(max-width:560px){.tabs{gap:4px}.tabs button{flex:1 1 0;min-width:0;flex-direction:column;gap:2px;height:auto;padding:5px 2px;font-size:10.5px;line-height:1.15}.tabs span{display:block!important;max-width:100%;overflow:hidden;text-overflow:ellipsis}}
+
+/* ---------- Revisão de layout (28/11/2026) ---------- */
+/* Largura máxima única para o topo e o conteúdo; cresce em telas grandes. */
+:root{--maxw:1640px}
+.app{max-width:var(--maxw)}
+.bar{padding-left:max(16px,2vw,calc((100% - var(--maxw)) / 2 + max(16px,2vw)));padding-right:max(16px,2vw,calc((100% - var(--maxw)) / 2 + max(16px,2vw)))}
+@media(min-width:1920px){:root{--maxw:2000px}.app{grid-template-columns:280px minmax(0,1fr) 400px;--sw:280px}body.sidecol .app{grid-template-columns:56px minmax(0,1fr) 400px}}
+@media(min-width:2400px){:root{--maxw:2240px}.app{grid-template-columns:290px minmax(0,1fr) 440px;--sw:290px}body.sidecol .app{grid-template-columns:56px minmax(0,1fr) 440px}}
+/* Menu recolhido na frente do conteúdo (dicas e submenu não ficam escondidos). */
+@media(min-width:1280px){body.sidecol .rail{z-index:30}}
+/* Palavras muito longas (flags, campos YAML) quebram dentro da caixa em vez de estourar. */
+.panel,.stage .cap,.exam,.cert,.qz,.trk{overflow-wrap:anywhere}
+/* Tablet e telas médias: cena isométrica é larga, então o diagrama fica mais largo que alto. */
+@media(max-width:1000px) and (min-width:561px){.svw>svg{aspect-ratio:16/11}}

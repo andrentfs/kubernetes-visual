@@ -67,7 +67,8 @@ const SV_WARN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 const MI={u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 3-6 6.5-6s6.5 2 6.5 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .5 3.5 2.5 3.5 6"/>',r:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',c:'<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/>',e:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/>',s:'<rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01"/>',p:'<path d="M12 2 21 7v10l-9 5-9-5V7Z"/><path d="M3 7l9 5 9-5M12 12v10"/>',t:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',v:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',o:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>'};
 const micon=l=>{l=l.toLowerCase();const k=l.includes('usu')?'u':l.includes('req')?'r':l.includes('cpu')?'c':l.includes('erro')||l.includes('fora')?'e':l.includes('node')||l.includes('servid')?'s':l.includes('pod')||l.includes('contain')||l.includes('endpoint')||l.includes('pront')||l.includes('desej')?'p':l.includes('vers')||l.includes('ip')?'v':l.includes('disp')?'t':'o';return`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${MI[k]}</svg>`};
 function parse(){const m=/^#([a-z]+)-(\d+)$/.exec(location.hash);let li=0,si=0;if(m){const k=L.findIndex(l=>l.id===m[1]);if(k>=0){li=k;si=Math.min(Math.max(+m[2]-1,0),L[k].steps.length-1)}}return[li,si]}
-const go=(li,si)=>{location.hash=window._lastLesson=`${L[li].id}-${si+1}`};
+let PEND=null; // posição pedida por go() antes do hashchange chegar (teclas rápidas)
+const go=(li,si)=>{PEND=[li,si];location.hash=window._lastLesson=`${L[li].id}-${si+1}`};
 const CT=()=>window.CERTTXT[LANG];let VIEW='learn';
 let CHK=new Set();try{CHK=new Set(JSON.parse(localStorage.getItem('k8s-chk')||'[]'))}catch(e){}
 const lidx=id=>L.findIndex(l=>l.id===id);
@@ -87,7 +88,7 @@ function setView(v){if(v!=='quiz'&&window.QUIZ)QUIZ.close();VIEW=v;document.body
 /** Simulados KCNA/KCSA: carregados sob demanda na primeira vez que a aba abre. */
 function openQuiz(sub){setView('quiz');window.K8S_load(['data/quiz/kcna.js','data/quiz/kcsa.js','js/quiz/ui.js'],()=>{if(VIEW==='quiz'&&window.QUIZ)QUIZ.open(sub)})}
 function openSim(id){setView('learn');window.K8S_load(['js/sim/engine.js','js/sim/nodefail.js','js/sim/ui.js'],()=>window.SIMUI&&SIMUI.open(id))}
-function show(){const hv=location.hash.slice(1);if(hv==='quiz'||hv.startsWith('quiz/')){if(window.SIMUI&&SIMUI.active){SIMUI.close();cur=null}openQuiz(hv.slice(5));return}if(hv.startsWith('sim/')){openSim(hv.slice(4));return}if(window.SIMUI&&SIMUI.active){SIMUI.close();cur=null}if(hv==='cka'||hv==='ckad'||hv==='cks'){setView(hv);return}if(VIEW!=='learn')cur=null;setView('learn');$('#svw')._u=0;if(/^[a-z]+-\d+$/.test(hv))window._lastLesson=hv;const[li,si]=parse(),les=L[li],st=les.steps[si],fresh=!cur||cur[0]!==li;cur=[li,si];
+function show(){PEND=null;const hv=location.hash.slice(1);if(hv==='quiz'||hv.startsWith('quiz/')){if(window.SIMUI&&SIMUI.active){SIMUI.close();cur=null}openQuiz(hv.slice(5));return}if(hv.startsWith('sim/')){openSim(hv.slice(4));return}if(window.SIMUI&&SIMUI.active){SIMUI.close();cur=null}if(hv==='cka'||hv==='ckad'||hv==='cks'){setView(hv);return}if(VIEW!=='learn')cur=null;setView('learn');$('#svw')._u=0;if(/^[a-z]+-\d+$/.test(hv))window._lastLesson=hv;const[li,si]=parse(),les=L[li],st=les.steps[si],fresh=!cur||cur[0]!==li;cur=[li,si];
  if(si===les.steps.length-1&&!DONE.has(les.id)){DONE.add(les.id);try{localStorage.setItem('k8s-done',JSON.stringify([...DONE]))}catch(e){}}buildSide();
  $('#prog').textContent=`${U_('lesson')} ${li+1} ${U_('of')} ${L.length}`;
  const inMod=L.filter(l=>l.mod===les.mod),pos=inMod.indexOf(les)+1;
@@ -113,7 +114,7 @@ function show(){const hv=location.hash.slice(1);if(hv==='quiz'||hv.startsWith('q
  document.title=`${les.title} · Kubernetes Visual`;applyUI();
  paint(st.s(),fresh);
  if(window.K8STERM){const o=LANG;LANG='en';let se;try{se=st.s()}finally{LANG=o}K8STERM.step({lesson:les.id,step:si,title:st.h,cmd:st.cmd,sc:se,lang:LANG,hostOf})}}
-function step(d){const[li,si]=cur;let a=li,b=si+d;if(b>=L[a].steps.length){if(a<L.length-1){a++;b=0}else return}if(b<0){if(a>0){a--;b=L[a].steps.length-1}else return}go(a,b)}
+function step(d){const[li,si]=PEND||cur;let a=li,b=si+d;if(b>=L[a].steps.length){if(a<L.length-1){a++;b=0}else return}if(b<0){if(a>0){a--;b=L[a].steps.length-1}else return}go(a,b)}
 const drawer=o=>{side.classList.toggle('open',o);$('#scrim').classList.toggle('open',o)};
 const replay=()=>{const[li,si]=cur;paint(L[li].steps[si].s(),true)};
 const togglePause=()=>{paused=!paused;paused?sv.pauseAnimations():sv.unpauseAnimations();$('#pauseI').setAttribute('d',paused?'M7 4l13 8-13 8z':'M9 5v14M15 5v14');applyUI()};

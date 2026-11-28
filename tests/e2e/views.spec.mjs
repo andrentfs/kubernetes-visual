@@ -24,6 +24,8 @@ test('troca de idioma muda os textos', async ({ page }) => {
 
 test('setas do teclado avançam e voltam os passos', async ({ page }) => {
   await open(page, 'pods-1');
+  await expect(page.locator('#title')).not.toBeEmpty();           // lição carregada antes da tecla
+  await expect(page.locator('#stepT, .step h2').first()).toBeVisible();
   await page.keyboard.press('ArrowRight');
   await expect(page).toHaveURL(/#pods-2$/);
   await page.keyboard.press('ArrowLeft');
@@ -153,4 +155,35 @@ test('todas as lições, PT e EN: caixa “Na prova” só onde há dicas e as 3
     }
     expect(errors, lang).toEqual([]);
   }
+});
+
+// Revisão de layout (28/11/2026): sem rolagem lateral nem texto estourando caixas, do tablet à tela 2560.
+for (const [w, h] of [[1024, 768], [1280, 720], [1366, 768], [1920, 1080], [2560, 1440]]) {
+  test(`layout ${w}×${h}: sem rolagem lateral; textos longos quebram dentro das caixas`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h });
+    const errors = await open(page, 'hardening-5', 'pt');                 // tem “authentication.anonymous.enabled:”
+    for (const hash of ['hardening-5', 'sim/nodefail', 'quiz', 'cks']) {
+      await page.evaluate(x => { location.hash = x; }, hash);
+      await page.waitForTimeout(300);
+      const r = await page.evaluate(() => {
+        const de = document.documentElement;
+        const vis = e => e.offsetParent !== null && getComputedStyle(e).visibility !== 'hidden';
+        const over = [...document.querySelectorAll('.panel *, .exam *, #cert *')]
+          .filter(e => !(e instanceof SVGElement) && vis(e) && getComputedStyle(e).overflowX === 'visible' && e.scrollWidth > e.clientWidth + 6)
+          .map(e => (e.textContent || '').trim().slice(0, 40));
+        return { hs: de.scrollWidth > de.clientWidth, over };
+      });
+      expect(r.hs, `${hash}: rolagem lateral`).toBe(false);
+      expect(r.over, `${hash}: texto estourando`).toEqual([]);
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
+test('menu recolhido fica na frente do conteúdo (dicas visíveis)', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.addInitScript(() => { try { localStorage.setItem('k8s-side', '0'); } catch {} });
+  await open(page, 'hardening-5', 'pt');
+  await expect(page.locator('#rail')).toBeVisible();
+  expect(await page.locator('#rail').evaluate(e => +getComputedStyle(e).zIndex)).toBeGreaterThan(0);
 });

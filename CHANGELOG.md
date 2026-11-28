@@ -13,6 +13,12 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 - The “no tips” messages claimed things that are not always true (the CKAD one said the topic “is covered by the CKA”, wrong for CKS topics; the CKS one still spoke of content “coming”). Replaced by a neutral message that lists the tabs that do have tips.
 - The review lesson (`tudo`) had CKAD and CKS tips but no CKA tips; added from the facts already on the CKA page and the CKA v1.37 weights.
 - The collapse handle (‹) is now always visible on wide screens, at the same height of the window as you scroll; it used to appear only on hover and could end up off-screen, because a `<button>` centres its content vertically.
+- **Collapsed menu in front of the text**: with the sidebar collapsed, the icon rail (and its flyout) now stays above the lesson content instead of being covered by it.
+- **Long words no longer overflow**: long commands, URLs and resource names in the panel, the diagram caption, the “On the exam” box, the certification pages, the mock exams and the progress tracker now wrap inside their box.
+- **Fast arrow keys**: pressing → then ← quickly could jump to the previous lesson, because the second key read the position from before the first one. Now each key starts from the step the previous key asked for.
+
+### Changed
+- **Better use of large screens**: the page grows up to 1640 px (2000 px from 1920 px wide, 2240 px from 2400 px), with wider side columns on those screens, and the header lines up with the content. On tablets (561–1000 px) the diagram is wider (16:11) so it is less cramped. An E2E test checks 5 window sizes (1024×768 to 2560×1440) for horizontal scroll and text overflowing its box.
 
 ## 2026-11-27 — Collapsible sidebar
 
