@@ -291,3 +291,33 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
  .fly .lk{all:unset;cursor:pointer;color:var(--ink);text-decoration:underline;font-size:12px}.fly .lk:focus-visible{outline:2px solid var(--k8s);outline-offset:2px}
 }
 @media(prefers-reduced-motion:reduce){.rb,.rail [data-tip]::after{transition:none}}
+
+/* Simulados KCNA/KCSA (#quiz) */
+.qz{display:grid;gap:16px;max-width:980px;margin:0 auto}.qz h1{margin:0 0 6px}.qz .lede{max-width:70ch}
+.qzcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.qzc{display:grid;gap:10px;align-content:start}.qzc h2{margin:0;font-size:22px}.qzc p{margin:0}
+.qzc dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:4px 0;font-size:13px}.qzc dt{font-weight:700}.qzc dd{margin:0}
+.qzdom{list-style:none;padding:0;margin:0;display:grid;gap:4px;font-size:13px}.qzdom li{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:3px 0}
+.qzbest{font-weight:700}.qzact{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:4px}.qz .pop.go{background:var(--green)}
+.qz .lk{color:inherit;text-decoration:underline}.qznote{opacity:.8}
+.qzbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;position:sticky;top:64px;z-index:5;background:var(--paper);padding:8px 0}.qzbar .pop{margin-left:auto}
+.qzt{font-weight:800;font-variant-numeric:tabular-nums}.qzt.low{color:#b3261e}
+.qzconf{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;border:1.5px solid var(--ink);border-radius:12px;background:#fdf1d8}.qzconf p{margin:0;flex:1 1 220px}
+.qzq h2{font-size:18px;line-height:1.45;margin:4px 0 14px}.qzq h2:focus{outline:none}.qzdomt{margin:0;font-size:12px;opacity:.7}
+.qzo{display:grid;gap:8px}.qzo button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1.5px solid var(--line2);border-radius:10px;background:var(--card);line-height:1.4}
+.qzo button:hover{border-color:var(--ink)}.qzo button:focus-visible{outline:2px solid var(--k8s);outline-offset:2px}
+.qzo button[aria-checked="true"]{border-color:var(--ink);background:var(--green);box-shadow:2px 2px 0 var(--drop)}
+.qzo i{font-style:normal;font-weight:800;min-width:1.4em}
+.qznav{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:16px}.qzmk{display:inline-flex;gap:6px;align-items:center;font-size:13px}
+.qzgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px}
+.qzgrid button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:7px 0;border:1.5px solid var(--line2);border-radius:8px;font-size:12px;font-weight:700;background:var(--card)}
+.qzgrid button.an{background:var(--green)}.qzgrid button.mk{border-color:#e6a23c;box-shadow:inset 0 -3px 0 #e6a23c}
+.qzgrid button[aria-current="true"]{border-color:var(--ink);outline:2px solid var(--ink)}.qzgrid button:focus-visible{outline:2px solid var(--k8s)}
+.qzv{font-weight:800;font-size:16px}.qzv.ok{color:#2f6a2a}.qzv.bad{color:#b3261e}
+.qzbars{list-style:none;padding:0;margin:8px 0;display:grid;gap:10px}.qzbars li{display:grid;grid-template-columns:1fr auto;gap:4px 10px}
+.qzbars i{grid-column:1/-1;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--g) var(--p),var(--line) var(--p))}.qzbars i.ok{--g:#5fae57}.qzbars i.bad{--g:#e58a7f}
+.qzrev{display:grid;gap:12px;padding-left:1.2em}.qzrev li{padding:12px 14px;border:1.5px solid var(--line2);border-radius:12px;background:var(--card)}
+.qzrev li.ok{border-left:5px solid #5fae57}.qzrev li.bad{border-left:5px solid #e58a7f}.qzrev h3{font-size:15px;margin:4px 0 8px}.qzexp{opacity:.9}
+.qz .card{padding:18px 20px}.qzq{padding:20px 22px}
+/* Celular: com a aba Simulados são 5 abas; ícone em cima e nome embaixo para caberem na largura */
+@media(max-width:560px){.tabs{gap:4px}.tabs button{flex:1 1 0;min-width:0;flex-direction:column;gap:2px;height:auto;padding:5px 2px;font-size:10.5px;line-height:1.15}.tabs span{display:block!important;max-width:100%;overflow:hidden;text-overflow:ellipsis}}

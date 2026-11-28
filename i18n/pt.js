@@ -574,3 +574,14 @@ Object.assign(window.TXT.pt.ui,{railProg:'Progresso: {d} de {t} lições',flyEsc
 /* ---------- Na prova (CKA) da lição de revisão ----------
    Fatos da página da prova (data/certs.js, CERTTXT.cka) e pesos do CKA_Curriculum v1.37. */
 window.TXT.pt.les.tudo.exam={t:['A CKA é prática: 2 horas resolvendo tarefas num terminal, online e supervisionada; a nota mínima é 66%.','Domínios (currículo v1.37): Troubleshooting 30%, Arquitetura, instalação e configuração do cluster 25%, Serviços e rede 20%, Workloads e Scheduling 15%, Storage 10%.','Cada tarefa indica o contexto do cluster: troque de contexto antes de começar.','A documentação oficial do Kubernetes fica liberada na prova; kubectl explain ajuda a conferir campos.'],c:['kubectl config use-context <contexto-da-tarefa>','kubectl get nodes -o wide','kubectl explain pod.spec.containers']};
+
+/* ---------- Simulados KCNA e KCSA (#quiz) ---------- */
+Object.assign(window.TXT.pt.ui,{qzT:'Simulados',qzLede:'Treine para as provas de múltipla escolha da CNCF. Questões originais, com explicação e link para a documentação oficial, distribuídas pelos pesos de cada domínio.',
+qzKcna:'Kubernetes and Cloud Native Associate: fundamentos de Kubernetes e do ecossistema cloud native.',qzKcsa:'Kubernetes and Cloud Native Security Associate: fundamentos de segurança em Kubernetes e cloud native.',
+qzReal:'Prova real',qzOurs:'Este simulado',qzFmt:'{n} questões · {m} min · {p}% para passar',qzStart:'Começar',qzResume:'Continuar a tentativa',qzBest:'Seu melhor resultado: {s}%',
+qzSrcCur:'Currículo oficial (CNCF)',qzSrcFmt:'Formato da prova (Linux Foundation)',qzNote:'As questões foram escritas para estudo e não são questões da prova. Os domínios e pesos seguem o currículo oficial da CNCF.',
+qzQ:'Questão {i} de {n}',qzTime:'Tempo restante',qzMark:'Marcar para revisar',qzPrev:'Anterior',qzNext:'Próxima',qzFinish:'Finalizar',qzKeep:'Continuar respondendo',
+qzConfirm:'Finalizar agora? Faltam {u} questão(ões) sem resposta.',qzGrid:'Mapa das questões',qzKeys:'Teclado: 1 a 4 (ou A a D) escolhem a alternativa; ← → mudam de questão.',
+qzScore:'Você acertou {c} de {n} ({p}%)',qzUsed:'tempo usado: {t}',qzPass:'Aprovado no simulado (75% ou mais).',qzFail:'Abaixo de 75%. Revise os domínios com menos acertos.',
+qzByDom:'Acertos por domínio',qzDomW:'peso {w}%',qzReview:'Revisar respostas',qzRetry:'Refazer',qzBack:'Voltar aos simulados',
+qzYour:'Sua resposta',qzRight:'Resposta certa',qzBlank:'sem resposta',qzDoc:'Documentação'});

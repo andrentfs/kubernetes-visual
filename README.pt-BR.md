@@ -2,7 +2,7 @@
 
 🇧🇷 Português · [🇺🇸 English](README.md)
 
-Curso interativo e visual sobre Kubernetes, em português (Brasil) e inglês. Cada conceito é um diagrama isométrico animado que você avança passo a passo, com terminal `kubectl` simulado, um simulador de falha de node (derrube nodes, volte no tempo, mude os tempos) e trilhas para as provas CKA, CKAD e CKS.
+Curso interativo e visual sobre Kubernetes, em português (Brasil) e inglês. Cada conceito é um diagrama isométrico animado que você avança passo a passo, com terminal `kubectl` simulado, um simulador de falha de node (derrube nodes, volte no tempo, mude os tempos), simulados de KCNA e KCSA e trilhas para as provas CKA, CKAD e CKS.
 
 **No ar:** https://andrentfs.github.io/kubernetes-visual/
 
@@ -59,6 +59,7 @@ Se mudar o `package.json`, rode `make clean` para recriar o volume de `node_modu
 | `i18n/labels.js` | Rótulos dos diagramas, nos dois idiomas ([ADR-003](docs/adr/ADR-003-lazy-language.md)) |
 | `licao/`, `en/lesson/` | Páginas estáticas por lição, geradas por `scripts/gen-lesson-pages.mjs` ([ADR-005](docs/adr/ADR-005-lesson-pages.md)) |
 | `js/geometry.js` · `content.js` · `renderer.js` · `ui.js` | Motor isométrico e interface ([ADR-002](docs/adr/ADR-002-file-structure.md)) |
+| `js/quiz/`, `data/quiz/` | Simulados KCNA e KCSA, carregados sob demanda |
 | `js/sim/` | Simuladores, carregados sob demanda: `engine.js` (relógio, [ADR-004](docs/adr/ADR-004-simulation-engine.md)), `nodefail.js` (modelo), `ui.js` (tela) |
 | `js/term/` | Terminal `kubectl` simulado: `lessons.js` (dados por lição), `files.js` (YAMLs), `engine.js` (interpretador) |
 

@@ -574,3 +574,14 @@ Object.assign(window.TXT.en.ui,{railProg:'Progress: {d} of {t} lessons',flyEsc:'
 /* ---------- On the exam (CKA) for the review lesson ----------
    Facts from the exam page (data/certs.js, CERTTXT.cka) and weights from CKA_Curriculum v1.37. */
 window.TXT.en.les.tudo.exam={t:['The CKA is hands-on: 2 hours solving tasks in a terminal, online and proctored; the passing score is 66%.','Domains (curriculum v1.37): Troubleshooting 30%, Cluster Architecture, Installation and Configuration 25%, Services and Networking 20%, Workloads and Scheduling 15%, Storage 10%.','Each task names the cluster context: switch context before starting.','The official Kubernetes docs are allowed during the exam; kubectl explain helps check fields.'],c:['kubectl config use-context <task-context>','kubectl get nodes -o wide','kubectl explain pod.spec.containers']};
+
+/* ---------- KCNA and KCSA mock exams (#quiz) ---------- */
+Object.assign(window.TXT.en.ui,{qzT:'Mock exams',qzLede:'Practise for the CNCF multiple-choice exams. Original questions, with explanations and links to the official docs, spread according to each domain’s weight.',
+qzKcna:'Kubernetes and Cloud Native Associate: Kubernetes and cloud native ecosystem fundamentals.',qzKcsa:'Kubernetes and Cloud Native Security Associate: Kubernetes and cloud native security fundamentals.',
+qzReal:'Real exam',qzOurs:'This mock exam',qzFmt:'{n} questions · {m} min · {p}% to pass',qzStart:'Start',qzResume:'Resume attempt',qzBest:'Your best score: {s}%',
+qzSrcCur:'Official curriculum (CNCF)',qzSrcFmt:'Exam format (Linux Foundation)',qzNote:'The questions were written for study and are not exam questions. Domains and weights follow the official CNCF curriculum.',
+qzQ:'Question {i} of {n}',qzTime:'Time left',qzMark:'Flag for review',qzPrev:'Previous',qzNext:'Next',qzFinish:'Finish',qzKeep:'Keep answering',
+qzConfirm:'Finish now? {u} question(s) still unanswered.',qzGrid:'Question map',qzKeys:'Keyboard: 1 to 4 (or A to D) pick an answer; ← → change question.',
+qzScore:'You got {c} of {n} right ({p}%)',qzUsed:'time used: {t}',qzPass:'Passed the mock exam (75% or more).',qzFail:'Below 75%. Review the domains with the fewest right answers.',
+qzByDom:'Right answers by domain',qzDomW:'weight {w}%',qzReview:'Review answers',qzRetry:'Try again',qzBack:'Back to mock exams',
+qzYour:'Your answer',qzRight:'Right answer',qzBlank:'no answer',qzDoc:'Documentation'});

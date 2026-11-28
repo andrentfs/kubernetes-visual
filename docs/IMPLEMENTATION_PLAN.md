@@ -30,6 +30,7 @@
 | 27/11/2026 | ADR-004 motor de simulação (S1) | `js/sim/engine.js` com 15 testes: velocidade 0,5×–10×, pausa, passo, seek, volta exata no tempo e ações do usuário |
 | 27/11/2026 | S2 simulador de falha de node | `#sim/nodefail` (botão “Simulador” na lição): derrubar/religar qualquer node; Lease, NotReady, taint, EndpointSlice, despejo, ReplicaSet, scheduler e StatefulSet na linha do tempo; tempos ajustáveis; nenhum pod se move. 8 testes do modelo + E2E em PT/EN |
 | 28/11/2026 | Correção: abas da caixa “Na prova” | Relato de Júlio César (cluster-1, nodefail-1, módulo 06). Causa: regra introduzida com o módulo CKS forçava a única prova com dicas mesmo após clique. Regra única `CERTS_TAB` (data/certs.js) + testes unitários e E2E (27 lições × 2 idiomas, desktop e celular). Mensagens “sem dicas” corrigidas; dica CKA da lição `tudo` |
+| 28/11/2026 | Simulados KCNA e KCSA | Aba “Simulados” (`#quiz`): 30 questões originais por prova, PT/EN, distribuídas pelos pesos de `KCNA_Curriculum.pdf` e `KCSA Curriculum.pdf` (commit `f5ab45e`); formato real conferido na documentação da Linux Foundation (60 questões, 90 min, 75%). 9 testes unitários (pesos, distribuição, paridade, alternativas) + 5 E2E; links das questões verificados pelo CI via `docs/quiz-references.md` |
 
 ## 1. Diagnóstico da arquitetura atual
 
@@ -226,7 +227,7 @@ Complexidade relativa: P (até ~1 dia), M (2–3 dias), G (1 semana), GG (mais d
 | A1 | HPA interativo | Controle de CPU/RPS altera réplicas pela fórmula oficial; gráfico ao vivo; janela de estabilização respeitada | G | S1 |
 | A2 | VPA, CA, Karpenter, KEDA + RabbitMQ | Diferença workload × recurso × node clara; KEDA escala a partir da fila, inclusive para 0 | GG | A1 |
 | E1 🟡 | Trilhas | 6 trilhas, cada lição mapeada a objetivos oficiais com data | G | F6 |
-| E2 | Quiz e revisão | Quiz por lição, revisão dos erros, modo revisão por certificação | G | E1 |
+| E2 🟡 | Quiz e revisão | Quiz por lição, revisão dos erros, modo revisão por certificação. *Feito: simulados KCNA e KCSA (30 questões cada, pesos oficiais, revisão com explicação e link). Falta: quiz por lição* | G | E1 |
 | E3 | Progresso completo | Favoritos, histórico, continuar, exportar/importar/zerar (JSON) | M | — |
 | E4 | Glossário | Termos com link para a lição e a documentação oficial; busca integrada | M | — |
 | C1 | Acessibilidade AA | axe sem violações sérias; navegação 100% por teclado; reduced-motion desliga pacotes | G | F4 |

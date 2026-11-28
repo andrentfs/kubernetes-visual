@@ -4,7 +4,11 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 
 ## [Unreleased]
 
+### Added
+- **KCNA and KCSA mock exams** (new “Mock exams” tab, `#quiz`): 30 original questions per exam in PT and EN, spread by the official domain weights (cncf/curriculum `f5ab45e`), 45 min, 75% to pass (the real exams have 60 questions in 90 min, per the Linux Foundation docs). Shuffled order, timer, flag for review, question map, keyboard, resume after reload, score by domain and a review with an explanation and an official docs link for every question. Loaded only when the tab opens. All question links are listed in `docs/quiz-references.md` so the CI link check verifies them.
+
 ### Fixed
+- With the new tab there are 5 tabs, which overflowed the width on phones; on screens up to 560 px each tab now shows the icon above the name.
 - **“On the exam” tabs stuck** in lessons with tips for a single exam (`cluster`, `nodefail` and the 5 module 06 lessons): clicking CKAD/CKS (or CKA/CKAD in module 06) did nothing. Cause: since the CKS release, the box forced the only exam with tips even after a click. Now a click always wins in that lesson; without a click the box still opens on the only exam with tips. The rule lives in one pure function (`CERTS_TAB` in `data/certs.js`) with unit tests. Reported by Júlio César.
 - The “no tips” messages claimed things that are not always true (the CKAD one said the topic “is covered by the CKA”, wrong for CKS topics; the CKS one still spoke of content “coming”). Replaced by a neutral message that lists the tabs that do have tips.
 - The review lesson (`tudo`) had CKAD and CKS tips but no CKA tips; added from the facts already on the CKA page and the CKA v1.37 weights.

@@ -5,7 +5,7 @@ Static site, no production build, served by GitHub Pages from the root of `main`
 ```
 index.html ─┬─ css/app.css
             ├─ data/meta.js        reference Kubernetes version
-            ├─ data/certs.js       CKA/CKAD/CKS domains, weights, competencies → lessons
+            ├─ data/certs.js       CKA/CKAD/CKS domains, weights, competencies → lessons; CERTS_TAB (exam box tab rule)
             ├─ data/scenes.js      window.buildScenes(H): scenes per lesson/step (language-neutral)
             ├─ i18n/labels.js      window.TXT.{pt,en}.lbl: short diagram labels, both languages (always loaded)
             ├─ js/term/lessons.js  ┐
@@ -18,6 +18,8 @@ index.html ─┬─ css/app.css
                  ├─ js/renderer.js        paint(): diff-based SVG rendering, links, packets, camera, anti-overlap
                  └─ js/ui.js            routing (#lesson-step, #cka, #ckad, #cks), panels, “On the exam” box (CKA/CKAD/CKS tabs), search, progress, theme, terminal wiring
 ```
+
+Mock exams (`#quiz`): `data/quiz/kcna.js` and `data/quiz/kcsa.js` (`window.K8SQUIZ`, both languages) and `js/quiz/ui.js` (`window.QUIZ`), loaded on demand when the tab opens and drawn inside `#cert`. `scripts/gen-quiz-refs.mjs` writes `docs/quiz-references.md` so the CI link check covers every question link.
 
 Simulators ([ADR-004](adr/ADR-004-simulation-engine.md)) live in `js/sim/` and are loaded on demand (`window.K8S_load`) when the route `#sim/<id>` opens:
 

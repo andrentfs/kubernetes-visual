@@ -104,3 +104,14 @@ test('caixa “Na prova” no celular e no desktop: abas respondem e nada estour
   }
   expect(errors).toEqual([]);
 });
+
+test('simulados no celular e no desktop: nada estoura a largura', async ({ page }) => {
+  const errors = await open(page, 'intro-1', 'pt');
+  await page.goto('/#quiz');
+  await expect(page.locator('.qzc')).toHaveCount(2);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await page.locator('[data-start="kcsa"]').click();
+  await expect(page.locator('.qzo button')).toHaveCount(4);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  expect(errors).toEqual([]);
+});
