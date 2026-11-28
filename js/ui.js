@@ -106,7 +106,7 @@ function show(){PEND=null;const hv=location.hash.slice(1);if(hv==='quiz'||hv.sta
   (st.warn?`<div class="call warn">${SV_WARN}<div><small>${U_('warn')}</small>${esc(st.warn)}</div></div>`:'')+
   (st.chg?`<div class="chg"><small>${U_('changed')}</small><ul>${st.chg.map(([s,t])=>`<li><i class="${s==='+'?'p':s==='-'?'m':'t'}">${s==='~'?'↝':s}</i>${esc(t)}</li>`).join('')}</ul></div>`:'')+
   (st.cmd?`<div class="cmd"><code>${esc(st.cmd)}</code>${window.K8STERM&&K8STERM.has(les.id)?`<button type="button" id="runT" title="${esc(K8STERM.T().run)}">▶</button>`:''}<button type="button" id="copy">${U_('copy')}</button></div>`:'');
- renderExam(les);
+ renderExam(les);requestAnimationFrame(fitDia);
  $('#cap').innerHTML=st.c?`<small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4M4 4h12l-2 4 2 4H4"/></svg>${U_('inDiagram')}</small>${esc(st.c)}`:'';$('#learn').innerHTML=les.goals.map(([g,at])=>`<li class="${si+1>=at?'ok':''}"><i>${si+1>=at?'✓':''}</i>${esc(g)}</li>`).join('');
  const last=si===les.steps.length-1,end=last&&li===L.length-1,nl=end?U_('end'):last?`${U_('nextLesson')}: ${L[li+1].title}`:`${U_('next')}: ${les.steps[si+1].n}`;
  ['#prev','#prev2'].forEach(q=>$(q).disabled=li===0&&si===0);['#next','#next2'].forEach(q=>$(q).disabled=end);
@@ -162,3 +162,19 @@ window.__dbg={L:()=>L,S,tl};window.__audit=()=>{if(!lastScene)return[];const{sc,
   if(L<38||hits.length)out.push(p+'→'+q+(L<38?' short:'+Math.round(L):'')+(hits.length?' through:'+hits.join(','):''))});return out};
 addEventListener('hashchange',show);
 show();syncTheme();
+
+/* ---------- Diagrama cabe na altura da janela + texto do passo na tela cheia (28/11/2026) ---------- */
+// Em janelas baixas (ex.: notebook 1280×700) o diagrama encolhe para a lição inteira (título, diagrama e
+// legenda) caber sem rolar. Abaixo de 1001 px o layout já é empilhado e rola normalmente.
+function fitDia(){const sv=$('#sv');if(!sv)return;if(document.fullscreenElement||VIEW!=='learn'||innerWidth<=1000){sv.style.maxHeight='';return}
+ const st=$('.stage'),foot=$('.dfoot'),top=sv.getBoundingClientRect().top+scrollY,pad=parseFloat(getComputedStyle(st).paddingBottom)||16;
+ const avail=Math.floor(innerHeight-top-foot.offsetHeight-pad-18);sv.style.maxHeight=Math.max(250,Math.min(avail,innerHeight*.7))+'px'}
+let fitQ=0;const fitSoon=()=>{cancelAnimationFrame(fitQ);fitQ=requestAnimationFrame(fitDia)};
+addEventListener('resize',fitSoon);if(window.ResizeObserver){const h=$('.head');if(h)new ResizeObserver(fitSoon).observe(h)}
+// Tela cheia: o cartão do passo (texto, Voltar/Próximo) vai para um painel ao lado do diagrama e volta ao sair.
+// O cartão é movido, não copiado: render, botões e teclado continuam funcionando sem código extra.
+function fsLabel(){const d=$('#dia'),t=$('#fsTog');if(!t)return;const off=d.classList.contains('fsno');t.setAttribute('aria-expanded',String(!off));t.querySelector('span').textContent=U_(off?'fsShow':'fsHide');t.title=U_(off?'fsShow':'fsHide')+' (T)'}
+document.addEventListener('fullscreenchange',()=>{const d=$('#dia'),card=$('.step'),side=$('#fsside'),panel=$('.panel');if(!d||!card)return;
+ if(document.fullscreenElement===d){side.appendChild(card);fsLabel()}else if(card.parentNode===side){panel.prepend(card);d.classList.remove('fsno')}fitSoon()});
+$('#fsTog').addEventListener('click',()=>{$('#dia').classList.toggle('fsno');fsLabel()});
+document.addEventListener('keydown',e=>{if((e.key==='t'||e.key==='T')&&document.fullscreenElement===$('#dia')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();$('#fsTog').click()}});

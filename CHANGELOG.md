@@ -5,6 +5,7 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 ## [Unreleased]
 
 ### Added
+- **Text in full screen**: the full-screen diagram now shows the step text on the side (below it on portrait screens), with Back/Next working. “Hide the text” (or the T key) leaves only the diagram, and “Show the text” brings it back.
 - **KCNA and KCSA mock exams** (new “Mock exams” tab, `#quiz`): 30 original questions per exam in PT and EN, spread by the official domain weights (cncf/curriculum `f5ab45e`), 45 min, 75% to pass (the real exams have 60 questions in 90 min, per the Linux Foundation docs). Shuffled order, timer, flag for review, question map, keyboard, resume after reload, score by domain and a review with an explanation and an official docs link for every question. Loaded only when the tab opens. All question links are listed in `docs/quiz-references.md` so the CI link check verifies them.
 
 ### Fixed
@@ -16,6 +17,10 @@ All notable changes to this project. Format based on [Keep a Changelog](https://
 - **Collapsed menu in front of the text**: with the sidebar collapsed, the icon rail (and its flyout) now stays above the lesson content instead of being covered by it.
 - **Long words no longer overflow**: long commands, URLs and resource names in the panel, the diagram caption, the “On the exam” box, the certification pages, the mock exams and the progress tracker now wrap inside their box.
 - **Fast arrow keys**: pressing → then ← quickly could jump to the previous lesson, because the second key read the position from before the first one. Now each key starts from the step the previous key asked for.
+
+- **Header overlap**: between about 1440 and 1560 px wide, the “Lesson X of 27” counter did not fit and slid under the language button, and on narrow tablets (561–760 px) the header ran off the screen. The counter and the “made by” text now show only from 1680 px, the tab names only from 1280 px, and on narrow tablets the tabs move to a second row. Reported on a Mac.
+- **Diagram fits short windows**: on laptops with a short window, the diagram shrinks so the title, diagram and caption fit without scrolling. In the narrow side panel (1280–1599 px), “Back” becomes just the arrow so “Next: …” no longer wraps onto three lines.
+- **Tests use the real font**: the E2E tests now load JetBrains Mono from the `@fontsource/jetbrains-mono` package (dev only; the site still uses Google Fonts). With the fallback font the header fit in the tests but not on screen. New tests: header in 14 widths (PT and EN), diagram fit in 4 short windows, and full screen with text.
 
 ### Changed
 - **Better use of large screens**: the page grows up to 1640 px (2000 px from 1920 px wide, 2240 px from 2400 px), with wider side columns on those screens, and the header lines up with the content. On tablets (561–1000 px) the diagram is wider (16:11) so it is less cramped. An E2E test checks 5 window sizes (1024×768 to 2560×1440) for horizontal scroll and text overflowing its box.

@@ -335,3 +335,42 @@ body.vcert .app,body.vcert .mnav,body.vcert #menu,body.vcert .prog{display:none!
 .panel,.stage .cap,.exam,.cert,.qz,.trk{overflow-wrap:anywhere}
 /* Tablet e telas médias: cena isométrica é larga, então o diagrama fica mais largo que alto. */
 @media(max-width:1000px) and (min-width:561px){.svw>svg{aspect-ratio:16/11}}
+
+/* ---------- Cabeçalho sem sobreposição, em todos os tamanhos (28/11/2026) ---------- */
+/* Medido com a JetBrains Mono de verdade: o contador "Lição X de 27" e o "feito por" só cabem a partir
+   de ~1560 px; antes disso o contador encolhia e o texto passava por baixo do botão de idioma. */
+.lang,.prog,.credit{flex:none}
+@media(max-width:1679px){.prog{display:none}.bar .credit__text{display:none}.bar .credit{margin-left:0}}
+@media(max-width:1279px){.tabs span{display:none}.tabs button{padding:0 11px}}
+/* Tablet estreito (561–760 px): as abas não cabem com o logo; vão para uma segunda linha, com nome. */
+@media(min-width:561px) and (max-width:760px){.bar{flex-wrap:wrap;row-gap:8px;--barh:112px}.tabs{order:10;width:100%;margin-left:0}.tabs button{flex:1;justify-content:center;height:36px}.tabs span{display:inline!important}.bar .sp{display:block}}
+@media(max-width:560px){.bar{--barh:120px}}
+.qzbar{top:var(--barh,64px)}
+
+/* ---------- Tela cheia: painel com o texto do passo ---------- */
+.fsside{display:none}
+.dia:fullscreen{--fsw:min(420px,34vw);display:flex;flex-direction:column}
+.dia:fullscreen:not(.fsno){padding-right:var(--fsw)}
+.dia:fullscreen .svw{flex:1;min-height:0}
+.dia:fullscreen .svw>svg{height:100%!important;max-height:none!important;aspect-ratio:auto!important}
+.dia:fullscreen .fsside{display:flex;flex-direction:column;gap:10px;position:absolute;top:0;right:0;bottom:0;width:var(--fsw);box-sizing:border-box;padding:14px 16px 16px;background:var(--paper);border-left:1px solid var(--line);overflow-y:auto;z-index:4}
+.dia:fullscreen .fsside .step{margin:0;flex:none}
+.fstog{all:unset;cursor:pointer;align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1.5px solid var(--ink);border-radius:9px;background:var(--card);font-size:12px;font-weight:700;box-shadow:1.5px 2px 0 var(--drop)}
+.fstog:hover{background:var(--green)}.fstog:focus-visible{outline:3px solid var(--k8s);outline-offset:2px}
+.dia.fsno .fsside{width:auto;top:50%;bottom:auto;transform:translateY(-50%);padding:0;border:0;background:none;overflow:visible}
+.dia.fsno .fsside .step{display:none}
+.dia.fsno .fstog svg{transform:rotate(180deg)}
+/* tela cheia em pé (celular/tablet): o texto vai para baixo do diagrama */
+@media(max-aspect-ratio:1/1){
+ .dia:fullscreen{--fsh:44vh}
+ .dia:fullscreen:not(.fsno){padding-right:0;padding-bottom:var(--fsh)}
+ .dia:fullscreen .fsside{top:auto;left:0;width:auto;height:var(--fsh);border-left:0;border-top:1px solid var(--line)}
+ .dia.fsno .fsside{left:auto;right:12px;top:auto;bottom:12px;height:auto;transform:none}
+}
+.dia:fullscreen:not(.fsno) .ovl{right:calc(var(--fsw) + 12px)}
+@media(max-aspect-ratio:1/1){.dia:fullscreen:not(.fsno) .ovl{right:12px}}
+/* painel estreito (1280–1599 px): "Voltar" vira só a seta (o nome continua para leitores de tela) e o
+   "Próximo: …" ganha espaço, sem quebrar em três linhas */
+@media(min-width:1280px) and (max-width:1599px){.nav .back{flex:none;padding-left:14px;padding-right:14px}.nav .back span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}
+.dia:fullscreen .fsside .nav{display:grid!important}
+.dia:fullscreen .nav .back span{position:static;width:auto;height:auto;overflow:visible;clip-path:none}

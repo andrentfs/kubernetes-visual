@@ -1,6 +1,6 @@
 // Navegação entre Aprender, CKA e CKAD; tema e idioma.
 import { test, expect } from '@playwright/test';
-import { open } from './helpers.mjs';
+import { open, hermetic } from './helpers.mjs';
 
 test('voltar de CKA/CKAD/CKS para Aprender não deixa o painel de certificação visível', async ({ page }) => {
   await open(page, 'pods-3');
@@ -69,7 +69,7 @@ test('baixa só os textos do idioma em uso; o outro só na troca (ADR-003)', asy
 
 for (const [lang, path, title] of [['pt', 'licao/nodefail/', 'Quando um node cai'], ['en', 'en/lesson/nodefail/', 'When a node goes down']]) {
   test(`página estática da lição abre a versão interativa no idioma dela (${lang}, ADR-005)`, async ({ page }) => {
-    await page.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, r => r.fulfill({ status: 200, body: '' }));
+    await hermetic(page);
     await page.addInitScript(() => { try { localStorage.setItem('k8s-lang', 'xx'); } catch {} });
     await page.goto('/' + path);
     await expect(page.locator('h1')).toHaveText(title);
@@ -186,4 +186,62 @@ test('menu recolhido fica na frente do conteúdo (dicas visíveis)', async ({ pa
   await open(page, 'hardening-5', 'pt');
   await expect(page.locator('#rail')).toBeVisible();
   expect(await page.locator('#rail').evaluate(e => +getComputedStyle(e).zIndex)).toBeGreaterThan(0);
+});
+
+// Revisão de layout 2 (relato de 28/11/2026, Mac): "Lição X de 27" passava por baixo do botão de idioma.
+// Medido com a JetBrains Mono real (servida localmente pelo helper), não com a fonte de reserva.
+const barHits = page => page.evaluate(() => {
+  const kids = [...document.querySelector('.bar').children].filter(e => e.offsetParent && getComputedStyle(e).display !== 'none');
+  const out = [], n = e => e.id || e.className;
+  for (let i = 0; i < kids.length; i++) {
+    const a = kids[i].getBoundingClientRect();
+    if (a.right > innerWidth + 1) out.push('fora da tela: ' + n(kids[i]));
+    if (!kids[i].matches('.search') && kids[i].scrollWidth > kids[i].clientWidth + 6) out.push('texto estourando: ' + n(kids[i]));
+    for (let j = i + 1; j < kids.length; j++) {
+      const c = kids[j].getBoundingClientRect();
+      if (a.left < c.right - 1 && c.left < a.right - 1 && a.top < c.bottom - 1 && c.top < a.bottom - 1) out.push(n(kids[i]) + ' × ' + n(kids[j]));
+    }
+  }
+  return out;
+});
+for (const lang of ['pt', 'en']) {
+  test(`cabeçalho sem sobreposição em 14 larguras (${lang})`, async ({ page }) => {
+    await open(page, 'porque-1', lang);
+    for (const w of [360, 420, 560, 600, 700, 760, 1024, 1240, 1286, 1366, 1470, 1512, 1600, 1728]) {
+      await page.setViewportSize({ width: w, height: 800 });
+      expect(await barHits(page), `largura ${w}`).toEqual([]);
+    }
+  });
+}
+
+test('diagrama encolhe em janelas baixas para a lição caber sem rolar', async ({ page }) => {
+  await open(page, 'porque-1', 'pt');
+  for (const [w, h] of [[1286, 701], [1366, 768], [1440, 789], [1512, 860]]) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(150);
+    const b = await page.locator('.stage').evaluate(e => e.getBoundingClientRect().bottom);
+    expect(b, `${w}×${h}`).toBeLessThanOrEqual(h + 8);
+  }
+});
+
+test('tela cheia mostra o texto do passo, navega, oculta com T e devolve o cartão ao sair', async ({ page }) => {
+  const errors = await open(page, 'probes-3', 'pt');
+  await page.locator('#full').click();
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement?.id)).toBe('dia');
+  const side = page.locator('#fsside');
+  await expect(side.locator('.step h2')).toHaveText(/Probe/);
+  await expect(side.locator('#next')).toBeVisible();
+  await expect(page.locator('#full')).toBeVisible();                 // controles não ficam sob o painel
+  await side.locator('#next').click();
+  await expect(page).toHaveURL(/#probes-4$/);
+  await expect(side.locator('.step .sh')).toContainText('4 / 11');
+  await page.keyboard.press('t');
+  await expect(side.locator('.step')).toBeHidden();
+  await expect(page.locator('#fsTog')).toHaveText('Mostrar o texto');
+  await page.keyboard.press('t');
+  await expect(side.locator('.step')).toBeVisible();
+  await page.evaluate(() => document.exitFullscreen());
+  await expect(page.locator('.panel > .step')).toHaveCount(1);
+  await expect(page.locator('#fsside .step')).toHaveCount(0);
+  expect(errors).toEqual([]);
 });

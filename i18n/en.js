@@ -568,7 +568,7 @@ simF_sched:'The scheduler put {p} on {n} (the Ready node with the fewest pods).'
 simF_running:'{p} became ready and joined the EndpointSlice.',
 simF_gone:'The kubelet on {n} confirmed and {p} was finally deleted.',
 simF_stuck:'The StatefulSet won’t create another {p} while the old one exists, so there are never two with the same identity.'});
-Object.assign(window.TXT.en.ui,{sideHide:'Hide the menu',sideShow:'Show the menu'});
+Object.assign(window.TXT.en.ui,{sideHide:'Hide the menu',sideShow:'Show the menu',fsHide:'Hide the text',fsShow:'Show the text'});
 Object.assign(window.TXT.en.ui,{railProg:'Progress: {d} of {t} lessons',flyEsc:'Esc closes',flyAll:'Open the full menu'});
 
 /* ---------- On the exam (CKA) for the review lesson ----------
